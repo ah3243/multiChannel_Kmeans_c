@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/multiDimen.cpp
+opencv2/imgproc/imgproc.hpp
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/imgproc/imgproc.hpp
+opencv2/highgui/highgui.hpp
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/highgui/highgui.hpp
+iostream
+-
+
