@@ -8,11 +8,11 @@ using namespace std;
 int main( int argc, char** argv )
 {
   Mat src = imread( argv[1], 1 );
-  Mat samples(src.rows * src.cols, 3, CV_32F);
+  Mat samples(src.rows * src.cols, 1, CV_32FC(3));
   for( int y = 0; y < src.rows; y++ )
     for( int x = 0; x < src.cols; x++ )
       for( int z = 0; z < 3; z++)
-        samples.at<float>(y + x*src.rows, z) = src.at<Vec3b>(y,x)[z];
+        samples.at<Vec3f>(y + x*src.rows, 1)[z] = src.at<Vec3b>(y,x)[z]; // Multichannel array going into a single channel Mat
 
   int clusterCount = 5;
   Mat labels;
