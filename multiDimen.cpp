@@ -241,36 +241,43 @@ int main( int /*argc*/, char** /*argv*/ ){
   // Create 1 against all SVM classifiers //
   //////////////////////////////////////////
 
+  map<string,CvSVM> classifiers;
+
+  // Iterate through class models
   for(int i=0;i<classes.size();i++){
     string class_ = classes[i];
     cout << "Currently training class: " << class_ << endl;
 
-    Mat samples(0, response_Hist.cols, response_Hist.type());
+    Mat samples(0, response_hist.cols, response_hist.type());
     Mat labels(0, 1, CV_32FC1);
 
     // Copy class samples and labels
     cout << "adding " << classes_training_data[class_].rows << " positive" << endl;
     samples.push_back(classes_training_data[class_]);
+
     Mat class_label = Mat::ones(classes_training_data[class_].rows, 1, CV_32FC1);
     labels.push_back(class_label);
 
-    for (map<string,Mat>::iterator it1 = classes_training_data.begin(); it1 != classes_training_data.end(); ++it1) {
-          string not_class_ = (*it1).first;
-          if(not_class_.compare(class_)==0) continue; //skip class itself
-          samples.push_back(classes_training_data[not_class_]);
-          class_label = Mat::zeros(classes_training_data[not_class_].rows, 1, CV_32FC1);
-          labels.push_back(class_label);
-       }
+    for(map<string,Mat>::iterator it1 = classes_training_data.begin(); it1 != classes_training_data.end(); ++it1) {
+      string not_class_ = (*it1).first;
+      if(not_class_.compare(class_)==0)
+        continue; //skip if not_class == currentclass
 
-       cout << "Train.." << endl;
-       Mat samples_32f; samples.convertTo(samples_32f, CV_32F);
-       if(samples.rows == 0) continue; //phantom class?!
-       CvSVM classifier;
-       classifier.train(samples_32f,labels);
+      samples.push_back(classes_training_data[not_class_]);
+      class_label = Mat::zeros(classes_training_data[not_class_].rows, 1, CV_32FC1);
+      labels.push_back(class_label);
+    }
 
-       // Save the classifier to file or cache
+    cout << "Train.." << endl;
+    Mat samples_32f; samples.convertTo(samples_32f, CV_32F);
+
+    if(samples.rows == 0)
+      continue; //phantom class?!
+
+    // Train and store classifiers in Map
+    classifiers[class_].train(samples_32f, labels);
   }
-  
+
   #endif
 
   return 0;
