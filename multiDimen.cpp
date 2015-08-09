@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 
-#define DICTIONARY_BUILD 0
+#define DICTIONARY_BUILD 1
 
 using std::vector;
 using namespace cv;
@@ -165,18 +165,25 @@ int main( int /*argc*/, char** /*argv*/ ){
   BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
 
   vector<Mat> txtons;
+
   listDir("../../../TEST_IMAGES/kth-tips/textons/",txtons);
+  SiftDescriptorExtractor detector;
 
   for(int i=0;i<txtons.size();i++){
-    Mat points = reshapeCol(txtons[i]);
-    cout << "\n\ntHis is the size: " << points.rows << endl;
+    Mat descriptorsTxt;
+    vector<KeyPoint> keypointsTxt;
+    detector.detect(txtons[i], keypointsTxt);
+    detector.compute(txtons[i], keypointsTxt, descriptorsTxt);
+    if(!descriptorsTxt.empty())
+      bowTrainer.add(descriptorsTxt);
     cout << "loop number: " << i << endl;
-    bowTrainer.add(points);
-    cout << "bowTrainer.discriptorCount: " << bowTrainer.descripotorsCount() << endl;
   }
+  cout << "bowTrainer.discriptorCount: " << bowTrainer.descripotorsCount() << endl;
+
   Mat dictionary = bowTrainer.cluster();
   cout << "This is the dictionary size: " << dictionary.size() << endl;
 
+  cout << "Saving Dictionary.." << endl;
   FileStorage fs("dictionary.xml",FileStorage::WRITE);
   fs << "vocabulary" << dictionary;
   fs.release();
@@ -187,6 +194,12 @@ int main( int /*argc*/, char** /*argv*/ ){
   // Get histogram responses using vocabulary from Classes //
   ///////////////////////////////////////////////////////////
 
+  // Load TextonDictionary
+  vector<Mat> dictionary;
+    FileStorage fs("dictionary.xml",FileStorage::READ);
+    fs["vocabulary"] >> dictionary;
+    fs.release();
+
   vector<KeyPoint> keypoints;
   Mat response_hist;
   vector<string> class_names;
@@ -194,19 +207,14 @@ int main( int /*argc*/, char** /*argv*/ ){
   string filepath;
   map<string,Mat> classes_training_data;
 
-  vector<Mat> dictionary;
-  FileStorage fs("dictionary.xml",FileStorage::READ);
-  fs["vocabulary"] >> dictionary;
-  fs.release();
 
-  Ptr<FeatureDetector> detector = FeatureDetector::create("FAST");
-  SurfDescriptorExtractor extractor;
-  // Ptr<DescriptorExtractor> discriptor = DescriptorExtractor::create("SURF");
-  Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("FlannBased");
+  Ptr<DescriptorMatcher> matcher(new FlannBasedMatcher);
+  Ptr<FeatureDetector> detector(new SiftFeatureDetector());
+  Ptr<DescriptorExtractor> extractor(new SiftDescriptorExtractor);
 
-  // BOWImgDescriptorExtractor bowDE(discriptor, matcher);
+  BOWImgDescriptorExtractor bowDE(extractor, matcher);
+  bowDE.setVocabulary(dictionary);
 
-  //  bowDE.setVocabulary(dictionary);
   cout << "\n\n\nCreate Models: \n" ;
 
   for(int i = 0; i < modelImg.size(); i++){
