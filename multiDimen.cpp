@@ -5,65 +5,197 @@
 // 4. apply kmeans to blured Segments, store in vector
 // 5. repeat 1-4 with image from second class
 
-
 #include "opencv2/highgui/highgui.hpp"
+#include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
+//#include "features2d.hpp" // For feature2d (typedef DescriptorExtractor)
 #include <iostream>
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <fstream>
+#include <string>
+
+#include <dirent.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
+
+
+using std::vector;
 using namespace cv;
 using namespace std;
 
 
+void listDir(const char *inPath, vector<Mat>& dirFiles){
+  DIR *pdir = NULL;
+  cout << "inpath : " << inPath << endl;
+  pdir = opendir(inPath);
+  // Check that dir was initialised correctly
+  if(pdir == NULL){
+    cout << "ERROR! unable to open directory, exiting." << endl;
+    exit(1);
+  }
+  struct dirent *pent = NULL;
+
+  // Continue as long as there are still values in the dir list
+  while (pent = readdir(pdir)){
+    if(pdir==NULL){
+      cout << "ERROR! dir was not initialised correctly, exiting." << endl;
+      exit(3);
+    }
+    stringstream ss;
+    ss << inPath;
+    ss << pent->d_name;
+    string a = ss.str();
+    Mat tmp = imread(a, CV_BGR2GRAY);
+    dirFiles.push_back(tmp);
+    if(!tmp.data){
+      cout << "unable to read image.." << endl;
+    }
+  }
+  closedir(pdir);
+  cout << "finished Reading Successfully.." << endl;
+}
+
 int main( int /*argc*/, char** /*argv*/ )
 {
- cout << "\n Usage in C++ API:\n double kmeans(const Mat& samples, int clusterCount, Mat& labels, TermCriteria termcrit, int attempts, int flags, Mat* centers) \n\n\n" << endl;
+  string basePath = "../../../TEST_IMAGES/kth-tips/";
+  vector<string> extPath = {"bread/", "cotton/", "cork/"};
+  typedef vector<Mat> mV;
+  mV txtons(100, Mat(200,200, CV_32FC1));
+  mV bread (10,Mat(200,200,CV_32FC1));
+  mV cotton (10, Mat(200,200,CV_32FC1));
+  mV cork (10, Mat(200,200,CV_32FC1));
 
- int clusterCount = 2;
- int dimensions = 1;
- int sampleCount = 20*20;
+  int count = 0;
+  for(int i=0;i<4;i++){
+    stringstream ss;
+    ss << basePath;
+    ss << extPath[count];
+    ss << "train/";
+    string b = ss.str();
+    const char* a = b.c_str();
+    cout << "this is the path.. " << a << endl;
 
- Mat points(sampleCount,dimensions, CV_32FC1,Scalar(10));
- Mat in =imread("../../10pixsq.png", CV_BGR2GRAY);
- Mat labels;
- Mat centers(clusterCount, 1, points.type());
+    switch(i){
+      case 0:
+      cout << "number: " << i << endl;
+      listDir("../../../TEST_IMAGES/kth-tips/textons/",txtons);
+      count--;
+      break;
 
+      case 1:
+      cout << "number: " << i << endl;
+      listDir(a,bread);
+      break;
 
-// // values of 1st half of data set is set to 10
-// // change the values of 2nd half of the data set; i.e. set it to 20
+      case 2:
+      cout << "number: " << i << endl;
+      listDir(a,cotton);
+      break;
 
-int cnt = -1; // To make sure img vals are stored from 0
- for(int i =0;i<in.rows;i++)
- {
-  for(int j=0;j<in.cols;j++)
-  {
-      points.at<float>(cnt,1) = in.at<Vec3b>(i,j)[0];
-//   points.at<float>(i,j)=rand()%100;
-    cnt++;
+      case 3:
+      cout << "number: " << i << endl;
+      listDir(a,cork);
+      break;
+    }
+    count ++;
   }
- }
- // int cnt = -1; // To make sure img vals are stored from 0
- //  for(int i =0;i<in.rows;i++)
- //  {
- //   for(int j=0;j<in.cols;j++)
- //   {
- //       points.at<float>(cnt,1) = in.at<Vec3b>(i,j)[0];
- // //   points.at<float>(i,j)=rand()%100;
- //     cnt++;
- //   }
- //  }
+  cout << "This is the size of textons: " << txtons.size() << ", bread: " << bread.size() << ", cotton: " << cotton.size() << ", cork: " << cork.size() << endl;
 
 
-//Mat out = points.reshape(1, points.rows*points.cols);
+  Mat in = imread("../../bread.png", CV_BGR2GRAY);
+  Mat points(in.rows*in.cols, 1,CV_32F);
 
- kmeans(points, clusterCount, labels, TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0), 3, KMEANS_PP_CENTERS, centers);
-    // we can print the matrix directly.
-// cout<<"Data: \n"<<points<<endl;
- cout << "Size: " << points.size() << endl;
- cout << "This has .channels(): " << points.channels() << endl;
- cout<<"Center: \n"<<centers<<endl;
-// cout<<"Labels: \n"<<labels<<endl;
- return 0;
+  int cnt = 0;
+  for(int i =0;i<in.rows;i++){
+    for(int j=0;j<in.cols;j++){
+      points.at<float>(cnt,0) = in.at<Vec3b>(i,j)[0];
+      cnt++;
+    }
+  }
+
+  int dictSize = 100;
+  int attempts = 1;
+  int flags = KMEANS_PP_CENTERS;
+  TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 10, 0.001);
+
+
+  BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
+
+  bowTrainer.add(points);
+  bowTrainer.add(points);
+  bowTrainer.add(points);
+//  cout << "this is the size of the local Feature set: " << bowTrainer.descriptorsCount() << endl;
+  Mat dictionary = bowTrainer.cluster();
+  cout << "This is the dictionary size: " << dictionary.size() << endl;
+
+
+  // Create Models/Train Classifier
+  vector<KeyPoint> keypoints;
+  Mat response_hist;
+  Mat img;
+  string filepath;
+  map<string,Mat> classes_training_data;
+
+  Ptr<FeatureDetector> detector = FeatureDetector::create("SURF");
+  Ptr<DescriptorExtractor> discriptor = DescriptorExtractor::create("SIFT");
+  Ptr<cv::DescriptorMatcher> matcher = DescriptorMatcher::create("FlannBased");
+  BOWImgDescriptorExtractor bowDE(discriptor, matcher);
+
+  bowDE.setVocabulary(dictionary);
+
+  img = imread("../../bread.png", CV_BGR2GRAY);
+  //detector.detect(img, keypoints);
+  bowDE.compute(img, keypoints, response_hist);
+
+
+
+  return 0;
 }
+
+//  cout << "\n Usage in C++ API:\n double kmeans(const Mat& samples, int clusterCount, Mat& labels, TermCriteria termcrit, int attempts, int flags, Mat* centers) \n\n\n" << endl;
+//
+//  int clusterCount = 2;
+//  int dimensions = 2;
+//  int sampleCount = 20*20;
+//
+//  Mat points(sampleCount,dimensions, CV_32FC1,Scalar(10));
+//  Mat in =imread("../../10pixsq.png", CV_BGR2GRAY);
+//  Mat labels;
+//  Mat centers(clusterCount, 1, points.type());
+//
+//
+// // // values of 1st half of data set is set to 10
+// // // change the values of 2nd half of the data set; i.e. set it to 20
+//
+// int cnt = 0; // To make sure img vals are stored from 0
+//  for(int i =0;i<in.rows;i++)
+//  {
+//   for(int j=0;j<in.cols;j++)
+//   {
+//       points.at<float>(cnt,0) = in.at<Vec3b>(i,j)[0];
+// //      points.at<float>(cnt,1) = in.at<Vec3b>(i,j)[0];
+//       points.at<float>(cnt,1)=rand()%100;
+//     cnt++;
+//   }
+//  }
+//
+//
+// //Mat out = points.reshape(1, points.rows*points.cols);
+//
+// kmeans(points, clusterCount, labels, TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0), 3, KMEANS_PP_CENTERS, centers);
+//     // we can print the matrix directly.
+//  cout<<"Data: \n"<<points<<endl;
+//  cout << "Size: " << points.size() << endl;
+//  cout << "This has .channels(): " << points.channels() << endl;
+// cout<<"Center: \n"<<centers<<endl;
+// //cout<<"Labels: \n"<<labels<<endl;
+//  return 0;
+// }
 
 /// ---------------------------------------------------------------------------------------------------- ///
 
