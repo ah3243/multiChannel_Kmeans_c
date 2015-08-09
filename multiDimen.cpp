@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 
-#define DICTIONARY_BUILD 1
+#define DICTIONARY_BUILD 0
 
 using std::vector;
 using namespace cv;
@@ -148,7 +148,7 @@ Mat reshapeCol(Mat in){
 
 
 int main( int /*argc*/, char** /*argv*/ ){
-  mV modelImg(3, m(10, Mat(200,200,CV_32FC1)));
+  mV modelImg(3, m(0, Mat(200,200,CV_32FC1)));
   vector<string> classes = {"bread", "cotton", "cork"};
 
   importImgs(modelImg, classes);
@@ -195,7 +195,7 @@ int main( int /*argc*/, char** /*argv*/ ){
   ///////////////////////////////////////////////////////////
 
   // Load TextonDictionary
-  vector<Mat> dictionary;
+    Mat dictionary;
     FileStorage fs("dictionary.xml",FileStorage::READ);
     fs["vocabulary"] >> dictionary;
     fs.release();
@@ -222,11 +222,12 @@ int main( int /*argc*/, char** /*argv*/ ){
       Mat bob = imread("../../bread.png", CV_BGR2GRAY);;
       detector->detect(bob, keypoints);
 
-      cout << "blah.. i: " << i << " j: " << j << endl;
-      extractor.compute(bob, keypoints, response_hist);
-      // bowDE.compute(bob, keypoints, response_hist);
+      cout << "loop.. i: " << i << " j: " << j << endl;
+      cout << "This is the size: " << modelImg[i][j].size() << endl;
+      bowDE.compute(modelImg[i][j], keypoints, response_hist);
 
       if(!classes_training_data.count(classes[i])){
+        cout << "Creating new class.." << endl;
         classes_training_data[classes[i]].create(0,response_hist.cols,response_hist.type());
         class_names.push_back(classes[i]);
       }
@@ -235,39 +236,41 @@ int main( int /*argc*/, char** /*argv*/ ){
   }
 
 
+
   //////////////////////////////////////////
   // Create 1 against all SVM classifiers //
   //////////////////////////////////////////
 
-  // for(int i=0;i<classes.size();i++){
-  //   string class_ = classes[i];
-  //   cout << "Currently training class: " << class_ << endl;
-  //
-  //   Mat samples(0, response_Hist.cols, response_Hist.type());
-  //   Mat labels(0, 1, CV_32FC1);
-  //
-  //   // Copy class samples and labels
-  //   cout << "adding " << classes_training_data[class_].rows << " positive" << endl;
-  //   samples.push_back(classes_training_data[class_]);
-  //   Mat class_label = Mat::ones(classes_training_data[class_].rows, 1, CV_32FC1);
-  //   labels.push_back(class_label);
-  //
-  //   for (map<string,Mat>::iterator it1 = classes_training_data.begin(); it1 != classes_training_data.end(); ++it1) {
-  //         string not_class_ = (*it1).first;
-  //         if(not_class_.compare(class_)==0) continue; //skip class itself
-  //         samples.push_back(classes_training_data[not_class_]);
-  //         class_label = Mat::zeros(classes_training_data[not_class_].rows, 1, CV_32FC1);
-  //         labels.push_back(class_label);
-  //      }
-  //
-  //      cout << "Train.." << endl;
-  //      Mat samples_32f; samples.convertTo(samples_32f, CV_32F);
-  //      if(samples.rows == 0) continue; //phantom class?!
-  //      CvSVM classifier;
-  //      classifier.train(samples_32f,labels);
-  //
-  //      // Save the classifier to file or cache
-  // }
+  for(int i=0;i<classes.size();i++){
+    string class_ = classes[i];
+    cout << "Currently training class: " << class_ << endl;
+
+    Mat samples(0, response_Hist.cols, response_Hist.type());
+    Mat labels(0, 1, CV_32FC1);
+
+    // Copy class samples and labels
+    cout << "adding " << classes_training_data[class_].rows << " positive" << endl;
+    samples.push_back(classes_training_data[class_]);
+    Mat class_label = Mat::ones(classes_training_data[class_].rows, 1, CV_32FC1);
+    labels.push_back(class_label);
+
+    for (map<string,Mat>::iterator it1 = classes_training_data.begin(); it1 != classes_training_data.end(); ++it1) {
+          string not_class_ = (*it1).first;
+          if(not_class_.compare(class_)==0) continue; //skip class itself
+          samples.push_back(classes_training_data[not_class_]);
+          class_label = Mat::zeros(classes_training_data[not_class_].rows, 1, CV_32FC1);
+          labels.push_back(class_label);
+       }
+
+       cout << "Train.." << endl;
+       Mat samples_32f; samples.convertTo(samples_32f, CV_32F);
+       if(samples.rows == 0) continue; //phantom class?!
+       CvSVM classifier;
+       classifier.train(samples_32f,labels);
+
+       // Save the classifier to file or cache
+  }
+  
   #endif
 
   return 0;
