@@ -147,7 +147,7 @@ Mat reshapeCol(Mat in){
 }
 
 
-int main( int /*argc*/, char** /*argv*/ ){
+int main( int argc, char** argv ){
   mV modelImg(3, m(0, Mat(200,200,CV_32FC1)));
   vector<string> classes = {"bread", "cotton", "cork"};
 
@@ -222,8 +222,6 @@ int main( int /*argc*/, char** /*argv*/ ){
       Mat bob = imread("../../bread.png", CV_BGR2GRAY);;
       detector->detect(bob, keypoints);
 
-      cout << "loop.. i: " << i << " j: " << j << endl;
-      cout << "This is the size: " << modelImg[i][j].size() << endl;
       bowDE.compute(modelImg[i][j], keypoints, response_hist);
 
       if(!classes_training_data.count(classes[i])){
@@ -255,6 +253,7 @@ int main( int /*argc*/, char** /*argv*/ ){
     cout << "adding " << classes_training_data[class_].rows << " positive" << endl;
     samples.push_back(classes_training_data[class_]);
 
+    // Set the label to 1 for positive match
     Mat class_label = Mat::ones(classes_training_data[class_].rows, 1, CV_32FC1);
     labels.push_back(class_label);
 
@@ -264,6 +263,8 @@ int main( int /*argc*/, char** /*argv*/ ){
         continue; //skip if not_class == currentclass
 
       samples.push_back(classes_training_data[not_class_]);
+
+      // Set the label as zero for negative match
       class_label = Mat::zeros(classes_training_data[not_class_].rows, 1, CV_32FC1);
       labels.push_back(class_label);
     }
@@ -277,6 +278,45 @@ int main( int /*argc*/, char** /*argv*/ ){
     // Train and store classifiers in Map
     classifiers[class_].train(samples_32f, labels);
   }
+
+
+
+    //////////////////////////////
+    // Test Against Novel Image //
+    //////////////////////////////
+
+  map<string, map<string, int> > confusionMatrix;
+
+ Mat novelImage1 = imread(argv[1], CV_BGR2GRAY);
+
+  if(!novelImage1.data){
+    cout << "novelImage unable to be loaded.\nExiting." << endl;
+    exit(0);
+  }
+  namedWindow("novelImg", CV_WINDOW_AUTOSIZE);
+  imshow("novelImg", novelImage1);
+
+  // for(int i=0;i<modelImg.size();i++){
+  //   for(int j=0;j<modelImg[i].size();j++){
+      Mat responseNovel_hist;
+      detector->detect(novelImage1, keypoints);
+      bowDE.compute(novelImage1, keypoints, responseNovel_hist);
+
+      float minf = FLT_MAX;
+      string min_class;
+      for(map<string,CvSVM>::iterator it = classifiers.begin(); it != classifiers.end(); ++it ){
+        float res = (*it).second.predict(responseNovel_hist, true);
+        if(res<minf){
+          minf = res;
+          min_class = (*it).first;
+        }
+      }
+      cout << "This is the actual classes: " << endl;
+      cout << "This is the best match: " << min_class << endl;
+      // Add 1 to the class with the closest match
+//      confusionMatrix[min_class][classes[i]]++;
+  //   }
+  // }
 
   #endif
 
