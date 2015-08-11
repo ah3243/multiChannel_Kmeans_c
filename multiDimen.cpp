@@ -63,6 +63,66 @@ void listDir(const char *inPath, vector<Mat>& dirFiles){
   cout << "finished Reading Successfully.." << endl;
 }
 
+void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
+  DIR *pdir = NULL;
+  cout << "inpath : " << inPath << endl;
+  pdir = opendir(inPath);
+  // Check that dir was initialised correctly
+  if(pdir == NULL){
+    cout << "ERROR! novelImgs: unable to open directory, exiting." << endl;
+    exit(1);
+  }
+  struct dirent *pent = NULL;
+
+  // Continue as long as there are still values in the dir list
+  while (pent = readdir(pdir)){
+    if(pdir==NULL){
+      cout << "ERROR! dir was not initialised correctly, exiting." << endl;
+      exit(3);
+    }
+
+    // Extract and save img filename without extension
+    stringstream ss;
+    ss << pent->d_name;
+    string fileNme =  ss.str();
+
+    // If not file then continue iteration
+    string dot[] = {".", ".."};
+    if(fileNme.compare(dot[0]) == 0 || fileNme.compare(dot[1]) == 0){
+      continue;
+    }
+    string cls;
+    int lastIdx = fileNme.find_last_of(".");
+    int classmk = fileNme.find_last_of("_");
+    if(classmk>0){
+      cls = fileNme.substr(0, classmk);
+    } else{
+      cls = fileNme.substr(0, lastIdx);
+    }
+    cout << "This is the cls: " << cls << " and the classmk: " << classmk << endl;
+
+    ss.str(""); // Clear stringstream
+
+    // Read in image
+    ss << inPath;
+    ss << pent->d_name;
+    string a = ss.str();
+    Mat tmp = imread(a, CV_BGR2GRAY);
+
+    cout << "This is the rows: " << tmp.rows << " and the cols: " << tmp.cols << endl;
+    if(tmp.data){
+      // if(!novelImgs.count(cls))
+      //   novelImgs[cls][0].create(tmp.rows, tmp.cols, tmp.type()); // if key not yet created initialise
+      novelImgs[cls].push_back(tmp);
+      cout << "pushing back: " << cls << endl;
+    }else{
+      cout << "unable to read image.." << endl;
+    }
+  }
+  closedir(pdir);
+  cout << "finished Reading Successfully.." << endl;
+}
+
 void importImgs(mV &modelImg, vector<string> classes){
   string basePath = "../../../TEST_IMAGES/kth-tips/";
 
@@ -287,20 +347,30 @@ int main( int argc, char** argv ){
 
   map<string, map<string, int> > confusionMatrix;
 
- Mat novelImage1 = imread(argv[1], CV_BGR2GRAY);
+ // Mat novelImage1 = imread(argv[1], CV_BGR2GRAY);
+ //
+ //  if(!novelImage1.data){
+ //    cout << "novelImage unable to be loaded.\nExiting." << endl;
+ //    exit(0);
+ //  }
+  map<string, vector<Mat> > novelImgs;
 
-  if(!novelImage1.data){
-    cout << "novelImage unable to be loaded.\nExiting." << endl;
-    exit(0);
-  }
-  namedWindow("novelImg", CV_WINDOW_AUTOSIZE);
-  imshow("novelImg", novelImage1);
+  getNovelImgs("../../../TEST_IMAGES/kth-tips/NovelTest/", novelImgs);
 
+  double y,n;
   // for(int i=0;i<modelImg.size();i++){
   //   for(int j=0;j<modelImg[i].size();j++){
+  for(map<string, vector<Mat> >::iterator it = novelImgs.begin(); it != novelImgs.end(); ++it){
+   cout << "\nThe class is: " << it->first << endl;
+    for(int i=0;i<it->second.size();i++){
+      if(it->second[i].rows == 0){
+        cout << "ERROR: novelImage map contains blank Mat. Exiting." << endl;
+        exit(1);
+      };
+
       Mat responseNovel_hist;
-      detector->detect(novelImage1, keypoints);
-      bowDE.compute(novelImage1, keypoints, responseNovel_hist);
+      detector->detect(it->second[i], keypoints);
+      bowDE.compute(it->second[i], keypoints, responseNovel_hist);
 
       float minf = FLT_MAX;
       string min_class;
@@ -311,10 +381,20 @@ int main( int argc, char** argv ){
           min_class = (*it).first;
         }
       }
-      cout << "This is the actual classes: " << endl;
-      cout << "This is the best match: " << min_class << endl;
-      // Add 1 to the class with the closest match
-//      confusionMatrix[min_class][classes[i]]++;
+      if(min_class == it->first){
+        cout << "YES, Predicted: " << min_class << " Actual: " << it->first << endl;
+        y++;
+      }else {
+        cout << "NO, Predicted: " << min_class << " Actual: " << it->first << endl;
+        n++;
+      }
+    }
+  }
+
+  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (n/y)*100 << "\n\n";
+
+// //      Add 1 to the class with the closest match
+//     confusionMatrix[min_class][classes[i]]++;
   //   }
   // }
 
