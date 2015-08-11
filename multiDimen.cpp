@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 
-#define DICTIONARY_BUILD 1
+#define DICTIONARY_BUILD 0
 
 using std::vector;
 using namespace cv;
@@ -89,7 +89,7 @@ void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
   cout << "finished Reading Successfully.." << endl;
 }
 
-void listDir(const char *inPath, vector<m >& dirFiles){
+void listDir(const char *inPath, vector<m >& dirFiles, vector<Mat>& textDict, int flag){
   DIR *pdir = NULL;
   cout << "inpath : " << inPath << endl;
   pdir = opendir(inPath);
@@ -114,7 +114,14 @@ void listDir(const char *inPath, vector<m >& dirFiles){
     string a = ss.str();
     Mat tmp = imread(a, CV_BGR2GRAY);
     if(tmp.data){
-      local.push_back(tmp);
+      switch(flag){
+        case 1:
+          local.push_back(tmp);
+          break;
+        case 2:
+          textDict.push_back(tmp);
+          break;
+      }
     }else{
       cout << "unable to read image.." << endl;
     }
@@ -139,7 +146,10 @@ void importImgs(mV &modelImg, vector<string> classes){
     cout << "this is the path.. " << a << endl;
 
     cout << "number: " << i << endl;
-    listDir(a, modelImg);
+    // -----CHANGE!-----! //
+    vector<Mat> plcHolder;
+    // -----CHANGE!-----! //
+    listDir(a, modelImg, plcHolder, 1);
 
     count ++;
   }
@@ -217,7 +227,10 @@ int main( int argc, char** argv ){
 
   vector<Mat> txtons;
 
-  listDir("../../../TEST_IMAGES/kth-tips/textons/",txtons);
+  // -----CHANGE!-----! //
+  vector<m> plcHolder;
+  // -----CHANGE!-----! //
+  listDir("../../../TEST_IMAGES/kth-tips/textons/",plcHolder ,txtons, 2);
   SiftDescriptorExtractor detector;
 
   for(int i=0;i<txtons.size();i++){
@@ -227,7 +240,6 @@ int main( int argc, char** argv ){
     detector.compute(txtons[i], keypointsTxt, descriptorsTxt);
     if(!descriptorsTxt.empty())
       bowTrainer.add(descriptorsTxt);
-    cout << "loop number: " << i << endl;
   }
   cout << "bowTrainer.discriptorCount: " << bowTrainer.descripotorsCount() << endl;
 
