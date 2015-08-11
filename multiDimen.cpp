@@ -31,22 +31,30 @@ using namespace std;
 typedef vector<Mat> m;
 typedef vector<m> mV;
 
+void errorFunc(string input){
+  cerr << "\n\nERROR!: " << input << "\nExiting.\n\n";
+  exit(-1);
+}
+
+void warnFunc(string input){
+  cerr << "\nWARNING!: " << input << endl;
+};
+
+
 void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
   DIR *pdir = NULL;
   cout << "inpath : " << inPath << endl;
   pdir = opendir(inPath);
   // Check that dir was initialised correctly
   if(pdir == NULL){
-    cout << "ERROR! novelImgs: unable to open directory, exiting." << endl;
-    exit(1);
+    errorFunc("Unable to open directory.");
   }
   struct dirent *pent = NULL;
 
   // Continue as long as there are still values in the dir list
   while (pent = readdir(pdir)){
     if(pdir==NULL){
-      cout << "ERROR! dir was not initialised correctly, exiting." << endl;
-      exit(3);
+      errorFunc("Dir was not initialised correctly.");
     }
 
     // Extract and save img filename without extension
@@ -82,7 +90,7 @@ void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
       novelImgs[cls].push_back(tmp);
       cout << "pushing back: " << cls << endl;
     }else{
-      cout << "unable to read image.." << endl;
+      warnFunc("Unable to read Image.");
     }
   }
   closedir(pdir);
@@ -95,8 +103,7 @@ void listDir(const char *inPath, vector<m >& dirFiles, vector<Mat>& textDict, in
   pdir = opendir(inPath);
   // Check that dir was initialised correctly
   if(pdir == NULL){
-    cout << "ERROR! unable to open directory, exiting." << endl;
-    exit(1);
+    errorFunc("Unable to open directory.");
   }
   struct dirent *pent = NULL;
 
@@ -105,8 +112,7 @@ void listDir(const char *inPath, vector<m >& dirFiles, vector<Mat>& textDict, in
   m local;
   while (pent = readdir(pdir)){
     if(pdir==NULL){
-      cout << "ERROR! dir was not initialised correctly, exiting." << endl;
-      exit(3);
+      errorFunc("Dir was not initialised correctly.");
     }
     stringstream ss;
     ss << inPath;
@@ -123,7 +129,7 @@ void listDir(const char *inPath, vector<m >& dirFiles, vector<Mat>& textDict, in
           break;
       }
     }else{
-      cout << "unable to read image.." << endl;
+      warnFunc("Unable to read image.");
     }
   }
   dirFiles.push_back(local);
@@ -204,7 +210,6 @@ Mat reshapeCol(Mat in){
   }
   return points;
 }
-
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Loading Model Images...... \n" ;
@@ -371,8 +376,7 @@ int main( int argc, char** argv ){
    cout << "\nThe class is: " << it->first << endl;
     for(int i=0;i<it->second.size();i++){
       if(it->second[i].rows == 0){
-        cout << "ERROR: novelImage map contains blank Mat. Exiting." << endl;
-        exit(1);
+        errorFunc("NovelImage map contains blank Mat.");
       };
 
       Mat responseNovel_hist;
