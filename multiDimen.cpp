@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 
-#define DICTIONARY_BUILD 0
+#define DICTIONARY_BUILD 1
 
 using std::vector;
 using namespace cv;
@@ -30,38 +30,6 @@ using namespace std;
 
 typedef vector<Mat> m;
 typedef vector<m> mV;
-
-void listDir(const char *inPath, vector<Mat>& dirFiles){
-  DIR *pdir = NULL;
-  cout << "inpath : " << inPath << endl;
-  pdir = opendir(inPath);
-  // Check that dir was initialised correctly
-  if(pdir == NULL){
-    cout << "ERROR! unable to open directory, exiting." << endl;
-    exit(1);
-  }
-  struct dirent *pent = NULL;
-
-  // Continue as long as there are still values in the dir list
-  while (pent = readdir(pdir)){
-    if(pdir==NULL){
-      cout << "ERROR! dir was not initialised correctly, exiting." << endl;
-      exit(3);
-    }
-    stringstream ss;
-    ss << inPath;
-    ss << pent->d_name;
-    string a = ss.str();
-    Mat tmp = imread(a, CV_BGR2GRAY);
-    if(tmp.data){
-      dirFiles.push_back(tmp);
-    }else{
-      cout << "unable to read image.." << endl;
-    }
-  }
-  closedir(pdir);
-  cout << "finished Reading Successfully.." << endl;
-}
 
 void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
   DIR *pdir = NULL;
@@ -99,7 +67,6 @@ void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
     } else{
       cls = fileNme.substr(0, lastIdx);
     }
-    cout << "This is the cls: " << cls << " and the classmk: " << classmk << endl;
 
     ss.str(""); // Clear stringstream
 
@@ -109,7 +76,6 @@ void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
     string a = ss.str();
     Mat tmp = imread(a, CV_BGR2GRAY);
 
-    cout << "This is the rows: " << tmp.rows << " and the cols: " << tmp.cols << endl;
     if(tmp.data){
       // if(!novelImgs.count(cls))
       //   novelImgs[cls][0].create(tmp.rows, tmp.cols, tmp.type()); // if key not yet created initialise
@@ -122,6 +88,42 @@ void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
   closedir(pdir);
   cout << "finished Reading Successfully.." << endl;
 }
+
+void listDir(const char *inPath, vector<m >& dirFiles){
+  DIR *pdir = NULL;
+  cout << "inpath : " << inPath << endl;
+  pdir = opendir(inPath);
+  // Check that dir was initialised correctly
+  if(pdir == NULL){
+    cout << "ERROR! unable to open directory, exiting." << endl;
+    exit(1);
+  }
+  struct dirent *pent = NULL;
+
+  // Continue as long as there are still values in the dir list
+
+  m local;
+  while (pent = readdir(pdir)){
+    if(pdir==NULL){
+      cout << "ERROR! dir was not initialised correctly, exiting." << endl;
+      exit(3);
+    }
+    stringstream ss;
+    ss << inPath;
+    ss << pent->d_name;
+    string a = ss.str();
+    Mat tmp = imread(a, CV_BGR2GRAY);
+    if(tmp.data){
+      local.push_back(tmp);
+    }else{
+      cout << "unable to read image.." << endl;
+    }
+  }
+  dirFiles.push_back(local);
+  closedir(pdir);
+  cout << "finished Reading Successfully.." << endl;
+}
+
 
 void importImgs(mV &modelImg, vector<string> classes){
   string basePath = "../../../TEST_IMAGES/kth-tips/";
@@ -136,22 +138,9 @@ void importImgs(mV &modelImg, vector<string> classes){
     const char* a = b.c_str();
     cout << "this is the path.. " << a << endl;
 
-    switch(i){
-      case 0:
-      cout << "number: " << i << endl;
-      listDir(a, modelImg[0]);
-      break;
+    cout << "number: " << i << endl;
+    listDir(a, modelImg);
 
-      case 1:
-      cout << "number: " << i << endl;
-      listDir(a, modelImg[1]);
-      break;
-
-      case 2:
-      cout << "number: " << i << endl;
-      listDir(a, modelImg[2]);
-      break;
-    }
     count ++;
   }
   cout << "This is the size of bread: " << modelImg[0].size() << ", cotton: " << modelImg[1].size() << ", cork: " << modelImg[2].size() << endl;
@@ -208,15 +197,17 @@ Mat reshapeCol(Mat in){
 
 
 int main( int argc, char** argv ){
-  mV modelImg(3, m(0, Mat(200,200,CV_32FC1)));
-  vector<string> classes = {"bread", "cotton", "cork"};
+  cout << "\n\n.......Loading Model Images...... \n" ;
 
+  mV modelImg;
+  vector<string> classes = {"bread", "cotton", "cork", "wood"};
   importImgs(modelImg, classes);
 
   //////////////////////////////
   // Create Texton vocabulary //
   //////////////////////////////
   #if DICTIONARY_BUILD == 1
+  cout << "\n\n.......Generating Texton Dictionary...... \n" ;
   int dictSize = 28;
   int attempts = 1;
   int flags = KMEANS_PP_CENTERS;
@@ -275,7 +266,7 @@ int main( int argc, char** argv ){
   BOWImgDescriptorExtractor bowDE(extractor, matcher);
   bowDE.setVocabulary(dictionary);
 
-  cout << "\n\n\nCreate Models: \n" ;
+  cout << "\n\n.......Generating Models...... \n" ;
 
   for(int i = 0; i < modelImg.size(); i++){
     for(int j = 0; j < modelImg[i].size(); j++){
@@ -298,6 +289,8 @@ int main( int argc, char** argv ){
   //////////////////////////////////////////
   // Create 1 against all SVM classifiers //
   //////////////////////////////////////////
+
+  cout << "\n\n.......Generating Classifiers...... \n" ;
 
   map<string,CvSVM> classifiers;
 
@@ -345,6 +338,8 @@ int main( int argc, char** argv ){
     // Test Against Novel Image //
     //////////////////////////////
 
+  cout << "\n\n.......Testing Against Novel Images...... \n" ;
+
   map<string, map<string, int> > confusionMatrix;
 
  // Mat novelImage1 = imread(argv[1], CV_BGR2GRAY);
@@ -357,7 +352,7 @@ int main( int argc, char** argv ){
 
   getNovelImgs("../../../TEST_IMAGES/kth-tips/NovelTest/", novelImgs);
 
-  double y,n;
+  double y,n, total;
   // for(int i=0;i<modelImg.size();i++){
   //   for(int j=0;j<modelImg[i].size();j++){
   for(map<string, vector<Mat> >::iterator it = novelImgs.begin(); it != novelImgs.end(); ++it){
@@ -388,10 +383,11 @@ int main( int argc, char** argv ){
         cout << "NO, Predicted: " << min_class << " Actual: " << it->first << endl;
         n++;
       }
+      total++;
     }
   }
 
-  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (n/y)*100 << "\n\n";
+  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
 
 // //      Add 1 to the class with the closest match
 //     confusionMatrix[min_class][classes[i]]++;
