@@ -116,7 +116,7 @@ void listDir(const char *inPath, vector<m >& dirFiles, vector<Mat>& textDict, in
       errorFunc("Dir was not initialised correctly.");
     }
     stringstream ss;
-    ss << inPath;
+    ss << inPath << "/";
     ss << pent->d_name;
     string a = ss.str();
     Mat tmp = imread(a, CV_BGR2GRAY);
@@ -147,7 +147,6 @@ void importImgs(mV &modelImg, vector<string> classes){
     stringstream ss;
     ss << basePath;
     ss << classes[count];
-    ss << "/train/";
     string b = ss.str();
     const char* a = b.c_str();
     cout << "this is the path.. " << a << endl;
@@ -160,8 +159,31 @@ void importImgs(mV &modelImg, vector<string> classes){
 
     count ++;
   }
-  cout << "This is the size of bread: " << modelImg[0].size() << ", cotton: " << modelImg[1].size() << ", cork: " << modelImg[2].size() << endl;
+  cout << "This is the size of bread: " << modelImg[0].size() << ", cotton: " << modelImg[1].size() << ", cork: " << modelImg[2].size() << ", wood: " << modelImg[3].size() << ", AFoil: " << modelImg[4].size() << endl;
 }
+
+// void loadClassImgs(path p, map<string, vector<Mat> > &classImgs){
+//     if(!exists(p) || !is_directory(p)){
+//       cout << "\nClass loading path was not valid.\nExiting.\n";
+//       exit(-1);
+//     }
+//     directory_iterator itr_end;
+//     for(directory_iterator itr(p); itr != itr_end; ++itr){
+//       string nme = itr -> path().string();
+//       Mat img = imread(nme, CV_BGR2GRAY);
+//       extractClsNme(nme);
+//       cout << "Pushing back: " << nme << " img.size(): " << img.size() << endl;
+//       classImgs[nme].push_back(img);
+//     }
+//     cout << "This is the total for each class: " << endl;
+//     for(auto const & ent1 : classImgs){
+//       cout << "Class: " << ent1.first;
+//       cout << " Number: " << ent1.second.size();
+//       cout << "\n";
+//     }
+//     cout << "\n";
+// }
+
 
 // int main(int argc, char** argv){
   //   if(argc<3){
@@ -219,6 +241,10 @@ int main( int argc, char** argv ){
 
   mV modelImg;
   vector<string> classes = {"bread", "cotton", "cork", "wood", "alumniniumFoil"};
+
+//  map<string, vector<Mat> > classImgs;
+//  loadClassImgs(, classImgs);
+
   importImgs(modelImg, classes);
 
   //////////////////////////////
