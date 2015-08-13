@@ -23,6 +23,7 @@
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 
 #define DICTIONARY_BUILD 0
+#define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n", msg, __LINE__);
 
 using std::vector;
 using namespace cv;
@@ -214,8 +215,10 @@ Mat reshapeCol(Mat in){
 int main( int argc, char** argv ){
   cout << "\n\n.......Loading Model Images...... \n" ;
 
+  //ERR("blah\n");
+
   mV modelImg;
-  vector<string> classes = {"bread", "cotton", "cork", "wood"};
+  vector<string> classes = {"bread", "cotton", "cork", "wood", "alumniniumFoil"};
   importImgs(modelImg, classes);
 
   //////////////////////////////
@@ -266,6 +269,10 @@ int main( int argc, char** argv ){
     Mat dictionary;
     FileStorage fs("dictionary.xml",FileStorage::READ);
     fs["vocabulary"] >> dictionary;
+    if(!fs.isOpened()){
+      ERR("Unable to open Texton Dictionary.");
+      exit(-1);
+    }
     fs.release();
 
   vector<KeyPoint> keypoints;
