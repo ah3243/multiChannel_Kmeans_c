@@ -8,7 +8,7 @@ if(Boost_FOUND)
 
   INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
-  ADD_EXECUTABLE(${PROJECT_NAME} multiDimen.cpp ./filterbank.h ./filterbank.cpp)
+  ADD_EXECUTABLE(${PROJECT_NAME} multiDimen.cpp ./filterbank.h ./filterbank.cpp ./imgCollection.cpp ./imgCollection.h)
 
   TARGET_LINK_LIBRARIES(${PROJECT_NAME}
     ${OpenCV_LIBS}

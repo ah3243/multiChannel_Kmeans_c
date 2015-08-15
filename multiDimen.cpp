@@ -18,13 +18,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
+#include <boost/filesystem.hpp>
 
 #include "filterbank.h" // Filterbank Handling Functions
+#include "imgCollection.h" // Img Handling Functions
 
 #define DICTIONARY_BUILD 1
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n", msg, __LINE__);
 
+
 using std::vector;
+using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
@@ -80,7 +84,6 @@ void warnFunc(string input){
 //   //  imshow("matches", img_matches);
 //    waitKey(0);
 //   }
-
 
 
 void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
@@ -203,28 +206,6 @@ void importImgs(mV &modelImg, vector<string> classes){
   cout << "This is the size of bread: " << modelImg[0].size() << ", cotton: " << modelImg[1].size() << ", cork: " << modelImg[2].size() << ", wood: " << modelImg[3].size() << ", AFoil: " << modelImg[4].size() << endl;
 }
 
-// void loadClassImgs(path p, map<string, vector<Mat> > &classImgs){
-//     if(!exists(p) || !is_directory(p)){
-//       cout << "\nClass loading path was not valid.\nExiting.\n";
-//       exit(-1);
-//     }
-//     directory_iterator itr_end;
-//     for(directory_iterator itr(p); itr != itr_end; ++itr){
-//       string nme = itr -> path().string();
-//       Mat img = imread(nme, CV_BGR2GRAY);
-//       extractClsNme(nme);
-//       cout << "Pushing back: " << nme << " img.size(): " << img.size() << endl;
-//       classImgs[nme].push_back(img);
-//     }
-//     cout << "This is the total for each class: " << endl;
-//     for(auto const & ent1 : classImgs){
-//       cout << "Class: " << ent1.first;
-//       cout << " Number: " << ent1.second.size();
-//       cout << "\n";
-//     }
-//     cout << "\n";
-// }
-
 Mat reshapeCol(Mat in){
   Mat points(in.rows*in.cols, 1,CV_32F);
   int cnt = 0;
@@ -256,13 +237,10 @@ void segmentImg(vector<Mat>& out, Mat in){
 int main( int argc, char** argv ){
   cout << "\n\n.......Loading Model Images...... \n" ;
 
-  mV modelImg;
-  vector<string> classes = {"bread", "cotton", "cork", "wood", "alumniniumFoil"};
+ map<string, vector<Mat> > classImgs;
+ path p = "../../../TEST_IMAGES/kth-tips/classes";
+ loadClassImgs(p, classImgs);
 
-//  map<string, vector<Mat> > classImgs;
-//  loadClassImgs(, classImgs);
-
-  importImgs(modelImg, classes);
 
   //////////////////////////////
   // Create Texton vocabulary //
@@ -276,21 +254,15 @@ int main( int argc, char** argv ){
   BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
 
 
-  vector<Mat> txtons;
-
-  // -----CHANGE!-----! //
-  vector<m> plcHolder;
-  // -----CHANGE!-----! //
-
-  listDir("../../../TEST_IMAGES/kth-tips/textons/",plcHolder ,txtons, 2);
   Mat dictionary;
 
-  for(int i=0;i<modelImg.size();i++){
-    for(int j=0;j<modelImg[i].size();j++){
-      Mat hold;
+  for(auto const ent1 : classImgs){
+    for(int j=0;j<ent1.second.size();j++){
+      Mat in, hold;
       // Send img to be filtered, and responses aggregated with addWeighted
-      if(!modelImg[i][j].empty())
-        filterHandle(modelImg[i][j], hold);
+      in = ent1.second[j];
+     if(!in.empty())
+        filterHandle(in, hold);
 
       // Segment the 200x200pixel image into 400x1 Mats(20x20)
       vector<Mat> test;
@@ -309,12 +281,12 @@ int main( int argc, char** argv ){
     bowTrainer.clear();
   }
 
-  // Save to file
+  //Save to file
   cout << "Saving Dictionary.." << endl;
   FileStorage fs("dictionary.xml",FileStorage::WRITE);
   fs << "vocabulary" << dictionary;
   fs.release();
-
+  return 0;
   #else
   ///////////////////////////////////////////////////////////
   // Get histogram responses using vocabulary from Classes //
@@ -330,147 +302,101 @@ int main( int argc, char** argv ){
   }
   fs.release();
 
-  vector<KeyPoint> keypoints;
-  Mat response_hist;
-  vector<string> class_names;
-  Mat img;
-  string filepath;
-  map<string,Mat> classes_training_data;
+  int clsDictSize = 10;
+  int clsAttempts = 5;
+  int clsFlags = KMEANS_PP_CENTERS;
+  TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+  BOWKMeansTrainer classTrainer(clsDictSize, clsTc, clsAttempts, clsFlags);
 
-
-  Ptr<FeatureDetector> detector(new SiftFeatureDetector());
-  Ptr<DescriptorMatcher> matcher(new FlannBasedMatcher);
-  Ptr<DescriptorExtractor> extractor(new SiftDescriptorExtractor);
-
-  BOWImgDescriptorExtractor bowDE(extractor, matcher);
-  bowDE.setVocabulary(dictionary);
 
   cout << "\n\n.......Generating Models...... \n" ;
 
-  for(int i = 0; i < modelImg.size(); i++){
-    for(int j = 0; j < modelImg[i].size(); j++){
-      Mat bob = imread("../../bread.png", CV_BGR2GRAY);;
-      detector->detect(bob, keypoints);
-
-      bowDE.compute(modelImg[i][j], keypoints, response_hist);
-
-      if(!classes_training_data.count(classes[i])){
-        cout << "Creating new class.." << endl;
-        classes_training_data[classes[i]].create(0,response_hist.cols,response_hist.type());
-        class_names.push_back(classes[i]);
-      }
-      classes_training_data[classes[i]].push_back(response_hist);
-    }
-  }
-
-
-
-  //////////////////////////////////////////
-  // Create 1 against all SVM classifiers //
-  //////////////////////////////////////////
-
-  cout << "\n\n.......Generating Classifiers...... \n" ;
-
-  map<string,CvSVM> classifiers;
-
-  // Iterate through class models
-  for(int i=0;i<classes.size();i++){
-    string class_ = classes[i];
-    cout << "Currently training class: " << class_ << endl;
-
-    Mat samples(0, response_hist.cols, response_hist.type());
-    Mat labels(0, 1, CV_32FC1);
-
-    // Copy class samples and labels
-    cout << "adding " << classes_training_data[class_].rows << " positive" << endl;
-    samples.push_back(classes_training_data[class_]);
-
-    // Set the label to 1 for positive match
-    Mat class_label = Mat::ones(classes_training_data[class_].rows, 1, CV_32FC1);
-    labels.push_back(class_label);
-
-    for(map<string,Mat>::iterator it1 = classes_training_data.begin(); it1 != classes_training_data.end(); ++it1) {
-      string not_class_ = (*it1).first;
-      if(not_class_.compare(class_)==0)
-        continue; //skip if not_class == currentclass
-
-      samples.push_back(classes_training_data[not_class_]);
-
-      // Set the label as zero for negative match
-      class_label = Mat::zeros(classes_training_data[not_class_].rows, 1, CV_32FC1);
-      labels.push_back(class_label);
-    }
-
-    cout << "Train.." << endl;
-    Mat samples_32f; samples.convertTo(samples_32f, CV_32F);
-
-    if(samples.rows == 0)
-      continue; //phantom class?!
-
-    // Train and store classifiers in Map
-    classifiers[class_].train(samples_32f, labels);
-  }
-
-
-
-    //////////////////////////////
-    // Test Against Novel Image //
-    //////////////////////////////
-
-  cout << "\n\n.......Testing Against Novel Images...... \n" ;
-
-  map<string, map<string, int> > confusionMatrix;
-
- // Mat novelImage1 = imread(argv[1], CV_BGR2GRAY);
- //
- //  if(!novelImage1.data){
- //    cout << "novelImage unable to be loaded.\nExiting." << endl;
- //    exit(0);
- //  }
-  map<string, vector<Mat> > novelImgs;
-
-  getNovelImgs("../../../TEST_IMAGES/kth-tips/NovelTest/", novelImgs);
-
-  double y,n, total;
   // for(int i=0;i<modelImg.size();i++){
   //   for(int j=0;j<modelImg[i].size();j++){
-  for(map<string, vector<Mat> >::iterator it = novelImgs.begin(); it != novelImgs.end(); ++it){
-   cout << "\nThe class is: " << it->first << endl;
-    for(int i=0;i<it->second.size();i++){
-      if(it->second[i].rows == 0){
-        errorFunc("NovelImage map contains blank Mat.");
-      };
-
-      Mat responseNovel_hist;
-      detector->detect(it->second[i], keypoints);
-      bowDE.compute(it->second[i], keypoints, responseNovel_hist);
-
-      float minf = FLT_MAX;
-      string min_class;
-      for(map<string,CvSVM>::iterator it = classifiers.begin(); it != classifiers.end(); ++it ){
-        float res = (*it).second.predict(responseNovel_hist, true);
-        if(res<minf){
-          minf = res;
-          min_class = (*it).first;
-        }
-      }
-      if(min_class == it->first){
-        cout << "YES, Predicted: " << min_class << " Actual: " << it->first << endl;
-        y++;
-      }else {
-        cout << "NO, Predicted: " << min_class << " Actual: " << it->first << endl;
-        n++;
-      }
-      total++;
-    }
-  }
-
-  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
-
-// //      Add 1 to the class with the closest match
-//     confusionMatrix[min_class][classes[i]]++;
+  //     Mat hold;
+  //     // Send img to be filtered, and responses aggregated with addWeighted
+  //     if(!modelImg[i][j].empty())
+  //       filterHandle(modelImg[i][j], hold);
+  //
+  //     // Segment the 200x200pixel image into 400x1 Mats(20x20)
+  //     vector<Mat> test;
+  //     segmentImg(test, hold);
+  //
+  //     // Push each saved Mat to bowTrainer
+  //     for(int k = 0; k < test.size(); k++){
+  //       if(!test[k].empty()){
+  //         classTrainer.add(test[k]);
+  //       }
+  //       classTrainer.cluster();
+  //     }
   //   }
+  //   cout << "This is the bowTrainer.size(): " << classTrainer.descripotorsCount() << endl;
+  //   // Generate 10 clusters per class and store in Mat
+  //   dictionary.push_back(classTrainer.cluster());
+  //   classTrainer.clear();
   // }
+
+
+
+
+//     //////////////////////////////
+//     // Test Against Novel Image //
+//     //////////////////////////////
+//
+//   cout << "\n\n.......Testing Against Novel Images...... \n" ;
+//
+//   map<string, map<string, int> > confusionMatrix;
+//
+//  // Mat novelImage1 = imread(argv[1], CV_BGR2GRAY);
+//  //
+//  //  if(!novelImage1.data){
+//  //    cout << "novelImage unable to be loaded.\nExiting." << endl;
+//  //    exit(0);
+//  //  }
+//   map<string, vector<Mat> > novelImgs;
+//
+//   getNovelImgs("../../../TEST_IMAGES/kth-tips/NovelTest/", novelImgs);
+//
+//   double y,n, total;
+//   // for(int i=0;i<modelImg.size();i++){
+//   //   for(int j=0;j<modelImg[i].size();j++){
+//   for(map<string, vector<Mat> >::iterator it = novelImgs.begin(); it != novelImgs.end(); ++it){
+//    cout << "\nThe class is: " << it->first << endl;
+//     for(int i=0;i<it->second.size();i++){
+//       if(it->second[i].rows == 0){
+//         errorFunc("NovelImage map contains blank Mat.");
+//       };
+//
+//       Mat responseNovel_hist;
+//       detector->detect(it->second[i], keypoints);
+//       bowDE.compute(it->second[i], keypoints, responseNovel_hist);
+//
+//       float minf = FLT_MAX;
+//       string min_class;
+//       for(map<string,CvSVM>::iterator it = classifiers.begin(); it != classifiers.end(); ++it ){
+//         float res = (*it).second.predict(responseNovel_hist, true);
+//         if(res<minf){
+//           minf = res;
+//           min_class = (*it).first;
+//         }
+//       }
+//       if(min_class == it->first){
+//         cout << "YES, Predicted: " << min_class << " Actual: " << it->first << endl;
+//         y++;
+//       }else {
+//         cout << "NO, Predicted: " << min_class << " Actual: " << it->first << endl;
+//         n++;
+//       }
+//       total++;
+//     }
+//   }
+//
+//   cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
+//
+// // //      Add 1 to the class with the closest match
+// //     confusionMatrix[min_class][classes[i]]++;
+//   //   }
+//   // }
 
   #endif
 
