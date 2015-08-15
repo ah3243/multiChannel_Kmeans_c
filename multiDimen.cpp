@@ -24,27 +24,12 @@
 #include "imgCollection.h" // Img Handling Functions
 
 #define DICTIONARY_BUILD 1
+
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n", msg, __LINE__);
 
-
-using std::vector;
 using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
-
-typedef vector<Mat> m;
-typedef vector<m> mV;
-
-void errorFunc(string input){
-  cerr << "\n\nERROR!: " << input << "\nExiting.\n\n";
-  exit(-1);
-}
-
-void warnFunc(string input){
-  cerr << "\nWARNING!: " << input << endl;
-};
-
-
 
 // int main(int argc, char** argv){
 //     if(argc<3){
@@ -84,127 +69,6 @@ void warnFunc(string input){
 //   //  imshow("matches", img_matches);
 //    waitKey(0);
 //   }
-
-
-void getNovelImgs(const char *inPath, map<string, vector<Mat> >& novelImgs){
-  DIR *pdir = NULL;
-  cout << "inpath : " << inPath << endl;
-  pdir = opendir(inPath);
-  // Check that dir was initialised correctly
-  if(pdir == NULL){
-    errorFunc("Unable to open directory.");
-  }
-  struct dirent *pent = NULL;
-
-  // Continue as long as there are still values in the dir list
-  while (pent = readdir(pdir)){
-    if(pdir==NULL){
-      errorFunc("Dir was not initialised correctly.");
-    }
-
-    // Extract and save img filename without extension
-    stringstream ss;
-    ss << pent->d_name;
-    string fileNme =  ss.str();
-
-    // If not file then continue iteration
-    string dot[] = {".", ".."};
-    if(fileNme.compare(dot[0]) == 0 || fileNme.compare(dot[1]) == 0){
-      continue;
-    }
-    string cls;
-    int lastIdx = fileNme.find_last_of(".");
-    int classmk = fileNme.find_last_of("_");
-    if(classmk>0){
-      cls = fileNme.substr(0, classmk);
-    } else{
-      cls = fileNme.substr(0, lastIdx);
-    }
-
-    ss.str(""); // Clear stringstream
-
-    // Read in image
-    ss << inPath;
-    ss << pent->d_name;
-    string a = ss.str();
-    Mat tmp = imread(a, CV_BGR2GRAY);
-
-    if(tmp.data){
-      // if(!novelImgs.count(cls))
-      //   novelImgs[cls][0].create(tmp.rows, tmp.cols, tmp.type()); // if key not yet created initialise
-      novelImgs[cls].push_back(tmp);
-      cout << "pushing back: " << cls << endl;
-    }else{
-      warnFunc("Unable to read Image.");
-    }
-  }
-  closedir(pdir);
-  cout << "finished Reading Successfully.." << endl;
-}
-
-void listDir(const char *inPath, vector<m >& dirFiles, vector<Mat>& textDict, int flag){
-  DIR *pdir = NULL;
-  cout << "inpath : " << inPath << endl;
-  pdir = opendir(inPath);
-  // Check that dir was initialised correctly
-  if(pdir == NULL){
-    errorFunc("Unable to open directory.");
-  }
-  struct dirent *pent = NULL;
-
-  // Continue as long as there are still values in the dir list
-
-  m local;
-  while (pent = readdir(pdir)){
-    if(pdir==NULL){
-      errorFunc("Dir was not initialised correctly.");
-    }
-    stringstream ss;
-    ss << inPath << "/";
-    ss << pent->d_name;
-    string a = ss.str();
-    Mat tmp = imread(a, CV_BGR2GRAY);
-    if(tmp.data){
-      switch(flag){
-        case 1:
-          local.push_back(tmp);
-          break;
-        case 2:
-          textDict.push_back(tmp);
-          break;
-      }
-    }else{
-      warnFunc("Unable to read image.");
-    }
-  }
-  dirFiles.push_back(local);
-  closedir(pdir);
-  cout << "finished Reading Successfully.." << endl;
-}
-
-
-void importImgs(mV &modelImg, vector<string> classes){
-  string basePath = "../../../TEST_IMAGES/kth-tips/";
-
-  int count = 0;
-  for(int i=0;i<classes.size();i++){
-    stringstream ss;
-    ss << basePath;
-    ss << classes[count];
-    string b = ss.str();
-    const char* a = b.c_str();
-    cout << "this is the path.. " << a << endl;
-
-    cout << "number: " << i << endl;
-    // -----CHANGE!-----! //
-    vector<Mat> plcHolder;
-    // -----CHANGE!-----! //
-    listDir(a, modelImg, plcHolder, 1);
-
-    count ++;
-  }
-  cout << "This is the size of bread: " << modelImg[0].size() << ", cotton: " << modelImg[1].size() << ", cork: " << modelImg[2].size() << ", wood: " << modelImg[3].size() << ", AFoil: " << modelImg[4].size() << endl;
-}
 
 Mat reshapeCol(Mat in){
   Mat points(in.rows*in.cols, 1,CV_32F);
@@ -287,10 +151,14 @@ int main( int argc, char** argv ){
   fs << "vocabulary" << dictionary;
   fs.release();
   return 0;
+
+
   #else
   ///////////////////////////////////////////////////////////
   // Get histogram responses using vocabulary from Classes //
   ///////////////////////////////////////////////////////////
+
+  cout << "\n\n........Loading Texton Dictionary.........\n";
 
   // Load TextonDictionary
   Mat dictionary;
@@ -302,6 +170,7 @@ int main( int argc, char** argv ){
   }
   fs.release();
 
+
   int clsDictSize = 10;
   int clsAttempts = 5;
   int clsFlags = KMEANS_PP_CENTERS;
@@ -311,31 +180,39 @@ int main( int argc, char** argv ){
 
   cout << "\n\n.......Generating Models...... \n" ;
 
-  // for(int i=0;i<modelImg.size();i++){
-  //   for(int j=0;j<modelImg[i].size();j++){
-  //     Mat hold;
-  //     // Send img to be filtered, and responses aggregated with addWeighted
-  //     if(!modelImg[i][j].empty())
-  //       filterHandle(modelImg[i][j], hold);
-  //
-  //     // Segment the 200x200pixel image into 400x1 Mats(20x20)
-  //     vector<Mat> test;
-  //     segmentImg(test, hold);
-  //
-  //     // Push each saved Mat to bowTrainer
-  //     for(int k = 0; k < test.size(); k++){
-  //       if(!test[k].empty()){
-  //         classTrainer.add(test[k]);
-  //       }
-  //       classTrainer.cluster();
-  //     }
-  //   }
-  //   cout << "This is the bowTrainer.size(): " << classTrainer.descripotorsCount() << endl;
-  //   // Generate 10 clusters per class and store in Mat
-  //   dictionary.push_back(classTrainer.cluster());
-  //   classTrainer.clear();
-  // }
+  map<string, vector<Mat> > classClusters;
 
+  // Cycle through Classes
+  for(auto const ent1 : classImgs){
+    // Cycle through each classes images
+    for(int j=0;j < ent1.second.size();j++){
+      Mat in, hold;
+
+      // Send img to be filtered, and responses aggregated with addWeighted
+      in = ent1.second[j];
+       if(!in.empty())
+          filterHandle(in, hold);
+
+      // Segment the 200x200pixel image into 400x1 Mats(20x20)
+      vector<Mat> test;
+      segmentImg(test, hold);
+
+      // Push each saved Mat to classTrainer
+      for(int k = 0; k < test.size(); k++){
+        if(!test[k].empty()){
+          classTrainer.add(test[k]);
+        }
+      }
+
+      cout << "This is the classTrainer.size(): " << classTrainer.descripotorsCount() << endl;
+      // Generate 10 clusters per class and store in Mat
+
+      cout << "This is the string: " << ent1.first  << " size: " << classClusters[ent1.first].size() << endl;
+
+      classClusters[ent1.first].push_back(classTrainer.cluster());
+      classTrainer.clear();
+    }
+  }
 
 
 
