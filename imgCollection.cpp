@@ -309,7 +309,7 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs){
     directory_iterator itr_end;
     for(directory_iterator itr(p); itr != itr_end; ++itr){
       string nme = itr -> path().string();
-      Mat img = imread(nme, CV_BGR2GRAY);
+      Mat img = imread(nme, CV_LOAD_IMAGE_GRAYSCALE);
       extractClsNme(nme);
       cout << "Pushing back: " << nme << " img.size(): " << img.size() << endl;
       classImgs[nme].push_back(img);
