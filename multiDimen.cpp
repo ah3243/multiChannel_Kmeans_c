@@ -24,7 +24,7 @@
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Handling Functions
 
-#define DICTIONARY_BUILD 1
+#define DICTIONARY_BUILD 0
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -124,28 +124,28 @@ void textonFind(Mat& clus, Mat dictionary){
 }
 
 // Create bins for each textonDictionary Value
-vector<float> binLimits(vector<float> tex){
+void binLimits(vector<float>& tex){
   cout << "inside binLimits" << endl;
 
   vector<float> bins;
   bins.push_back(0);
-
   for(int i = 0;i <= tex.size()-1;i++){
       bins.push_back(tex[i] + 0.00001);
   }
   bins.push_back(256);
-  bins.pop_back(); // To remove residual value
+
   for(int i=0;i<bins.size();i++)
     cout << "texDict: " << i << ": "<< tex[i] << " becomes: " << bins[i+1] << endl;
-  return bins;
+  tex.clear();
+  tex = bins;
 }
 
 // Assign vector to Set to remove duplicates
-vector<float> removeDups(vector<float> v){
+void removeDups(vector<float>& v){
   cout << "inside.." << endl;
+  sort(v.begin(), v.end());
   auto last = unique(v.begin(), v.end());
   v.erase(last, v.end());
-  return v;
 }
 
 vector<float> matToVec(Mat m){
@@ -153,12 +153,7 @@ vector<float> matToVec(Mat m){
   for(int i=0;i<m.rows;i++){
     v.push_back(m.at<float>(i,0));
   }
-  sort(v.begin(), v.end());
-  vector<float> o =  removeDups(v);
-  // for(int i=0;i<o.size();i++){
-  //   cout << "Number: " << i << ": " << o[i] << endl;
-  // }
-  return o;
+  return v;
 }
 void vecToArr(vector<float> v, float* m){
   int size = v.size();
@@ -167,10 +162,12 @@ void vecToArr(vector<float> v, float* m){
   }
 }
 
-void createBins(Mat texDic, float* m){
+vector<float> createBins(Mat texDic){
   vector<float> v = matToVec(texDic);
-  vector<float> bins = binLimits(v);
-  vecToArr(bins, m);
+  cout << "\n\nThis is the bin vector size BEFORE: " << v.size() << endl;
+  binLimits(v);
+  cout << "\n\nThis is the bin vector size AFTER: " << v.size() << endl;
+  return v;
 }
 
 int main( int argc, char** argv ){
@@ -219,25 +216,17 @@ int main( int argc, char** argv ){
       bowTrainer.clear();
     }
 
+    vector<float> bins = createBins(dictionary);
+
+    removeDups(bins);
+
     //Save to file
     cout << "Saving Dictionary.." << endl;
     FileStorage fs("dictionary.xml",FileStorage::WRITE);
     fs << "vocabulary" << dictionary;
+    fs << "bins" << bins;
     fs.release();
 
-    float m[40];
-    createBins(dictionary, m);
-    cout << "Create hist.." << endl;
-    int histSize = 20;
-    float range[] = {0,100};
-    const float* histRange = {range};
-    bool uniform = true;
-    bool accumulate = false;
-
-    Mat out;
-    calcHist(&dictionary, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-    cout << "This is the size: " << out << endl;
-    return 0;
   #else
   ///////////////////////////////////////////////////////////
   // Get histogram responses using vocabulary from Classes //
@@ -247,29 +236,41 @@ int main( int argc, char** argv ){
 
   // Load TextonDictionary
   Mat dictionary;
+  vector<float> m;
     FileStorage fs("dictionary.xml",FileStorage::READ);
     fs["vocabulary"] >> dictionary;
+    fs["bins"] >> m;
     if(!fs.isOpened()){
       ERR("Unable to open Texton Dictionary.");
       exit(-1);
     }
     fs.release();
 
+    float bins[m.size()];
+    vecToArr(m, bins);
 
-    int clsDictSize = 10;
+    // Initilse Histogram parameters
+    int histSize = m.size()-1;
+    const float* histRange = {bins};
+    bool uniform = false;
+    bool accumulate = false;
+
+
+    int clsNumClusters = 50;
     int clsAttempts = 5;
     int clsFlags = KMEANS_PP_CENTERS;
     TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-    BOWKMeansTrainer classTrainer(clsDictSize, clsTc, clsAttempts, clsFlags);
+    BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
 
     cout << "\n\n.......Generating Models...... \n" ;
 
-    map<string, vector<Mat> > classClusters;
+    map<string, vector<Mat> > classHist;
 
   // Cycle through Classes
   for(auto const ent1 : classImgs){
     // Cycle through each classes images
+    cout << "\nClass: " << ent1.first << endl;
     for(int j=0;j < ent1.second.size();j++){
       Mat in, hold;
 
@@ -290,16 +291,15 @@ int main( int argc, char** argv ){
       }
 
       // Generate 10 clusters per class and store in Mat
-
-
-      Mat clus = Mat::zeros(10,1, CV_32FC1);
+      Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
       clus = classTrainer.cluster();
-      cout << "These are the cluster centeres BEFORE: " << clus << endl;
-      textonFind(clus, dictionary);
-      cout << "These are the cluster centeres AFTER: " << clus << endl;
 
-      return 0;
-      classClusters[ent1.first].push_back(clus);
+      // Replace Cluster Centers with the closest matching texton
+      textonFind(clus, dictionary);
+
+      Mat out;
+      calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
+      classHist[ent1.first].push_back(out);
 
       classTrainer.clear();
     }
