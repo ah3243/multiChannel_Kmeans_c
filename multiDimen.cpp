@@ -307,64 +307,62 @@ int main( int argc, char** argv ){
 
 
 
-//     //////////////////////////////
-//     // Test Against Novel Image //
-//     //////////////////////////////
-//
-//   cout << "\n\n.......Testing Against Novel Images...... \n" ;
-//
-//   map<string, map<string, int> > confusionMatrix;
-//
-//  // Mat novelImage1 = imread(argv[1], CV_BGR2GRAY);
-//  //
-//  //  if(!novelImage1.data){
-//  //    cout << "novelImage unable to be loaded.\nExiting." << endl;
-//  //    exit(0);
-//  //  }
-//   map<string, vector<Mat> > novelImgs;
-//
-//   getNovelImgs("../../../TEST_IMAGES/kth-tips/NovelTest/", novelImgs);
-//
-//   double y,n, total;
-//   // for(int i=0;i<modelImg.size();i++){
-//   //   for(int j=0;j<modelImg[i].size();j++){
-//   for(map<string, vector<Mat> >::iterator it = novelImgs.begin(); it != novelImgs.end(); ++it){
-//    cout << "\nThe class is: " << it->first << endl;
-//     for(int i=0;i<it->second.size();i++){
-//       if(it->second[i].rows == 0){
-//         errorFunc("NovelImage map contains blank Mat.");
-//       };
-//
-//       Mat responseNovel_hist;
-//       detector->detect(it->second[i], keypoints);
-//       bowDE.compute(it->second[i], keypoints, responseNovel_hist);
-//
-//       float minf = FLT_MAX;
-//       string min_class;
-//       for(map<string,CvSVM>::iterator it = classifiers.begin(); it != classifiers.end(); ++it ){
-//         float res = (*it).second.predict(responseNovel_hist, true);
-//         if(res<minf){
-//           minf = res;
-//           min_class = (*it).first;
-//         }
-//       }
-//       if(min_class == it->first){
-//         cout << "YES, Predicted: " << min_class << " Actual: " << it->first << endl;
-//         y++;
-//       }else {
-//         cout << "NO, Predicted: " << min_class << " Actual: " << it->first << endl;
-//         n++;
-//       }
-//       total++;
-//     }
-//   }
-//
-//   cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
-//
-// // //      Add 1 to the class with the closest match
-// //     confusionMatrix[min_class][classes[i]]++;
-//   //   }
-//   // }
+    //////////////////////////////
+    // Test Against Novel Image //
+    //////////////////////////////
+
+  cout << "\n\n.......Testing Against Novel Images...... \n" ;
+
+ BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
+ Mat out1;
+ if(true){
+  Mat in, hold;
+
+  in = classImgs["AFoil"][0];
+
+
+  // Send img to be filtered, and responses aggregated with addWeighted
+   if(!in.empty())
+    filterHandle(in, hold);
+
+    // Segment the 200x200pixel image into 400x1 Mats(20x20)
+    vector<Mat> test;
+    segmentImg(test, hold);
+
+    // Push each saved Mat to classTrainer
+    for(int k = 0; k < test.size(); k++){
+      if(!test[k].empty()){
+        novelTrainer.add(test[k]);
+      }
+    }
+
+    // Generate 10 clusters per class and store in Mat
+    Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+    clus = novelTrainer.cluster();
+
+    // Replace Cluster Centers with the closest matching texton
+    textonFind(clus, dictionary);
+
+    calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
+
+    cout << "This is the histogram: " << out1 << endl;
+    novelTrainer.clear();
+
+  }
+
+  for(auto const ent2 : classHist){
+    for(int j=0;j < ent2.second.size();j++){
+      double what = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+      cout << "class: " << ent2.first << "waht.." << what << endl;
+    }
+  }
+
+//  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
+
+// //      Add 1 to the class with the closest match
+//     confusionMatrix[min_class][classes[i]]++;
+  //   }
+  // }
 
   #endif
 
