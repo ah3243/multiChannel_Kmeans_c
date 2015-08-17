@@ -4,6 +4,7 @@
 
 #include "opencv2/highgui/highgui.hpp" // Needed for HistCalc
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
+//#include "opencv2/imgproc/rectange.hpp" // Needed for Rectanges
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
 #include <opencv2/nonfree/features2d.hpp>
@@ -99,6 +100,8 @@ void segmentImg(vector<Mat>& out, Mat in){
   }
   cout << "This is the size: " << out.size() << " and the average cols: " << out[0].rows << endl;
 }
+
+
 
 void textonFind(Mat& clus, Mat dictionary){
   if(clus.empty() || dictionary.empty()){
@@ -406,7 +409,30 @@ int main( int argc, char** argv ){
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
   BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
-  in = classImgs["cotton"][0];
+map<string, Scalar> Colors;
+  // Block Colors
+  vector<Scalar> clsColor;
+    clsColor.push_back(Scalar(255,0,0)); // Red
+    clsColor.push_back(Scalar(0,255,0)); // Green
+    clsColor.push_back(Scalar(0,0,250)); // Blue
+    clsColor.push_back(Scalar(255,255,0));
+    clsColor.push_back(Scalar(0,255,100));
+    clsColor.push_back(Scalar(0,255,255));
+    clsColor.push_back(Scalar(100,100,100));
+
+  Colors["gray"] = Scalar(100,100,100);
+  int count =0;
+  for(auto const ent : savedClassHist){
+    Colors[ent.first] = clsColor[count];
+    cout << "and again.." << endl;
+    count++;
+  }
+
+
+  Mat disVals = Mat(200,200,CV_8UC3);
+
+
+  in = classImgs["cork"][0];
 
   // Send img to be filtered, and responses aggregated with addWeighted
    if(!in.empty()){
@@ -417,50 +443,75 @@ int main( int argc, char** argv ){
     vector<Mat> test;
     segmentImg(test, hold);
 
-    // Push each saved Mat to classTrainer
-    for(int k = 0; k < test.size(); k++){
-      if(!test[k].empty()){
-        novelTrainer.add(test[k]);
+//    void segmentNovelImg(vector<Mat>& out, Mat in){
+      int cropsize = 20, size = 200;
+      if(in.rows!=200 || in.cols!=200){
+        cout << "The input image was not 200x200 pixels.\nExiting.\n";
+        exit(-1);
       }
-    }
+      for(int i=0;i<size;i+=cropsize){
+        for(int j=0;j<size;j+=cropsize){
+         Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
+         tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));
 
-    // Generate 10 clusters per class and store in Mat
-    Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-    clus = novelTrainer.cluster();
+         if(!tmp.empty()){
+           novelTrainer.add(tmp);
+         }
 
-    // Replace Cluster Centers with the closest matching texton
-    textonFind(clus, dictionary);
+         // Generate 10 clusters per class and store in Mat
+         Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+         clus = novelTrainer.cluster();
 
-    Mat out1;
-    calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
-    novelTrainer.clear();
-  double high = DBL_MAX, secHigh = DBL_MAX;
-  string match, secMatch;
-  for(auto const ent2 : savedClassHist){
-    for(int j=0;j < ent2.second.size();j++){
-      double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
-      cout << "class: " << ent2.first << " MatchValue:" << val << endl;
-      if(val < high){
-        high = val;
-        match = ent2.first;
+         // Replace Cluster Centers with the closest matching texton
+         textonFind(clus, dictionary);
+
+        // Calculate the histogram
+         Mat out1;
+         calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
+         novelTrainer.clear();
+
+         double high = DBL_MAX, secHigh = DBL_MAX;
+         string match, secMatch;
+         for(auto const ent2 : savedClassHist){
+           for(int j=0;j < ent2.second.size();j++){
+             double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+//             cout << "class: " << ent2.first << " MatchValue:" << val << endl;
+             if(val < high){
+               high = val;
+               match = ent2.first;
+             }
+             if(val < secHigh && val > high && match.compare(ent2.first) != 0){
+               secHigh = val;
+               secMatch = ent2.first;
+             }
+           }
+         }
+         string prediction = "";
+         if(secHigh-high>high){
+           prediction = "gray";
+         }else{
+           prediction = match;
+         }
+         cout << "done..: " << match << endl;
+         rectangle(disVals, Rect(i,j,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+        }
       }
-      if(val < secHigh && val > high && match.compare(ent2.first) != 0){
-        secHigh = val;
-        secMatch = ent2.first;
-      }
-    }
-  }
 
-  cout << "The input sample was matched as: " << match << " with a value of: " << high << endl;
-  cout << "The second best match was: " << secMatch << " with a value of: " << secHigh << endl;
-  cout << "\nThe variation between these two values is: " << secHigh-high << "\n";
+//    }
 
- // cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
-//
-// //      Add 1 to the class with the closest match
-//     confusionMatrix[min_class][classes[i]]++;
-  //   }
-  // }
+
+//   if(secHigh-high>high){
+//   cout << "\n\nThe input sample was matched as: " << match << " with a value of: " << high << endl;
+//   cout << "The second best match was: " << secMatch << " with a value of: " << secHigh << endl;
+//   cout << "\nThe variation between these two values is: " << secHigh-high << "\n\n";
+// }else{
+//   cout << "\n\nThis was a very close match with the distance being smaller than the chosen value.\n\n";
+// }
+
+namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
+imshow("mywindow", disVals);
+waitKey(0);
+
 
   #endif
 
