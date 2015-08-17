@@ -420,7 +420,7 @@ map<string, Scalar> Colors;
     clsColor.push_back(Scalar(0,255,255));
     clsColor.push_back(Scalar(100,100,100));
 
-  Colors["gray"] = Scalar(100,100,100);
+  Colors["Unknown"] = Scalar(100,100,100);
   int count =0;
   for(auto const ent : savedClassHist){
     Colors[ent.first] = clsColor[count];
@@ -428,8 +428,21 @@ map<string, Scalar> Colors;
     count++;
   }
 
+  Mat Key = Mat::zeros(400,200,CV_8UC3);
+  int cnt=0;
+  for(auto const ent1 : Colors){
+    putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+    rectangle(Key, Rect(100, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
+    cnt++;
+    //  rectangle(disVals, Rect(i,j,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+  }
 
-  Mat disVals = Mat(200,200,CV_8UC3);
+
+  namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
+  imshow("legendWin", Key);
+
+
+  Mat disVals = Mat(100,200,CV_8UC3);
 
 
   in = classImgs["cork"][0];
@@ -488,7 +501,7 @@ map<string, Scalar> Colors;
          }
          string prediction = "";
          if(secHigh-high>high){
-           prediction = "gray";
+           prediction = "Unknown";
          }else{
            prediction = match;
          }
