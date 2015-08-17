@@ -313,7 +313,6 @@ int main( int argc, char** argv ){
   FileStorage fs2("models.xml",FileStorage::WRITE);
   // int numClasses = classHist.size();
   // fs2 << "Num_Models" << numClasses;
-  fs2 << "ClassHistograms" << "{";
   int cont=0;
   for(auto const ent1 : classHist){
     stringstream ss;
@@ -330,10 +329,14 @@ int main( int argc, char** argv ){
     fs2 << "}";
     cont++;
   }
-  fs2 << "}";
   fs2.release();
 
   #endif
+
+
+
+
+
   #if NOVELIMG_TEST == 1
     //////////////////////////////
     // Test Against Novel Image //
@@ -341,17 +344,32 @@ int main( int argc, char** argv ){
 
   cout << "\n\n.......Testing Against Novel Images...... \n" ;
 
- // BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
- Mat out1;
- if(true){
-  Mat in, hold;
+  // Load TextonDictionary
+  Mat dictionary;
+  vector<float> m;
+    FileStorage fs("dictionary.xml",FileStorage::READ);
+    if(!fs.isOpened()){
+      ERR("Unable to open Texton Dictionary.");
+      exit(-1);
+    }
 
+    fs["vocabulary"] >> dictionary;
+    fs["bins"] >> m;
+    float bins[m.size()];
+    vecToArr(m, bins);
+    fs.release();
+
+    // Load Class imgs and store in classImgs map
+    map<string, vector<Mat> > classImgs;
+    path p = "../../../TEST_IMAGES/kth-tips/classes";
+    loadClassImgs(p, classImgs);
+
+  Mat in, hold;
   map<string, vector<Mat> > savedClassHist;
 
+  // Load in Class Histograms(Models)
   FileStorage fs3("models.xml", FileStorage::READ);
-  int classes, model;
-
-  FileNode fn = fs3["ClassHistograms"];
+  FileNode fn = fs3.root();
   if(fn.type() == FileNode::MAP){
 
     // Create iterator to go through all the classes
@@ -369,54 +387,64 @@ int main( int argc, char** argv ){
         savedClassHist[clsNme].push_back(tmp);
       }
     }
-  fs3.release();
-}else{
-  ERR("Class file was not map. Exiting");
-  exit(-1);
-}
-}
+    fs3.release();
+  }else{
+    ERR("Class file was not map. Exiting");
+    exit(-1);
+  }
 
+  // Initilse Histogram parameters
+  int histSize = m.size()-1;
+  const float* histRange = {bins};
+  bool uniform = false;
+  bool accumulate = false;
 
+  // Initialise Clustering Parameters
+  int clsNumClusters = 50;
+  int clsAttempts = 5;
+  int clsFlags = KMEANS_PP_CENTERS;
+  TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+  BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
+  in = classImgs["cotton"][0];
 
-  // in = classImgs["cotton"][0];
-  //
-  // // Send img to be filtered, and responses aggregated with addWeighted
-  //  if(!in.empty())
-  //   filterHandle(in, hold);
-  //
-  //   // Segment the 200x200pixel image into 400x1 Mats(20x20)
-  //   vector<Mat> test;
-  //   segmentImg(test, hold);
-  //
-  //   // Push each saved Mat to classTrainer
-  //   for(int k = 0; k < test.size(); k++){
-  //     if(!test[k].empty()){
-  //       novelTrainer.add(test[k]);
-  //     }
-  //   }
-  //
-  //   // Generate 10 clusters per class and store in Mat
-  //   Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-  //   clus = novelTrainer.cluster();
-  //
-  //   // Replace Cluster Centers with the closest matching texton
-  //   textonFind(clus, dictionary);
-  //
-  //   calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
-  //   novelTrainer.clear();
-  //
-  // }
-  //
-  // for(auto const ent2 : classHist){
-  //   for(int j=0;j < ent2.second.size();j++){
-  //     double what = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
-  //     cout << "class: " << ent2.first << " waht.." << what << endl;
-  //   }
-  // }
+  // Send img to be filtered, and responses aggregated with addWeighted
+   if(!in.empty()){
+    filterHandle(in, hold);
+   }
+
+    // Segment the 200x200pixel image into 400x1 Mats(20x20)
+    vector<Mat> test;
+    segmentImg(test, hold);
+
+    // Push each saved Mat to classTrainer
+    for(int k = 0; k < test.size(); k++){
+      if(!test[k].empty()){
+        novelTrainer.add(test[k]);
+      }
+    }
+
+    // Generate 10 clusters per class and store in Mat
+    Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+    clus = novelTrainer.cluster();
+
+    // Replace Cluster Centers with the closest matching texton
+    textonFind(clus, dictionary);
+
+    Mat out1;
+    calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
+    novelTrainer.clear();
+
+  for(auto const ent2 : savedClassHist){
+    for(int j=0;j < ent2.second.size();j++){
+      double what = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+      cout << "class: " << ent2.first << " waht.." << what << endl;
+    }
+  }
+
 
 //  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
-
+//
 // //      Add 1 to the class with the closest match
 //     confusionMatrix[min_class][classes[i]]++;
   //   }
