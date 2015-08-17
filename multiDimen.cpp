@@ -25,7 +25,8 @@
 #include "imgCollection.h" // Img Handling Functions
 
 #define DICTIONARY_BUILD 0
-
+#define MODEL_BUILD 0
+#define NOVELIMG_TEST 1
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
 using namespace boost::filesystem;
@@ -171,11 +172,8 @@ vector<float> createBins(Mat texDic){
 }
 
 int main( int argc, char** argv ){
-  cout << "\n\n.......Loading Model Images...... \n" ;
+  cout << "\n\n.......Starting Program...... \n\n" ;
 
- map<string, vector<Mat> > classImgs;
- path p = "../../../TEST_IMAGES/kth-tips/classes";
- loadClassImgs(p, classImgs);
 
   //////////////////////////////
   // Create Texton vocabulary //
@@ -188,9 +186,12 @@ int main( int argc, char** argv ){
     TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
     BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
 
+    map<string, vector<Mat> > textonImgs;
+    path p = "../../../TEST_IMAGES/kth-tips/classes";
+    loadClassImgs(p, textonImgs);
 
     Mat dictionary;
-    for(auto const ent1 : classImgs){
+    for(auto const ent1 : textonImgs){
       for(int j=0;j<ent1.second.size();j++){
         Mat in = Mat::zeros(200,200,CV_32FC1);
         Mat hold = Mat::zeros(200,200,CV_32FC1);
@@ -226,8 +227,8 @@ int main( int argc, char** argv ){
     fs << "vocabulary" << dictionary;
     fs << "bins" << bins;
     fs.release();
-
-  #else
+  #endif
+  #if MODEL_BUILD == 1
   ///////////////////////////////////////////////////////////
   // Get histogram responses using vocabulary from Classes //
   ///////////////////////////////////////////////////////////
@@ -246,6 +247,11 @@ int main( int argc, char** argv ){
     }
     fs.release();
 
+    // Load Class imgs and store in classImgs map
+    map<string, vector<Mat> > classImgs;
+    path p = "../../../TEST_IMAGES/kth-tips/classes";
+    loadClassImgs(p, classImgs);
+
     float bins[m.size()];
     vecToArr(m, bins);
 
@@ -261,7 +267,6 @@ int main( int argc, char** argv ){
     int clsFlags = KMEANS_PP_CENTERS;
     TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
     BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
-
 
     cout << "\n\n.......Generating Models...... \n" ;
 
@@ -305,57 +310,110 @@ int main( int argc, char** argv ){
     }
   }
 
+  FileStorage fs2("models.xml",FileStorage::WRITE);
+  // int numClasses = classHist.size();
+  // fs2 << "Num_Models" << numClasses;
+  fs2 << "ClassHistograms" << "{";
+  int cont=0;
+  for(auto const ent1 : classHist){
+    stringstream ss;
+    ss << "class_" << cont;
+    fs2 << ss.str() << "{";
+      fs2 << "Name" << ent1.first;
+      fs2 << "Models" << "{";
+        for(int i=0;i<ent1.second.size();i++){
+          stringstream ss1;
+          ss1 << "m_" << i;
+          fs2 << ss1.str() << ent1.second[i];
+        }
+      fs2 << "}";
+    fs2 << "}";
+    cont++;
+  }
+  fs2 << "}";
+  fs2.release();
 
-
+  #endif
+  #if NOVELIMG_TEST == 1
     //////////////////////////////
     // Test Against Novel Image //
     //////////////////////////////
 
   cout << "\n\n.......Testing Against Novel Images...... \n" ;
 
- BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
+ // BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
  Mat out1;
  if(true){
   Mat in, hold;
 
-  in = classImgs["AFoil"][0];
+  map<string, vector<Mat> > savedClassHist;
 
+  FileStorage fs3("models.xml", FileStorage::READ);
+  int classes, model;
 
-  // Send img to be filtered, and responses aggregated with addWeighted
-   if(!in.empty())
-    filterHandle(in, hold);
+  FileNode fn = fs3["ClassHistograms"];
+  if(fn.type() == FileNode::MAP){
 
-    // Segment the 200x200pixel image into 400x1 Mats(20x20)
-    vector<Mat> test;
-    segmentImg(test, hold);
+    // Create iterator to go through all the classes
+    for(FileNodeIterator it = fn.begin();it != fn.end();it++){
+      string clsNme = (string)(*it)["Name"];
+      savedClassHist[clsNme];
 
-    // Push each saved Mat to classTrainer
-    for(int k = 0; k < test.size(); k++){
-      if(!test[k].empty()){
-        novelTrainer.add(test[k]);
+      // Create node of current Class
+      FileNode clss = (*it)["Models"];
+      // Iterate through each model inside class, saving to map
+      for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
+        FileNode k = *it1;
+        Mat tmp;
+        k >> tmp;
+        savedClassHist[clsNme].push_back(tmp);
       }
     }
+  fs3.release();
+}else{
+  ERR("Class file was not map. Exiting");
+  exit(-1);
+}
+}
 
-    // Generate 10 clusters per class and store in Mat
-    Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-    clus = novelTrainer.cluster();
 
-    // Replace Cluster Centers with the closest matching texton
-    textonFind(clus, dictionary);
 
-    calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
 
-    cout << "This is the histogram: " << out1 << endl;
-    novelTrainer.clear();
-
-  }
-
-  for(auto const ent2 : classHist){
-    for(int j=0;j < ent2.second.size();j++){
-      double what = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
-      cout << "class: " << ent2.first << "waht.." << what << endl;
-    }
-  }
+  // in = classImgs["cotton"][0];
+  //
+  // // Send img to be filtered, and responses aggregated with addWeighted
+  //  if(!in.empty())
+  //   filterHandle(in, hold);
+  //
+  //   // Segment the 200x200pixel image into 400x1 Mats(20x20)
+  //   vector<Mat> test;
+  //   segmentImg(test, hold);
+  //
+  //   // Push each saved Mat to classTrainer
+  //   for(int k = 0; k < test.size(); k++){
+  //     if(!test[k].empty()){
+  //       novelTrainer.add(test[k]);
+  //     }
+  //   }
+  //
+  //   // Generate 10 clusters per class and store in Mat
+  //   Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+  //   clus = novelTrainer.cluster();
+  //
+  //   // Replace Cluster Centers with the closest matching texton
+  //   textonFind(clus, dictionary);
+  //
+  //   calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
+  //   novelTrainer.clear();
+  //
+  // }
+  //
+  // for(auto const ent2 : classHist){
+  //   for(int j=0;j < ent2.second.size();j++){
+  //     double what = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+  //     cout << "class: " << ent2.first << " waht.." << what << endl;
+  //   }
+  // }
 
 //  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
 
