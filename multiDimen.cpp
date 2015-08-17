@@ -434,16 +434,28 @@ int main( int argc, char** argv ){
     Mat out1;
     calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
     novelTrainer.clear();
-
+  double high = DBL_MAX, secHigh = DBL_MAX;
+  string match, secMatch;
   for(auto const ent2 : savedClassHist){
     for(int j=0;j < ent2.second.size();j++){
-      double what = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
-      cout << "class: " << ent2.first << " waht.." << what << endl;
+      double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+      cout << "class: " << ent2.first << " MatchValue:" << val << endl;
+      if(val < high){
+        high = val;
+        match = ent2.first;
+      }
+      if(val < secHigh && val > high && match.compare(ent2.first) != 0){
+        secHigh = val;
+        secMatch = ent2.first;
+      }
     }
   }
 
+  cout << "The input sample was matched as: " << match << " with a value of: " << high << endl;
+  cout << "The second best match was: " << secMatch << " with a value of: " << secHigh << endl;
+  cout << "\nThe variation between these two values is: " << secHigh-high << "\n";
 
-//  cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
+ // cout << "\nThe total ratio was:\nCorrect: " << y << "\nIncorrect: " << n << "\n\nPercent correct: " << (y/total)*100 << "\%\n\n";
 //
 // //      Add 1 to the class with the closest match
 //     confusionMatrix[min_class][classes[i]]++;
