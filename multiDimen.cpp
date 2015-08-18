@@ -34,6 +34,10 @@ using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
+#define cropsize  20
+#define CHISQU_threshold 5
+
+
 // int main(int argc, char** argv){
 //     if(argc<3){
 //       cout << "not enough inputs entered, exiting." << endl;
@@ -86,7 +90,7 @@ Mat reshapeCol(Mat in){
 }
 
 void segmentImg(vector<Mat>& out, Mat in){
-  int cropsize = 20, size = 200;
+  int size = 200;
   if(in.rows!=200 || in.cols!=200){
     cout << "The input image was not 200x200 pixels.\nExiting.\n";
     exit(-1);
@@ -176,7 +180,6 @@ vector<float> createBins(Mat texDic){
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-
 
   //////////////////////////////
   // Create Texton vocabulary //
@@ -347,8 +350,8 @@ int main( int argc, char** argv ){
 
   cout << "\n\n.......Testing Against Novel Images...... \n" ;
 
-  // Load TextonDictionary
-  Mat dictionary;
+// Load TextonDictionary
+Mat dictionary;
   vector<float> m;
     FileStorage fs("dictionary.xml",FileStorage::READ);
     if(!fs.isOpened()){
@@ -362,16 +365,14 @@ int main( int argc, char** argv ){
     vecToArr(m, bins);
     fs.release();
 
-    // Load Class imgs and store in classImgs map
-    map<string, vector<Mat> > classImgs;
-    path p = "../../../TEST_IMAGES/kth-tips/classes";
-    loadClassImgs(p, classImgs);
+// Load Images to be tested
+map<string, vector<Mat> > classImgs;
+  path p = "../../../TEST_IMAGES/kth-tips/classes";
+  loadClassImgs(p, classImgs);
 
-  Mat in, hold;
-  map<string, vector<Mat> > savedClassHist;
-
-  // Load in Class Histograms(Models)
-  FileStorage fs3("models.xml", FileStorage::READ);
+map<string, vector<Mat> > savedClassHist;
+// Load in Class Histograms(Models)
+FileStorage fs3("models.xml", FileStorage::READ);
   FileNode fn = fs3.root();
   if(fn.type() == FileNode::MAP){
 
@@ -396,14 +397,14 @@ int main( int argc, char** argv ){
     exit(-1);
   }
 
-  // Initilse Histogram parameters
-  int histSize = m.size()-1;
+// Initilse Histogram parameters
+int histSize = m.size()-1;
   const float* histRange = {bins};
   bool uniform = false;
   bool accumulate = false;
 
-  // Initialise Clustering Parameters
-  int clsNumClusters = 50;
+// Initialise Clustering Parameters
+int clsNumClusters = 10;
   int clsAttempts = 5;
   int clsFlags = KMEANS_PP_CENTERS;
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
@@ -412,8 +413,6 @@ int main( int argc, char** argv ){
 // Stock Scalar Colors
 map<string, Scalar> Colors;
   vector<Scalar> clsColor;
-    clsColor.push_back(Scalar(255,0,0)); // Red
-    clsColor.push_back(Scalar(0,255,0)); // Green
     clsColor.push_back(Scalar(0,0,250)); // Blue
     clsColor.push_back(Scalar(255,128,0)); // Orange
     clsColor.push_back(Scalar(255,255,0)); // Yellow
@@ -421,57 +420,70 @@ map<string, Scalar> Colors;
     clsColor.push_back(Scalar(127,0,255)); // DarkPurple
     clsColor.push_back(Scalar(255,0,255)); // Purple
     clsColor.push_back(Scalar(255,0,127)); // Pink/Red
+
+  Colors["Correct"] = Scalar(0,255,0);
+  Colors["Incorrect"] = Scalar(255,0,0);
   Colors["Unknown"] = Scalar(100,100,100);
+
   int count =0;
   for(auto const ent : savedClassHist){
     Colors[ent.first] = clsColor[count];
     count++;
   }
 
-  Mat Key = Mat::zeros(400,200,CV_8UC3);
+// Create Img Legend
+Mat Key = Mat::zeros(400,200,CV_8UC3);
   int cnt=0;
   for(auto const ent1 : Colors){
     putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
     rectangle(Key, Rect(100, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
     cnt++;
-    //  rectangle(disVals, Rect(i,j,cropsize,cropsize), Colors[prediction], -1, 8, 0);
   }
 
+// Create Legend window and display
+namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
+imshow("legendWin", Key);
 
-  namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
-  imshow("legendWin", Key);
+namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
 
-
-  Mat disVals = Mat(100,200,CV_8UC3);
-
-
-  in = classImgs["cork"][0];
-
-  // Send img to be filtered, and responses aggregated with addWeighted
-   if(!in.empty()){
-    filterHandle(in, hold);
-   }
-
-    // Segment the 200x200pixel image into 400x1 Mats(20x20)
-    vector<Mat> test;
-    segmentImg(test, hold);
-
-//    void segmentNovelImg(vector<Mat>& out, Mat in){
-      int cropsize = 20, size = 200;
-      if(in.rows!=200 || in.cols!=200){
-        cout << "The input image was not 200x200 pixels.\nExiting.\n";
+    int Correct = 0, Incorrect =0, Unknown =0;
+  for(auto const ent : classImgs){
+    for(int h=0;h<ent.second.size();h++){
+      if(ent.second[h].rows != ent.second[h].cols){
+        ERR("Novel input image was now square. Exiting");
         exit(-1);
       }
-      for(int i=0;i<size;i+=cropsize){
-        for(int j=0;j<size;j+=cropsize){
-         Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
-         tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));
+      int imgSize = ent.second[h].rows;
+      Mat disVals = Mat(imgSize,imgSize,CV_8UC3);
 
-         if(!tmp.empty()){
-           novelTrainer.add(tmp);
+      Mat in, hold;
+      in = ent.second[h];
+       if(in.empty()){
+        ERR("Novel image was not able to be imported. Exiting.");
+        exit(-1);
+      }
+
+      // Send img to be filtered, and responses aggregated with addWeighted
+      filterHandle(in, hold);
+
+      // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
+      vector<Mat> test;
+      segmentImg(test, hold);
+
+      // Counters for putting 'pixels' on display image
+      int disrows = 0, discols = 0;
+
+      // Loop through and classify all image segments
+      for(int x=0;x<test.size();x++){
+        discols = (discols + cropsize)%imgSize;
+        if(discols==0){
+          disrows += 20;
+        }
+        if(!test[x].empty()){
+           novelTrainer.add(test[x]);
          }
 
-         // Generate 10 clusters per class and store in Mat
+         // Generate 10 clusters per segment and store in Mat
          Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
          clus = novelTrainer.cluster();
 
@@ -500,18 +512,30 @@ map<string, Scalar> Colors;
            }
          }
          string prediction = "";
-         if(secHigh-high>high){
+         // If the match is above threshold or nearest other match is to similar, return unknown
+         if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
            prediction = "Unknown";
          }else{
            prediction = match;
          }
-         cout << "done..: " << match << endl;
-         rectangle(disVals, Rect(i,j,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+         if(prediction.compare(ent.first)==0){
+           Correct += 1;
+           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
+         }else if(prediction.compare("Unknown")==0){
+           Unknown +=1;
+           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+         }else{
+           Incorrect += 1;
+           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
+         }
         }
-      }
+  //    imshow("mywindow", disVals);
+//      waitKey(500);
+    }
+  }
+        cout << "This is the correct: " << Correct << "\nIncorrect: " << Incorrect << "\nUnknown: " << Unknown << endl;
 
 //    }
-
 
 //   if(secHigh-high>high){
 //   cout << "\n\nThe input sample was matched as: " << match << " with a value of: " << high << endl;
@@ -521,9 +545,6 @@ map<string, Scalar> Colors;
 //   cout << "\n\nThis was a very close match with the distance being smaller than the chosen value.\n\n";
 // }
 
-namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
-imshow("mywindow", disVals);
-waitKey(0);
 
 
   #endif
