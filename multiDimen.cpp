@@ -35,7 +35,7 @@ using namespace cv;
 using namespace std;
 
 #define cropsize  20
-#define CHISQU_threshold 5
+#define CHISQU_threshold 10
 
 
 // int main(int argc, char** argv){
@@ -104,8 +104,6 @@ void segmentImg(vector<Mat>& out, Mat in){
   }
   cout << "This is the size: " << out.size() << " and the average cols: " << out[0].rows << endl;
 }
-
-
 
 void textonFind(Mat& clus, Mat dictionary){
   if(clus.empty() || dictionary.empty()){
@@ -178,6 +176,68 @@ vector<float> createBins(Mat texDic){
   return v;
 }
 
+////////////////////////
+// Key:               //
+// 0 == TruePositive  //
+// 1 == FalsePositive //
+// 2 == TrueNegative  //
+// 3 == FalseNegative //
+////////////////////////
+void addOneToAllButOne(string exp1, string exp2, map<string, vector<int> >& results){
+  for(auto ent4 : results){
+    if(exp1.compare(ent4.first)!=0 && exp2.compare(ent4.first)!=0){
+      ent4.second[2] = 3;
+    }
+  }
+}
+void initROCcnt(map<string, vector<int> >& r, map<string, vector<Mat> > classImgs){
+  cout << "initialiseing.. " << endl;
+  for(auto const ent5 : classImgs){
+    for(int i=0;i<4;i++)
+      r[ent5.first].push_back(1);
+    cout << "Initilseing..." << ent5.first << endl;
+  }
+  cout << "\n";
+}
+
+void printResults(map<string, vector<int> > r){
+  cout << "\n\n----------------------------------------------------------\n\n";
+  cout << "                    These are the test results                  \n";
+  for(auto const ent6 : r){
+    cout << ent6.first;
+    cout << "\n      TruePositive:  " << ent6.second[0];
+    cout << "\n      TrueNegative:  " << ent6.second[1];
+    cout << "\n      FalsePositive: " << ent6.second[2];
+    cout << "\n      FalseNegative: " << ent6.second[3];
+    cout << "\n";
+  }
+  cout << "\n\n";
+}
+
+void saveROCdata(string correct, string prediction, map<string, vector<int> >& results){
+  cout << "inside..\nAnswer is: " << correct << " prediction is: " << prediction <<endl;
+  if(correct.compare(prediction)==0){
+    // If correct
+
+    // add 1 to True Positive
+    results[correct][0] += 1;
+    // add 1 to True Positive to all other classes
+    addOneToAllButOne(correct, "", results);
+
+  }else if(correct.compare(prediction)!=0){
+    // If incorrect
+
+    // add 1 to False Positive for Predicted
+    results[prediction][1] += 1;
+    // add 1 to False Negative to Correct
+    results[correct][3] += 1;
+    // add 1 to True Positive to all other classes
+    addOneToAllButOne(correct, prediction, results);
+    cout << "This is the value AFTER: " << results[correct][3] << endl;
+  }
+}
+
+
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
 
@@ -234,316 +294,347 @@ int main( int argc, char** argv ){
     fs << "bins" << bins;
     fs.release();
   #endif
+
+
   #if MODEL_BUILD == 1
-  ///////////////////////////////////////////////////////////
-  // Get histogram responses using vocabulary from Classes //
-  ///////////////////////////////////////////////////////////
+  cout << "\n\n........Generating Class Models from Imgs.........\n";
+    ///////////////////////////////////////////////////////////
+    // Get histogram responses using vocabulary from Classes //
+    ///////////////////////////////////////////////////////////
 
-  cout << "\n\n........Loading Texton Dictionary.........\n";
+    cout << "\n\n........Loading Texton Dictionary.........\n";
 
-  // Load TextonDictionary
-  Mat dictionary;
-  vector<float> m;
-    FileStorage fs("dictionary.xml",FileStorage::READ);
-    fs["vocabulary"] >> dictionary;
-    fs["bins"] >> m;
-    if(!fs.isOpened()){
-      ERR("Unable to open Texton Dictionary.");
-      exit(-1);
-    }
-    fs.release();
-
-    // Load Class imgs and store in classImgs map
-    map<string, vector<Mat> > classImgs;
-    path p = "../../../TEST_IMAGES/kth-tips/classes";
-    loadClassImgs(p, classImgs);
-
-    float bins[m.size()];
-    vecToArr(m, bins);
-
-    // Initilse Histogram parameters
-    int histSize = m.size()-1;
-    const float* histRange = {bins};
-    bool uniform = false;
-    bool accumulate = false;
-
-
-    int clsNumClusters = 50;
-    int clsAttempts = 5;
-    int clsFlags = KMEANS_PP_CENTERS;
-    TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-    BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
-
-    cout << "\n\n.......Generating Models...... \n" ;
-
-    map<string, vector<Mat> > classHist;
-
-  // Cycle through Classes
-  for(auto const ent1 : classImgs){
-    // Cycle through each classes images
-    cout << "\nClass: " << ent1.first << endl;
-    for(int j=0;j < ent1.second.size();j++){
-      Mat in, hold;
-
-      // Send img to be filtered, and responses aggregated with addWeighted
-      in = ent1.second[j];
-       if(!in.empty())
-          filterHandle(in, hold);
-
-      // Segment the 200x200pixel image into 400x1 Mats(20x20)
-      vector<Mat> test;
-      segmentImg(test, hold);
-
-      // Push each saved Mat to classTrainer
-      for(int k = 0; k < test.size(); k++){
-        if(!test[k].empty()){
-          classTrainer.add(test[k]);
-        }
+    // Load TextonDictionary
+    Mat dictionary;
+    vector<float> m;
+      FileStorage fs("dictionary.xml",FileStorage::READ);
+      fs["vocabulary"] >> dictionary;
+      fs["bins"] >> m;
+      if(!fs.isOpened()){
+        ERR("Unable to open Texton Dictionary.");
+        exit(-1);
       }
+      fs.release();
 
-      // Generate 10 clusters per class and store in Mat
-      Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-      clus = classTrainer.cluster();
+      // Load Class imgs and store in classImgs map
+      map<string, vector<Mat> > classImgs;
+      path p = "../../../TEST_IMAGES/kth-tips/classes";
+      loadClassImgs(p, classImgs);
 
-      // Replace Cluster Centers with the closest matching texton
-      textonFind(clus, dictionary);
+      float bins[m.size()];
+      vecToArr(m, bins);
 
-      Mat out;
-      calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-      classHist[ent1.first].push_back(out);
+      // Initilse Histogram parameters
+      int histSize = m.size()-1;
+      const float* histRange = {bins};
+      bool uniform = false;
+      bool accumulate = false;
 
-      classTrainer.clear();
-    }
-  }
 
-  FileStorage fs2("models.xml",FileStorage::WRITE);
-  // int numClasses = classHist.size();
-  // fs2 << "Num_Models" << numClasses;
-  int cont=0;
-  for(auto const ent1 : classHist){
-    stringstream ss;
-    ss << "class_" << cont;
-    fs2 << ss.str() << "{";
-      fs2 << "Name" << ent1.first;
-      fs2 << "Models" << "{";
-        for(int i=0;i<ent1.second.size();i++){
-          stringstream ss1;
-          ss1 << "m_" << i;
-          fs2 << ss1.str() << ent1.second[i];
+      int clsNumClusters = 10;
+      int clsAttempts = 5;
+      int clsFlags = KMEANS_PP_CENTERS;
+      TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+      BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
+
+      cout << "\n\n.......Generating Models...... \n" ;
+
+      map<string, vector<Mat> > classHist;
+
+    // Cycle through Classes
+    for(auto const ent1 : classImgs){
+      // Cycle through each classes images
+      cout << "\nClass: " << ent1.first << endl;
+      for(int j=0;j < ent1.second.size();j++){
+        Mat in, hold;
+
+        // Send img to be filtered, and responses aggregated with addWeighted
+        in = ent1.second[j];
+         if(!in.empty())
+            filterHandle(in, hold);
+
+        // Segment the 200x200pixel image into 400x1 Mats(20x20)
+        vector<Mat> test;
+        segmentImg(test, hold);
+
+        // Push each saved Mat to classTrainer
+        for(int k = 0; k < test.size(); k++){
+          if(!test[k].empty()){
+            classTrainer.add(test[k]);
+          }
         }
+
+        // Generate 10 clusters per class and store in Mat
+        Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+        clus = classTrainer.cluster();
+
+        // Replace Cluster Centers with the closest matching texton
+        textonFind(clus, dictionary);
+
+        Mat out;
+        calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
+        classHist[ent1.first].push_back(out);
+
+        classTrainer.clear();
+      }
+    }
+
+    FileStorage fs2("models.xml",FileStorage::WRITE);
+    // int numClasses = classHist.size();
+    // fs2 << "Num_Models" << numClasses;
+    int cont=0;
+    for(auto const ent1 : classHist){
+      stringstream ss;
+      ss << "class_" << cont;
+      fs2 << ss.str() << "{";
+        fs2 << "Name" << ent1.first;
+        fs2 << "Models" << "{";
+          for(int i=0;i<ent1.second.size();i++){
+            stringstream ss1;
+            ss1 << "m_" << i;
+            fs2 << ss1.str() << ent1.second[i];
+          }
+        fs2 << "}";
       fs2 << "}";
-    fs2 << "}";
-    cont++;
-  }
-  fs2.release();
+      cont++;
+    }
+    fs2.release();
 
   #endif
 
 
-
-
-
   #if NOVELIMG_TEST == 1
+  cout << "\n\n.......Testing Against Novel Images...... \n" ;
     //////////////////////////////
     // Test Against Novel Image //
     //////////////////////////////
 
-  cout << "\n\n.......Testing Against Novel Images...... \n" ;
+    // Load TextonDictionary
+    Mat dictionary;
+      vector<float> m;
+        FileStorage fs("dictionary.xml",FileStorage::READ);
+        if(!fs.isOpened()){
+          ERR("Unable to open Texton Dictionary.");
+          exit(-1);
+        }
 
-// Load TextonDictionary
-Mat dictionary;
-  vector<float> m;
-    FileStorage fs("dictionary.xml",FileStorage::READ);
-    if(!fs.isOpened()){
-      ERR("Unable to open Texton Dictionary.");
-      exit(-1);
-    }
+        fs["vocabulary"] >> dictionary;
+        fs["bins"] >> m;
+        float bins[m.size()];
+        vecToArr(m, bins);
+        fs.release();
 
-    fs["vocabulary"] >> dictionary;
-    fs["bins"] >> m;
-    float bins[m.size()];
-    vecToArr(m, bins);
-    fs.release();
+    // Load Images to be tested
+    map<string, vector<Mat> > classImgs;
+      path p = "../../../TEST_IMAGES/kth-tips/classes";
+      loadClassImgs(p, classImgs);
 
-// Load Images to be tested
-map<string, vector<Mat> > classImgs;
-  path p = "../../../TEST_IMAGES/kth-tips/classes";
-  loadClassImgs(p, classImgs);
+    map<string, vector<Mat> > savedClassHist;
+    // Load in Class Histograms(Models)
+    FileStorage fs3("models.xml", FileStorage::READ);
+      FileNode fn = fs3.root();
+      if(fn.type() == FileNode::MAP){
 
-map<string, vector<Mat> > savedClassHist;
-// Load in Class Histograms(Models)
-FileStorage fs3("models.xml", FileStorage::READ);
-  FileNode fn = fs3.root();
-  if(fn.type() == FileNode::MAP){
+        // Create iterator to go through all the classes
+        for(FileNodeIterator it = fn.begin();it != fn.end();it++){
+          string clsNme = (string)(*it)["Name"];
+          savedClassHist[clsNme];
 
-    // Create iterator to go through all the classes
-    for(FileNodeIterator it = fn.begin();it != fn.end();it++){
-      string clsNme = (string)(*it)["Name"];
-      savedClassHist[clsNme];
-
-      // Create node of current Class
-      FileNode clss = (*it)["Models"];
-      // Iterate through each model inside class, saving to map
-      for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
-        FileNode k = *it1;
-        Mat tmp;
-        k >> tmp;
-        savedClassHist[clsNme].push_back(tmp);
-      }
-    }
-    fs3.release();
-  }else{
-    ERR("Class file was not map. Exiting");
-    exit(-1);
-  }
-
-// Initilse Histogram parameters
-int histSize = m.size()-1;
-  const float* histRange = {bins};
-  bool uniform = false;
-  bool accumulate = false;
-
-// Initialise Clustering Parameters
-int clsNumClusters = 10;
-  int clsAttempts = 5;
-  int clsFlags = KMEANS_PP_CENTERS;
-  TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-  BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
-
-// Stock Scalar Colors
-map<string, Scalar> Colors;
-  vector<Scalar> clsColor;
-    clsColor.push_back(Scalar(0,0,250)); // Blue
-    clsColor.push_back(Scalar(255,128,0)); // Orange
-    clsColor.push_back(Scalar(255,255,0)); // Yellow
-    clsColor.push_back(Scalar(0,255,255)); // Turquoise
-    clsColor.push_back(Scalar(127,0,255)); // DarkPurple
-    clsColor.push_back(Scalar(255,0,255)); // Purple
-    clsColor.push_back(Scalar(255,0,127)); // Pink/Red
-
-  Colors["Correct"] = Scalar(0,255,0);
-  Colors["Incorrect"] = Scalar(255,0,0);
-  Colors["Unknown"] = Scalar(100,100,100);
-
-  int count =0;
-  for(auto const ent : savedClassHist){
-    Colors[ent.first] = clsColor[count];
-    count++;
-  }
-
-// Create Img Legend
-Mat Key = Mat::zeros(400,200,CV_8UC3);
-  int cnt=0;
-  for(auto const ent1 : Colors){
-    putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-    rectangle(Key, Rect(100, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
-    cnt++;
-  }
-
-// Create Legend window and display
-namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
-imshow("legendWin", Key);
-
-namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
-
-    int Correct = 0, Incorrect =0, Unknown =0;
-  for(auto const ent : classImgs){
-    for(int h=0;h<ent.second.size();h++){
-      if(ent.second[h].rows != ent.second[h].cols){
-        ERR("Novel input image was now square. Exiting");
-        exit(-1);
-      }
-      int imgSize = ent.second[h].rows;
-      Mat disVals = Mat(imgSize,imgSize,CV_8UC3);
-
-      Mat in, hold;
-      in = ent.second[h];
-       if(in.empty()){
-        ERR("Novel image was not able to be imported. Exiting.");
+          // Create node of current Class
+          FileNode clss = (*it)["Models"];
+          // Iterate through each model inside class, saving to map
+          for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
+            FileNode k = *it1;
+            Mat tmp;
+            k >> tmp;
+            savedClassHist[clsNme].push_back(tmp);
+          }
+        }
+        fs3.release();
+      }else{
+        ERR("Class file was not map. Exiting");
         exit(-1);
       }
 
-      // Send img to be filtered, and responses aggregated with addWeighted
-      filterHandle(in, hold);
+    // Initilse Histogram parameters
+    int histSize = m.size()-1;
+      const float* histRange = {bins};
+      bool uniform = false;
+      bool accumulate = false;
 
-      // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
-      vector<Mat> test;
-      segmentImg(test, hold);
+    // Initialise Clustering Parameters
+    int clsNumClusters = 10;
+      int clsAttempts = 5;
+      int clsFlags = KMEANS_PP_CENTERS;
+      TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+      BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
-      // Counters for putting 'pixels' on display image
-      int disrows = 0, discols = 0;
+    // Stock Scalar Colors
+    map<string, Scalar> Colors;
+      vector<Scalar> clsColor;
+        clsColor.push_back(Scalar(0,0,250)); // Blue
+        clsColor.push_back(Scalar(255,128,0)); // Orange
+        clsColor.push_back(Scalar(255,255,0)); // Yellow
+        clsColor.push_back(Scalar(0,255,255)); // Turquoise
+        clsColor.push_back(Scalar(127,0,255)); // DarkPurple
+        clsColor.push_back(Scalar(255,0,255)); // Purple
+        clsColor.push_back(Scalar(255,0,127)); // Pink/Red
 
-      // Loop through and classify all image segments
-      for(int x=0;x<test.size();x++){
-        discols = (discols + cropsize)%imgSize;
-        if(discols==0){
-          disrows += 20;
-        }
-        if(!test[x].empty()){
-           novelTrainer.add(test[x]);
-         }
+      Colors["Correct"] = Scalar(0,255,0);
+      Colors["Incorrect"] = Scalar(255,0,0);
+      Colors["Unknown"] = Scalar(100,100,100);
 
-         // Generate 10 clusters per segment and store in Mat
-         Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-         clus = novelTrainer.cluster();
+      int count =0;
+      for(auto const ent : savedClassHist){
+        Colors[ent.first] = clsColor[count];
+        count++;
+      }
 
-         // Replace Cluster Centers with the closest matching texton
-         textonFind(clus, dictionary);
+    // Create Img Legend
+    Mat Key = Mat::zeros(400,200,CV_8UC3);
+      int cnt=0;
+      for(auto const ent1 : Colors){
+        putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+        rectangle(Key, Rect(100, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
+        cnt++;
+      }
 
-        // Calculate the histogram
-         Mat out1;
-         calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
-         novelTrainer.clear();
+    // Create Legend window and display
+    namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
+    imshow("legendWin", Key);
 
-         double high = DBL_MAX, secHigh = DBL_MAX;
-         string match, secMatch;
-         for(auto const ent2 : savedClassHist){
-           for(int j=0;j < ent2.second.size();j++){
-             double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
-//             cout << "class: " << ent2.first << " MatchValue:" << val << endl;
-             if(val < high){
-               high = val;
-               match = ent2.first;
+    namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
+
+      // Holds Class names, each holding a count for TP, FP, FN, FP Values
+      map<string, vector<int> > results;
+      initROCcnt(results, classImgs); // Initilse map
+
+      // Store aggregated correct, incorrect and unknown results
+      int Correct = 0, Incorrect =0, Unknown =0;
+      // Loop through All Classes
+      for(auto const ent : classImgs){
+        // Loop through all images in Class
+        for(int h=0;h<ent.second.size();h++){
+          if(ent.second[h].rows != ent.second[h].cols){
+            ERR("Novel input image was now square. Exiting");
+            exit(-1);
+          }
+          int imgSize = ent.second[h].rows;
+          Mat disVals = Mat(imgSize,imgSize,CV_8UC3);
+
+          Mat in, hold;
+          in = ent.second[h];
+           if(in.empty()){
+            ERR("Novel image was not able to be imported. Exiting.");
+            exit(-1);
+          }
+
+          // Send img to be filtered, and responses aggregated with addWeighted
+          filterHandle(in, hold);
+
+          // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
+          vector<Mat> test;
+          segmentImg(test, hold);
+
+          // Counters for putting 'pixels' on display image
+          int disrows = 0, discols = 0;
+          // Loop through and classify all image segments
+          for(int x=0;x<test.size();x++){
+            discols = (discols + cropsize)%imgSize;
+            if(discols==0){
+              disrows += 20;
+            }
+            if(!test[x].empty()){
+               novelTrainer.add(test[x]);
              }
-             if(val < secHigh && val > high && match.compare(ent2.first) != 0){
-               secHigh = val;
-               secMatch = ent2.first;
+
+             // Generate 10 clusters per segment and store in Mat
+             Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+             clus = novelTrainer.cluster();
+
+             // Replace Cluster Centers with the closest matching texton
+             textonFind(clus, dictionary);
+
+            // Calculate the histogram
+             Mat out1;
+             calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
+             novelTrainer.clear();
+
+             double high = DBL_MAX, secHigh = DBL_MAX;
+             string match, secMatch;
+             for(auto const ent2 : savedClassHist){
+               for(int j=0;j < ent2.second.size();j++){
+                 double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+                 if(val < high){
+                   high = val;
+                   match = ent2.first;
+                 }
+                 if(val < secHigh && val > high && match.compare(ent2.first) != 0){
+                   secHigh = val;
+                   secMatch = ent2.first;
+                 }
+               }
              }
-           }
-         }
-         string prediction = "";
-         // If the match is above threshold or nearest other match is to similar, return unknown
-         if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
-           prediction = "Unknown";
-         }else{
-           prediction = match;
-         }
-         if(prediction.compare(ent.first)==0){
-           Correct += 1;
-           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
-         }else if(prediction.compare("Unknown")==0){
-           Unknown +=1;
-           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
-         }else{
-           Incorrect += 1;
-           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
-         }
+             string prediction = "";
+             // If the match is above threshold or nearest other match is to similar, return unknown
+             if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
+               prediction = "Unknown";
+             }else{
+               prediction = match;
+             }
+
+             if(prediction.compare(ent.first)==0){
+               Correct += 1;
+               rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
+             }else if(prediction.compare("Unknown")==0){
+               Unknown +=1;
+               rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+             }else{
+               Incorrect += 1;
+               rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
+             }
+
+            //  // Sort and count the predictions by class
+            //  int AFOIL, BREAD, COTTON, CORK, WOOD;
+            //  if(prediction.compare("AFoil")){
+            //    AFOIL++;
+            //  }else if(prediction.compare("Wood")){
+            //    WOOD++;
+            //  }else if(prediction.compare("Bread")){
+            //    BREAD++;
+            //  }else if(prediction.compare("Cotton")){
+            //    COTTON++;
+            //  }else if(prediction.compare("Cork")){
+            //    CORK++;
+            //  }
+//            cout << "\nThis is the correct: " << Correct << "\nIncorrect: " << Incorrect << "\nUnknown: " << Unknown << endl;
+            saveROCdata(ent.first, match, results);
+            // cout << "These are the indivdual ratings: \nCorrect Answer: " << ent.first << "\nAFoil: " << AFOIL << "\nWood: " << WOOD;
+            // cout << "\nBread: " << BREAD << "\nCotton: " << COTTON << "\nCork: " << CORK << endl;
+
+      //    imshow("mywindow", disVals);
+    //      waitKey(500);
         }
-  //    imshow("mywindow", disVals);
-//      waitKey(500);
+      }
+      // END OF CLASS, CONTINUING TO NEXT CLASS //
     }
-  }
-        cout << "This is the correct: " << Correct << "\nIncorrect: " << Incorrect << "\nUnknown: " << Unknown << endl;
+    printResults(results);
+    namedWindow("ROC", CV_WINDOW_AUTOSIZE);
+    Mat roc = Mat(400,400,CV_8UC3, Scalar(255,255,255));
+    line(roc, Point(0,400), Point(400,0), Scalar(0,0,255), 1, 8, 0);
 
-//    }
+    imshow("ROC", roc);
+    waitKey(2000);
+    return 0;
+    //    }
 
-//   if(secHigh-high>high){
-//   cout << "\n\nThe input sample was matched as: " << match << " with a value of: " << high << endl;
-//   cout << "The second best match was: " << secMatch << " with a value of: " << secHigh << endl;
-//   cout << "\nThe variation between these two values is: " << secHigh-high << "\n\n";
-// }else{
-//   cout << "\n\nThis was a very close match with the distance being smaller than the chosen value.\n\n";
-// }
+    //   if(secHigh-high>high){
+    //   cout << "\n\nThe input sample was matched as: " << match << " with a value of: " << high << endl;
+    //   cout << "The second best match was: " << secMatch << " with a value of: " << secHigh << endl;
+    //   cout << "\nThe variation between these two values is: " << secHigh-high << "\n\n";
+    // }else{
+    //   cout << "\n\nThis was a very close match with the distance being smaller than the chosen value.\n\n";
+    // }
 
 
 
