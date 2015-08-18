@@ -409,22 +409,22 @@ int main( int argc, char** argv ){
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
   BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
+// Stock Scalar Colors
 map<string, Scalar> Colors;
-  // Block Colors
   vector<Scalar> clsColor;
     clsColor.push_back(Scalar(255,0,0)); // Red
     clsColor.push_back(Scalar(0,255,0)); // Green
     clsColor.push_back(Scalar(0,0,250)); // Blue
-    clsColor.push_back(Scalar(255,255,0));
-    clsColor.push_back(Scalar(0,255,100));
-    clsColor.push_back(Scalar(0,255,255));
-    clsColor.push_back(Scalar(100,100,100));
-
+    clsColor.push_back(Scalar(255,128,0)); // Orange
+    clsColor.push_back(Scalar(255,255,0)); // Yellow
+    clsColor.push_back(Scalar(0,255,255)); // Turquoise
+    clsColor.push_back(Scalar(127,0,255)); // DarkPurple
+    clsColor.push_back(Scalar(255,0,255)); // Purple
+    clsColor.push_back(Scalar(255,0,127)); // Pink/Red
   Colors["Unknown"] = Scalar(100,100,100);
   int count =0;
   for(auto const ent : savedClassHist){
     Colors[ent.first] = clsColor[count];
-    cout << "and again.." << endl;
     count++;
   }
 
