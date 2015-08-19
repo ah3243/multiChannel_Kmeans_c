@@ -292,7 +292,7 @@ void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vecto
       TP = in[curCls][0][j];
       FN = in[curCls][3][j];
       TPR = (TP/TP+FN);
-      cout << " TP: " << TP << " FN: " << FN << " TPR: " << TPR;
+      cout << " " << j << ":-  TP: " << TP << " FN: " << FN << " TPR: " << TPR;
 
       // Calculate FPR
       int FPR, FP, TN;
@@ -314,25 +314,25 @@ void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vecto
 }
 
 // void saveTestData(vector<map<string, vector<int> > > r){
-//   cout << "inside test data.." << endl;
-//   vector<string> nme;
-//   assert(getClsNames(r[0], nme));
-//
-//   FileStorage fs("results.xml", FileStorage::WRITE);
-//   for(int i=0;i<r.size();i++){
-//     cout << "Test: " << i << endl;
-//     stringstream ss;
-//     ss << "TEST:" << i;
-//     fs << ss.str() << "{";
-//     for(const auto ent : r){
-//       cout << "Class: " << ent.first << endl;
-//       fs
-//       for(int j=0;j<ent.second.size();j++){
-//
-//       }
-//     }
-//   }
-// }
+  //   cout << "inside test data.." << endl;
+  //   vector<string> nme;
+  //   assert(getClsNames(r[0], nme));
+  //
+  //   FileStorage fs("results.xml", FileStorage::WRITE);
+  //   for(int i=0;i<r.size();i++){
+  //     cout << "Test: " << i << endl;
+  //     stringstream ss;
+  //     ss << "TEST:" << i;
+  //     fs << ss.str() << "{";
+  //     for(const auto ent : r){
+  //       cout << "Class: " << ent.first << endl;
+  //       fs
+  //       for(int j=0;j<ent.second.size();j++){
+  //
+  //       }
+  //     }
+  //   }
+  // }
 
 void getClassHist(map<string, vector<Mat> >& savedClassHist){
   // Load in Class Histograms(Models)
@@ -526,7 +526,7 @@ int main( int argc, char** argv ){
         if(!in.empty())
           filterHandle(in, hold);
 
-        // Segment the 200x200pixel image into 400x1 Mats(20x20)
+        // Segment the 200x200pixel image
         vector<Mat> test;
         segmentImg(test, hold);
 
@@ -623,7 +623,7 @@ int main( int argc, char** argv ){
             classTrainer.add(test[k]);
           }
         }
-
+      }
         // Generate 10 clusters per class and store in Mat
         Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
         clus = classTrainer.cluster();
@@ -636,7 +636,6 @@ int main( int argc, char** argv ){
         classHist[ent1.first].push_back(out);
 
         classTrainer.clear();
-      }
     }
 
     FileStorage fs2("models.xml",FileStorage::WRITE);
@@ -719,7 +718,7 @@ int main( int argc, char** argv ){
     vector<map<string, vector<int> > > results;
 
   int counter = 0;
-  for(int numClusters=1;numClusters<10;numClusters++){
+  for(int numClusters=1;numClusters<15;numClusters++){
     initROCcnt(results, classImgs); // Initilse map
     cout << "This is the size of the results.." << results.size() << endl;
     int clsAttempts = 5;
