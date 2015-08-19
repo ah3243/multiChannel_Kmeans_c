@@ -204,16 +204,22 @@ void initROCcnt(vector<map<string, vector<int> > >& r, map<string, vector<Mat> >
   cout << "\n";
 }
 
-void printResults(vector<map<string, vector<int> > > r){
+void printResults(map<string, vector<vector<int> > > r, vector<string> clsNmes){
+  assert(r.size()==clsNmes.size());
+  string testtype[] = {"TruePositive", "FalsePositive", "TrueNegative", "FalseNegative"};
   cout << "\n\n----------------------------------------------------------\n\n";
   cout << "                    These are the test results                  \n";
-  for(int i=0;i<r.size();i++){
-    for(auto const ent6 : r[i]){
-      cout << ent6.first;
-      cout << "\n      TruePositive:  " << ent6.second[0];
-      cout << "\n      TrueNegative:  " << ent6.second[1];
-      cout << "\n      FalsePositive: " << ent6.second[2];
-      cout << "\n      FalseNegative: " << ent6.second[3];
+
+  for(int i = 0;i<clsNmes.size();i++){
+    string clss = clsNmes[i];
+    cout << "\nClass: " << clss << "\n\n";
+    // Loop through both TPR and FPR results
+    for(int j = 0 ;j<4;j++){
+      cout << testtype[j] << " : " ;
+      // Loop through all test iterations
+      for(int k = 0;k<r[clss][j].size();k++){
+        cout << r[clss][j][k] << ", ";
+      }
       cout << "\n";
     }
     cout << "\n\n";
@@ -248,10 +254,8 @@ void cacheTestdata(string correct, string prediction, map<string, vector<int> >&
   }
 }
 
-void organiseResultByClass(vector<map<string, vector<int> > >in, map<string, vector<vector<int> > > &out){
+void organiseResultByClass(vector<map<string, vector<int> > >in, map<string, vector<vector<int> > > &out, vector<string> clsNmes){
   int numTests = in.size();
-  vector<string> clsNmes;
-  getClsNames(in[0], clsNmes); // Get class Names
 
   vector<int> a;
   cout << "\n\nNumber of tests: " << in.size() << endl;
@@ -684,11 +688,12 @@ int main( int argc, char** argv ){
 
   }
   map<string, vector<vector<int> > > resByCls;
-  organiseResultByClass(results, resByCls);
+  vector<string> clsNmes;
+  getClsNames(results[0], clsNmes); // Get class Names
+  organiseResultByClass(results, resByCls, clsNmes);
 
   // print results, clsAttempts starts at 1 so is -1
-  printResults(results);
-
+  printResults(resByCls, clsNmes);
 
 
   #endif
