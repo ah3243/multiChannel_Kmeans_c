@@ -22,6 +22,7 @@
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Handling Functions
+#include "modelBuild.h" // Generate models from class images
 
 #define DICTIONARY_BUILD 0
 #define MODEL_BUILD 1
@@ -159,6 +160,7 @@ vector<float> matToVec(Mat m){
   }
   return v;
 }
+
 void vecToArr(vector<float> v, float* m){
   int size = v.size();
   for(int i=0;i<size;i++){
@@ -555,109 +557,15 @@ int main( int argc, char** argv ){
     fs.release();
   #endif
 
-
   #if MODEL_BUILD == 1
   cout << "\n\n........Generating Class Models from Imgs.........\n";
     ///////////////////////////////////////////////////////////
     // Get histogram responses using vocabulary from Classes //
     ///////////////////////////////////////////////////////////
+    modelBuildHandle();
 
     cout << "\n\n........Loading Texton Dictionary.........\n";
 
-    // Load TextonDictionary
-    Mat dictionary;
-    vector<float> m;
-      FileStorage fs("dictionary.xml",FileStorage::READ);
-      fs["vocabulary"] >> dictionary;
-      fs["bins"] >> m;
-      if(!fs.isOpened()){
-        ERR("Unable to open Texton Dictionary.");
-        exit(-1);
-      }
-      fs.release();
-
-      // Load Class imgs and store in classImgs map
-      map<string, vector<Mat> > classImgs;
-      path p = "../../../TEST_IMAGES/kth-tips/classes";
-      loadClassImgs(p, classImgs);
-
-      float bins[m.size()];
-      vecToArr(m, bins);
-
-      // Initilse Histogram parameters
-      int histSize = m.size()-1;
-      const float* histRange = {bins};
-      bool uniform = false;
-      bool accumulate = false;
-
-
-      int clsNumClusters = 10;
-      int clsAttempts = 5;
-      int clsFlags = KMEANS_PP_CENTERS;
-      TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-      BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
-
-      cout << "\n\n.......Generating Models...... \n" ;
-
-      map<string, vector<Mat> > classHist;
-
-    // Cycle through Classes
-    for(auto const ent1 : classImgs){
-      // Cycle through each classes images
-      cout << "\nClass: " << ent1.first << endl;
-      for(int j=0;j < ent1.second.size();j++){
-        Mat in, hold;
-
-        // Send img to be filtered, and responses aggregated with addWeighted
-        in = ent1.second[j];
-         if(!in.empty())
-            filterHandle(in, hold);
-
-        // Segment the 200x200pixel image into 400x1 Mats(20x20)
-        vector<Mat> test;
-        segmentImg(test, hold);
-
-        // Push each saved Mat to classTrainer
-        for(int k = 0; k < test.size(); k++){
-          if(!test[k].empty()){
-            classTrainer.add(test[k]);
-          }
-        }
-      }
-      // Generate 10 clusters per class and store in Mat
-      Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-      clus = classTrainer.cluster();
-
-      // Replace Cluster Centers with the closest matching texton
-      textonFind(clus, dictionary);
-
-      Mat out;
-      calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-      classHist[ent1.first].push_back(out);
-
-      classTrainer.clear();
-    }
-
-    FileStorage fs2("models.xml",FileStorage::WRITE);
-    // int numClasses = classHist.size();
-    // fs2 << "Num_Models" << numClasses;
-    int cont=0;
-    for(auto const ent1 : classHist){
-      stringstream ss;
-      ss << "class_" << cont;
-      fs2 << ss.str() << "{";
-        fs2 << "Name" << ent1.first;
-        fs2 << "Models" << "{";
-          for(int i=0;i<ent1.second.size();i++){
-            stringstream ss1;
-            ss1 << "m_" << i;
-            fs2 << ss1.str() << ent1.second[i];
-          }
-        fs2 << "}";
-      fs2 << "}";
-      cont++;
-    }
-    fs2.release();
 
   #endif
 
@@ -668,12 +576,10 @@ int main( int argc, char** argv ){
     // Test Against Novel Image //
     //////////////////////////////
 
-  if(MODEL_BUILD == 0){
     // Load Images to be tested
-    map<string, vector<Mat> > classImgs;
+    map<string, vector<Mat> > classImages;
       path p = "../../../TEST_IMAGES/kth-tips/classes";
-      loadClassImgs(p, classImgs);
-  }
+      loadClassImgs(p, classImages);
 
     map<string, vector<Mat> > savedClassHist;
 
@@ -720,10 +626,10 @@ int main( int argc, char** argv ){
 
   int counter = 0;
   for(int numClusters=10;numClusters<11;numClusters++){
-    initROCcnt(results, classImgs); // Initilse map
+    initROCcnt(results, classImages); // Initilse map
     cout << "This is the size of the results.." << results.size() << endl;
     int clsAttempts = 5;
-    testNovelImgHandle(clsAttempts, numClusters, results[counter], classImgs, savedClassHist, Colors);
+    testNovelImgHandle(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors);
     counter++;
   }
   map<string, vector<vector<int> > > resByCls;
