@@ -270,6 +270,141 @@ void getClassHist(map<string, vector<Mat> >& savedClassHist){
   }
 }
 
+void getDictionary(Mat &dictionary, vector<float> &m){
+  // Load TextonDictionary
+  FileStorage fs("dictionary.xml",FileStorage::READ);
+  if(!fs.isOpened()){
+    ERR("Unable to open Texton Dictionary.");
+    exit(-1);
+  }
+
+  fs["vocabulary"] >> dictionary;
+  fs["bins"] >> m;
+  fs.release();
+}
+
+void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int> >& results, map<string, vector<Mat> > classImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors){
+  int clsFlags = KMEANS_PP_CENTERS;
+  TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+  BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
+
+  // Import Texton Dictionary
+  Mat dictionary;
+  vector<float> m;
+  getDictionary(dictionary, m);
+  float bins[m.size()];
+  vecToArr(m, bins);
+
+  // Initilse Histogram parameters
+  int histSize = m.size()-1;
+  const float* histRange = {bins};
+  bool uniform = false;
+  bool accumulate = false;
+
+    // Store aggregated correct, incorrect and unknown results for segment prediction display
+    int Correct = 0, Incorrect =0, Unknown =0;
+    // Loop through All Classes
+    for(auto const ent : classImgs){
+      // Loop through all images in Class
+      for(int h=0;h<ent.second.size();h++){
+        if(ent.second[h].rows != ent.second[h].cols){
+          ERR("Novel input image was now square. Exiting");
+          exit(-1);
+        }
+        int imgSize = ent.second[h].rows;
+        Mat disVals = Mat(imgSize,imgSize,CV_8UC3);
+
+        Mat in, hold;
+        in = ent.second[h];
+         if(in.empty()){
+          ERR("Novel image was not able to be imported. Exiting.");
+          exit(-1);
+        }
+
+        // Send img to be filtered, and responses aggregated with addWeighted
+        filterHandle(in, hold);
+
+        // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
+        vector<Mat> test;
+        segmentImg(test, hold);
+
+        // Counters for putting 'pixels' on display image
+        int disrows = 0, discols = 0;
+        // Loop through and classify all image segments
+        for(int x=0;x<test.size();x++){
+          // handle segment prediction printing
+          discols = (discols + cropsize)%imgSize;
+          if(discols==0){
+            disrows += 20;
+          }
+          if(!test[x].empty()){
+             novelTrainer.add(test[x]);
+           }
+
+           // Generate 10 clusters per segment and store in Mat
+           Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
+           clus = novelTrainer.cluster();
+
+           // Replace Cluster Centers with the closest matching texton
+           textonFind(clus, dictionary);
+
+          // Calculate the histogram
+           Mat out1;
+           calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
+           novelTrainer.clear();
+
+           double high = DBL_MAX, secHigh = DBL_MAX;
+           string match, secMatch;
+           for(auto const ent2 : savedClassHist){
+             for(int j=0;j < ent2.second.size();j++){
+               double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+               // Save best match value and name
+               if(val < high){
+                 high = val;
+                 match = ent2.first;
+               }
+               // save second best match and name
+               else if(val < secHigh && val > high && match.compare(ent2.first) != 0){
+                 secHigh = val;
+                 secMatch = ent2.first;
+               }
+             }
+           }
+
+           string prediction = "";
+           // If the match is above threshold or nearest other match is to similar, return unknown
+           if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
+             prediction = "Unknown";
+           }else{
+             prediction = match;
+           }
+
+           // Populate Window with predictions
+           if(prediction.compare(ent.first)==0){
+             Correct += 1;
+             rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
+           }else if(prediction.compare("Unknown")==0){
+             Unknown +=1;
+             rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+           }else{
+             Incorrect += 1;
+             rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
+           }
+          // Save ROC data to results, clsAttempts starts at 0 so is -1
+          saveROCdata(ent.first, match, results);
+
+      }
+      //  imshow("mywindow", disVals);
+      //  waitKey(500);
+    }
+    // END OF CLASS, CONTINUING TO NEXT CLASS //
+  }
+
+  // namedWindow("ROC", CV_WINDOW_AUTOSIZE);
+  // Mat roc = Mat(400,400,CV_8UC3, Scalar(255,255,255));
+  // line(roc, Point(0,400), Point(400,0), Scalar(0,0,255), 1, 8, 0);
+  // imshow("ROC", roc);
+}
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
@@ -442,20 +577,6 @@ int main( int argc, char** argv ){
     // Test Against Novel Image //
     //////////////////////////////
 
-    // Load TextonDictionary
-    Mat dictionary;
-      vector<float> m;
-        FileStorage fs("dictionary.xml",FileStorage::READ);
-        if(!fs.isOpened()){
-          ERR("Unable to open Texton Dictionary.");
-          exit(-1);
-        }
-
-        fs["vocabulary"] >> dictionary;
-        fs["bins"] >> m;
-        float bins[m.size()];
-        vecToArr(m, bins);
-        fs.release();
 
     // Load Images to be tested
     map<string, vector<Mat> > classImgs;
@@ -465,15 +586,6 @@ int main( int argc, char** argv ){
     map<string, vector<Mat> > savedClassHist;
 
     getClassHist(savedClassHist);
-
-    // Initilse Histogram parameters
-    int histSize = m.size()-1;
-      const float* histRange = {bins};
-      bool uniform = false;
-      bool accumulate = false;
-
-    // Initialise Clustering Parameters
-    int clsNumClusters = 10;
 
     // Stock Scalar Colors
     map<string, Scalar> Colors;
@@ -513,120 +625,14 @@ int main( int argc, char** argv ){
 
     // Holds Class names, each holding a count for TP, FP, FN, FP Values
     vector<map<string, vector<int> > > results;
-
+    // Initialise Clustering Parameters
+    int numClusters = 10;
   for(int clsAttempts=1;clsAttempts<5;clsAttempts++){
-    int clsFlags = KMEANS_PP_CENTERS;
-    TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-    BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
-
     initROCcnt(results, classImgs); // Initilse map
     cout << "This is the size of the results.." << results.size() << endl;
 
-      // Store aggregated correct, incorrect and unknown results for segment prediction display
-      int Correct = 0, Incorrect =0, Unknown =0;
-      // Loop through All Classes
-      for(auto const ent : classImgs){
-        // Loop through all images in Class
-        for(int h=0;h<ent.second.size();h++){
-          if(ent.second[h].rows != ent.second[h].cols){
-            ERR("Novel input image was now square. Exiting");
-            exit(-1);
-          }
-          int imgSize = ent.second[h].rows;
-          Mat disVals = Mat(imgSize,imgSize,CV_8UC3);
+    testNovelImgHandle(clsAttempts, numClusters, results[clsAttempts-1], classImgs, savedClassHist, Colors);
 
-          Mat in, hold;
-          in = ent.second[h];
-           if(in.empty()){
-            ERR("Novel image was not able to be imported. Exiting.");
-            exit(-1);
-          }
-
-          // Send img to be filtered, and responses aggregated with addWeighted
-          filterHandle(in, hold);
-
-          // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
-          vector<Mat> test;
-          segmentImg(test, hold);
-
-          // Counters for putting 'pixels' on display image
-          int disrows = 0, discols = 0;
-          // Loop through and classify all image segments
-          for(int x=0;x<test.size();x++){
-            // handle segment prediction printing
-            discols = (discols + cropsize)%imgSize;
-            if(discols==0){
-              disrows += 20;
-            }
-            if(!test[x].empty()){
-               novelTrainer.add(test[x]);
-             }
-
-             // Generate 10 clusters per segment and store in Mat
-             Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-             clus = novelTrainer.cluster();
-
-             // Replace Cluster Centers with the closest matching texton
-             textonFind(clus, dictionary);
-
-            // Calculate the histogram
-             Mat out1;
-             calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
-             novelTrainer.clear();
-
-             double high = DBL_MAX, secHigh = DBL_MAX;
-             string match, secMatch;
-             for(auto const ent2 : savedClassHist){
-               for(int j=0;j < ent2.second.size();j++){
-                 double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
-                 // Save best match value and name
-                 if(val < high){
-                   high = val;
-                   match = ent2.first;
-                 }
-                 // save second best match and name
-                else if(val < secHigh && val > high && match.compare(ent2.first) != 0){
-                   secHigh = val;
-                   secMatch = ent2.first;
-                 }
-               }
-             }
-
-             string prediction = "";
-             // If the match is above threshold or nearest other match is to similar, return unknown
-             if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
-               prediction = "Unknown";
-             }else{
-               prediction = match;
-             }
-
-             // Populate Window with predictions
-             if(prediction.compare(ent.first)==0){
-               Correct += 1;
-               rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
-             }else if(prediction.compare("Unknown")==0){
-               Unknown +=1;
-               rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
-             }else{
-               Incorrect += 1;
-               rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
-             }
-            // Save ROC data to results, clsAttempts starts at 0 so is -1
-            saveROCdata(ent.first, match, results[clsAttempts-1]);
-
-        }
-        //  imshow("mywindow", disVals);
-        //  waitKey(500);
-      }
-      // END OF CLASS, CONTINUING TO NEXT CLASS //
-    }
-
-    // namedWindow("ROC", CV_WINDOW_AUTOSIZE);
-    // Mat roc = Mat(400,400,CV_8UC3, Scalar(255,255,255));
-    // line(roc, Point(0,400), Point(400,0), Scalar(0,0,255), 1, 8, 0);
-    // imshow("ROC", roc);
-
-    waitKey(1000);
   }
 
   // print results, clsAttempts starts at 1 so is -1
