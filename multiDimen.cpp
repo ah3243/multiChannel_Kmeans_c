@@ -220,19 +220,25 @@ void printResults(vector<map<string, vector<int> > > r){
   }
 }
 
-void saveROCdata(string correct, string prediction, map<string, vector<int> >& results){
+int getClsNames(map<string, vector<int> > &r, vector<string> &nme){
+  for(auto const ent5 : r){
+    if(ent5.second.size()<=0){
+      return 0;
+    }
+    nme.push_back(ent5.first);
+  }
+}
+
+void cacheTestdata(string correct, string prediction, map<string, vector<int> >& results){
   //cout << "Answer is: " << correct << " prediction is: " << prediction <<endl;
   if(correct.compare(prediction)==0){
     // If correct
-
     // add 1 to True Positive
     results[correct][0] += 1;
     // add 1 to True Positive to all other classes
     addOneToAllButOne(correct, "", results);
-
   }else if(correct.compare(prediction)!=0){
     // If incorrect
-
     // add 1 to False Positive for Predicted
     results[prediction][1] += 1;
     // add 1 to False Negative to Correct
@@ -241,6 +247,49 @@ void saveROCdata(string correct, string prediction, map<string, vector<int> >& r
     addOneToAllButOne(correct, prediction, results);
   }
 }
+
+void organiseResultByClass(vector<map<string, vector<int> > >in, map<string, vector<vector<int> > > &out){
+  int numTests = in.size();
+  vector<string> clsNmes;
+  getClsNames(in[0], clsNmes); // Get class Names
+
+  vector<int> a;
+  cout << "\n\nNumber of tests: " << in.size() << endl;
+  // Go through each class
+  for(int i=0;i<clsNmes.size();i++){
+    // Go through the 4 types of result for each class
+    cout << "\nnumber of classes: " << clsNmes.size() << endl;
+    for(int j=0;j<4;j++){
+      cout << "going through test.." << endl;
+      // Go through each test
+      for(int k=0;k<in.size();k++){
+        out[clsNmes[i]].push_back(a); // Initilse with vector
+        out[clsNmes[i]][j].push_back(in[k][clsNmes[i]][j]);
+      }
+    }
+  }
+}
+
+// void saveTestData(vector<map<string, vector<int> > > r){
+//   cout << "inside test data.." << endl;
+//   vector<string> nme;
+//   assert(getClsNames(r[0], nme));
+//
+//   FileStorage fs("results.xml", FileStorage::WRITE);
+//   for(int i=0;i<r.size();i++){
+//     cout << "Test: " << i << endl;
+//     stringstream ss;
+//     ss << "TEST:" << i;
+//     fs << ss.str() << "{";
+//     for(const auto ent : r){
+//       cout << "Class: " << ent.first << endl;
+//       fs
+//       for(int j=0;j<ent.second.size();j++){
+//
+//       }
+//     }
+//   }
+// }
 
 void getClassHist(map<string, vector<Mat> >& savedClassHist){
   // Load in Class Histograms(Models)
@@ -391,7 +440,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
              rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
            }
           // Save ROC data to results, clsAttempts starts at 0 so is -1
-          saveROCdata(ent.first, match, results);
+          cacheTestdata(ent.first, match, results);
 
       }
       //  imshow("mywindow", disVals);
@@ -634,9 +683,13 @@ int main( int argc, char** argv ){
     testNovelImgHandle(clsAttempts, numClusters, results[clsAttempts-1], classImgs, savedClassHist, Colors);
 
   }
+  map<string, vector<vector<int> > > resByCls;
+  organiseResultByClass(results, resByCls);
 
   // print results, clsAttempts starts at 1 so is -1
   printResults(results);
+
+
 
   #endif
 
