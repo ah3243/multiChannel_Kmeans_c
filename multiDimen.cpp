@@ -190,32 +190,38 @@ void addOneToAllButOne(string exp1, string exp2, map<string, vector<int> >& resu
     }
   }
 }
-void initROCcnt(map<string, vector<int> >& r, map<string, vector<Mat> > classImgs){
-  cout << "initialiseing.. " << endl;
+
+void initROCcnt(vector<map<string, vector<int> > >& r, map<string, vector<Mat> > classImgs){
+  cout << "initialising.. " << endl;
+  map<string, vector<int> > a;
   for(auto const ent5 : classImgs){
-    for(int i=0;i<4;i++)
-      r[ent5.first].push_back(1);
+    for(int i=0;i<4;i++){
+      a[ent5.first].push_back(1);
+    }
     cout << "Initilseing..." << ent5.first << endl;
   }
+  r.push_back(a);
   cout << "\n";
 }
 
-void printResults(map<string, vector<int> > r){
+void printResults(vector<map<string, vector<int> > > r){
   cout << "\n\n----------------------------------------------------------\n\n";
   cout << "                    These are the test results                  \n";
-  for(auto const ent6 : r){
-    cout << ent6.first;
-    cout << "\n      TruePositive:  " << ent6.second[0];
-    cout << "\n      TrueNegative:  " << ent6.second[1];
-    cout << "\n      FalsePositive: " << ent6.second[2];
-    cout << "\n      FalseNegative: " << ent6.second[3];
-    cout << "\n";
+  for(int i=0;i<r.size();i++){
+    for(auto const ent6 : r[i]){
+      cout << ent6.first;
+      cout << "\n      TruePositive:  " << ent6.second[0];
+      cout << "\n      TrueNegative:  " << ent6.second[1];
+      cout << "\n      FalsePositive: " << ent6.second[2];
+      cout << "\n      FalseNegative: " << ent6.second[3];
+      cout << "\n";
+    }
+    cout << "\n\n";
   }
-  cout << "\n\n";
 }
 
 void saveROCdata(string correct, string prediction, map<string, vector<int> >& results){
-  cout << "inside..\nAnswer is: " << correct << " prediction is: " << prediction <<endl;
+  //cout << "Answer is: " << correct << " prediction is: " << prediction <<endl;
   if(correct.compare(prediction)==0){
     // If correct
 
@@ -233,7 +239,34 @@ void saveROCdata(string correct, string prediction, map<string, vector<int> >& r
     results[correct][3] += 1;
     // add 1 to True Positive to all other classes
     addOneToAllButOne(correct, prediction, results);
-    cout << "This is the value AFTER: " << results[correct][3] << endl;
+  }
+}
+
+void getClassHist(map<string, vector<Mat> >& savedClassHist){
+  // Load in Class Histograms(Models)
+  FileStorage fs3("models.xml", FileStorage::READ);
+  FileNode fn = fs3.root();
+  if(fn.type() == FileNode::MAP){
+
+    // Create iterator to go through all the classes
+    for(FileNodeIterator it = fn.begin();it != fn.end();it++){
+      string clsNme = (string)(*it)["Name"];
+      savedClassHist[clsNme];
+
+      // Create node of current Class
+      FileNode clss = (*it)["Models"];
+      // Iterate through each model inside class, saving to map
+      for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
+        FileNode k = *it1;
+        Mat tmp;
+        k >> tmp;
+        savedClassHist[clsNme].push_back(tmp);
+      }
+    }
+    fs3.release();
+  }else{
+    ERR("Class file was not map. Exiting");
+    exit(-1);
   }
 }
 
@@ -430,31 +463,8 @@ int main( int argc, char** argv ){
       loadClassImgs(p, classImgs);
 
     map<string, vector<Mat> > savedClassHist;
-    // Load in Class Histograms(Models)
-    FileStorage fs3("models.xml", FileStorage::READ);
-      FileNode fn = fs3.root();
-      if(fn.type() == FileNode::MAP){
 
-        // Create iterator to go through all the classes
-        for(FileNodeIterator it = fn.begin();it != fn.end();it++){
-          string clsNme = (string)(*it)["Name"];
-          savedClassHist[clsNme];
-
-          // Create node of current Class
-          FileNode clss = (*it)["Models"];
-          // Iterate through each model inside class, saving to map
-          for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
-            FileNode k = *it1;
-            Mat tmp;
-            k >> tmp;
-            savedClassHist[clsNme].push_back(tmp);
-          }
-        }
-        fs3.release();
-      }else{
-        ERR("Class file was not map. Exiting");
-        exit(-1);
-      }
+    getClassHist(savedClassHist);
 
     // Initilse Histogram parameters
     int histSize = m.size()-1;
@@ -464,10 +474,6 @@ int main( int argc, char** argv ){
 
     // Initialise Clustering Parameters
     int clsNumClusters = 10;
-      int clsAttempts = 5;
-      int clsFlags = KMEANS_PP_CENTERS;
-      TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-      BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
     // Stock Scalar Colors
     map<string, Scalar> Colors;
@@ -499,17 +505,24 @@ int main( int argc, char** argv ){
         cnt++;
       }
 
-    // Create Legend window and display
+    // Window for Legend display
     namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
     imshow("legendWin", Key);
-
+    // Window for segment prediction display
     namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
 
-      // Holds Class names, each holding a count for TP, FP, FN, FP Values
-      map<string, vector<int> > results;
-      initROCcnt(results, classImgs); // Initilse map
+    // Holds Class names, each holding a count for TP, FP, FN, FP Values
+    vector<map<string, vector<int> > > results;
 
-      // Store aggregated correct, incorrect and unknown results
+  for(int clsAttempts=1;clsAttempts<5;clsAttempts++){
+    int clsFlags = KMEANS_PP_CENTERS;
+    TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+    BOWKMeansTrainer novelTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
+
+    initROCcnt(results, classImgs); // Initilse map
+    cout << "This is the size of the results.." << results.size() << endl;
+
+      // Store aggregated correct, incorrect and unknown results for segment prediction display
       int Correct = 0, Incorrect =0, Unknown =0;
       // Loop through All Classes
       for(auto const ent : classImgs){
@@ -540,6 +553,7 @@ int main( int argc, char** argv ){
           int disrows = 0, discols = 0;
           // Loop through and classify all image segments
           for(int x=0;x<test.size();x++){
+            // handle segment prediction printing
             discols = (discols + cropsize)%imgSize;
             if(discols==0){
               disrows += 20;
@@ -565,16 +579,19 @@ int main( int argc, char** argv ){
              for(auto const ent2 : savedClassHist){
                for(int j=0;j < ent2.second.size();j++){
                  double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+                 // Save best match value and name
                  if(val < high){
                    high = val;
                    match = ent2.first;
                  }
-                 if(val < secHigh && val > high && match.compare(ent2.first) != 0){
+                 // save second best match and name
+                else if(val < secHigh && val > high && match.compare(ent2.first) != 0){
                    secHigh = val;
                    secMatch = ent2.first;
                  }
                }
              }
+
              string prediction = "";
              // If the match is above threshold or nearest other match is to similar, return unknown
              if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
@@ -583,6 +600,7 @@ int main( int argc, char** argv ){
                prediction = match;
              }
 
+             // Populate Window with predictions
              if(prediction.compare(ent.first)==0){
                Correct += 1;
                rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
@@ -593,50 +611,26 @@ int main( int argc, char** argv ){
                Incorrect += 1;
                rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
              }
+            // Save ROC data to results, clsAttempts starts at 0 so is -1
+            saveROCdata(ent.first, match, results[clsAttempts-1]);
 
-            //  // Sort and count the predictions by class
-            //  int AFOIL, BREAD, COTTON, CORK, WOOD;
-            //  if(prediction.compare("AFoil")){
-            //    AFOIL++;
-            //  }else if(prediction.compare("Wood")){
-            //    WOOD++;
-            //  }else if(prediction.compare("Bread")){
-            //    BREAD++;
-            //  }else if(prediction.compare("Cotton")){
-            //    COTTON++;
-            //  }else if(prediction.compare("Cork")){
-            //    CORK++;
-            //  }
-//            cout << "\nThis is the correct: " << Correct << "\nIncorrect: " << Incorrect << "\nUnknown: " << Unknown << endl;
-            saveROCdata(ent.first, match, results);
-            // cout << "These are the indivdual ratings: \nCorrect Answer: " << ent.first << "\nAFoil: " << AFOIL << "\nWood: " << WOOD;
-            // cout << "\nBread: " << BREAD << "\nCotton: " << COTTON << "\nCork: " << CORK << endl;
-
-      //    imshow("mywindow", disVals);
-    //      waitKey(500);
         }
+        //  imshow("mywindow", disVals);
+        //  waitKey(500);
       }
       // END OF CLASS, CONTINUING TO NEXT CLASS //
     }
-    printResults(results);
-    namedWindow("ROC", CV_WINDOW_AUTOSIZE);
-    Mat roc = Mat(400,400,CV_8UC3, Scalar(255,255,255));
-    line(roc, Point(0,400), Point(400,0), Scalar(0,0,255), 1, 8, 0);
 
-    imshow("ROC", roc);
-    waitKey(2000);
-    return 0;
-    //    }
+    // namedWindow("ROC", CV_WINDOW_AUTOSIZE);
+    // Mat roc = Mat(400,400,CV_8UC3, Scalar(255,255,255));
+    // line(roc, Point(0,400), Point(400,0), Scalar(0,0,255), 1, 8, 0);
+    // imshow("ROC", roc);
 
-    //   if(secHigh-high>high){
-    //   cout << "\n\nThe input sample was matched as: " << match << " with a value of: " << high << endl;
-    //   cout << "The second best match was: " << secMatch << " with a value of: " << secHigh << endl;
-    //   cout << "\nThe variation between these two values is: " << secHigh-high << "\n\n";
-    // }else{
-    //   cout << "\n\nThis was a very close match with the distance being smaller than the chosen value.\n\n";
-    // }
+    waitKey(1000);
+  }
 
-
+  // print results, clsAttempts starts at 1 so is -1
+  printResults(results);
 
   #endif
 
