@@ -4,23 +4,21 @@
 
 #include "opencv2/highgui/highgui.hpp" // Needed for HistCalc
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
-//#include "opencv2/imgproc/rectange.hpp" // Needed for Rectanges
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
 #include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/legacy/legacy.hpp>
-//#include "features2d.hpp" // For feature2d (typedef DescriptorExtractor)
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h>
 #include <fstream>
 #include <string>
-//#include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 #include <boost/filesystem.hpp>
+#include <assert.h>
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Handling Functions
@@ -270,6 +268,47 @@ void organiseResultByClass(vector<map<string, vector<int> > >in, map<string, vec
         out[clsNmes[i]].push_back(a); // Initilse with vector
         out[clsNmes[i]][j].push_back(in[k][clsNmes[i]][j]);
       }
+    }
+  }
+}
+
+///////////////////////////
+// 0 == TPR == (TP/TP+FN)//
+// 1 == FPR == (FP/FP+TN)//
+///////////////////////////
+void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vector<int> > >& out, vector<string> clssNmes){
+  assert(clssNmes.size() == in.size());
+  vector<int> a;
+
+  // Go through each Class
+  for(int i=0;i<clssNmes.size();i++){
+    string curCls = clssNmes[i];
+    cout << "Class: " << curCls << "\n\n";
+
+    // Go through each test iteration
+    for(int j=0;j<in[curCls][0].size();j++){
+      // Calculate TPR
+      int TPR, TP, FN;
+      TP = in[curCls][0][j];
+      FN = in[curCls][3][j];
+      TPR = (TP/TP+FN);
+      cout << " TP: " << TP << " FN: " << FN << " TPR: " << TPR;
+
+      // Calculate FPR
+      int FPR, FP, TN;
+      FP = in[curCls][1][j];
+      TN = in[curCls][2][j];
+      FPR = (FP/FP+TN);
+      cout << " FP: " << FP << " TN: " << TN << " FPR: " << FPR;
+
+      // Pushback vector for each test
+      out[curCls].push_back(a);
+      // Push back results
+      out[curCls][j].push_back(TPR);
+      out[curCls][j].push_back(FPR);
+      double TPd = TP, TNd = TN, FPd = FP, FNd = FN;
+
+      cout << "   accuracy: " << ((TPd+TNd)/(TPd+TNd+FPd+FNd))*100 << endl;
     }
   }
 }
@@ -678,23 +717,26 @@ int main( int argc, char** argv ){
 
     // Holds Class names, each holding a count for TP, FP, FN, FP Values
     vector<map<string, vector<int> > > results;
-    // Initialise Clustering Parameters
-    int numClusters = 10;
-  for(int clsAttempts=1;clsAttempts<5;clsAttempts++){
+
+  int counter = 0;
+  for(int numClusters=1;numClusters<10;numClusters++){
     initROCcnt(results, classImgs); // Initilse map
     cout << "This is the size of the results.." << results.size() << endl;
-
-    testNovelImgHandle(clsAttempts, numClusters, results[clsAttempts-1], classImgs, savedClassHist, Colors);
-
+    int clsAttempts = 5;
+    testNovelImgHandle(clsAttempts, numClusters, results[counter], classImgs, savedClassHist, Colors);
+    counter++;
   }
   map<string, vector<vector<int> > > resByCls;
+  map<string, vector<vector<int> > > ROCVals;
   vector<string> clsNmes;
   getClsNames(results[0], clsNmes); // Get class Names
   organiseResultByClass(results, resByCls, clsNmes);
 
+
   // print results, clsAttempts starts at 1 so is -1
   printResults(resByCls, clsNmes);
 
+  calcROCVals(resByCls, ROCVals, clsNmes);
 
   #endif
 
