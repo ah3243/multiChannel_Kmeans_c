@@ -24,7 +24,7 @@
 #include "imgCollection.h" // Img Handling Functions
 
 #define DICTIONARY_BUILD 0
-#define MODEL_BUILD 0
+#define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -32,7 +32,7 @@ using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
-#define cropsize  20
+#define cropsize  200
 #define CHISQU_threshold 10
 
 
@@ -536,11 +536,11 @@ int main( int argc, char** argv ){
             bowTrainer.add(test[k]);
           }
         }
-      }
       cout << "This is the bowTrainer.size(): " << bowTrainer.descripotorsCount() << endl;
       // Generate 10 clusters per class and store in Mat
       dictionary.push_back(bowTrainer.cluster());
       bowTrainer.clear();
+      }
     }
 
     vector<float> bins = createBins(dictionary);
@@ -624,18 +624,18 @@ int main( int argc, char** argv ){
           }
         }
       }
-        // Generate 10 clusters per class and store in Mat
-        Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-        clus = classTrainer.cluster();
+      // Generate 10 clusters per class and store in Mat
+      Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+      clus = classTrainer.cluster();
 
-        // Replace Cluster Centers with the closest matching texton
-        textonFind(clus, dictionary);
+      // Replace Cluster Centers with the closest matching texton
+      textonFind(clus, dictionary);
 
-        Mat out;
-        calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-        classHist[ent1.first].push_back(out);
+      Mat out;
+      calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
+      classHist[ent1.first].push_back(out);
 
-        classTrainer.clear();
+      classTrainer.clear();
     }
 
     FileStorage fs2("models.xml",FileStorage::WRITE);
@@ -668,11 +668,12 @@ int main( int argc, char** argv ){
     // Test Against Novel Image //
     //////////////////////////////
 
-
+  if(MODEL_BUILD == 0){
     // Load Images to be tested
     map<string, vector<Mat> > classImgs;
       path p = "../../../TEST_IMAGES/kth-tips/classes";
       loadClassImgs(p, classImgs);
+  }
 
     map<string, vector<Mat> > savedClassHist;
 
@@ -718,7 +719,7 @@ int main( int argc, char** argv ){
     vector<map<string, vector<int> > > results;
 
   int counter = 0;
-  for(int numClusters=1;numClusters<15;numClusters++){
+  for(int numClusters=10;numClusters<11;numClusters++){
     initROCcnt(results, classImgs); // Initilse map
     cout << "This is the size of the results.." << results.size() << endl;
     int clsAttempts = 5;
