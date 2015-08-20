@@ -202,14 +202,14 @@ void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vecto
       double TPR, TP, FN;
       TP = in[curCls][0][j];
       FN = in[curCls][3][j];
-      TPR = (TP/TP+FN);
+      TPR = (TP/(TP+FN));
       cout << " " << j << ":-  TP: " << TP << " FN: " << FN << " TPR: " << TPR;
 
       // Calculate FPR
       double FPR, FP, TN;
       FP = in[curCls][1][j];
       TN = in[curCls][2][j];
-      FPR = (FP/FP+TN);
+      FPR = (FP/(FP+TN));
       cout << " FP: " << FP << " TN: " << TN << " FPR: " << FPR;
 
       // Pushback vector for each test
@@ -424,7 +424,7 @@ void printRAWResults(map<string, vector<int> > r){
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 200;
+  int cropsize = 50;
 
   #if DICTIONARY_BUILD == 1
   ////////////////////////////////
