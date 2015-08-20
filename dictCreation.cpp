@@ -73,7 +73,7 @@ void dictCreateHandler(int cropsize){
   BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
 
   map<string, vector<Mat> > textonImgs;
-  path p = "../../../TEST_IMAGES/kth-tips/classes";
+  path p = "../../../TEST_IMAGES/CapturedImgs/textons";
   loadClassImgs(p, textonImgs);
 
   Mat dictionary;

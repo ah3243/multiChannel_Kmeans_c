@@ -9,7 +9,6 @@ using namespace boost::filesystem;
 void errorFunc(std::string input);
 void warnFunc(std::string input);
 void menuPrint();
-void segmentImg(std::vector<cv::Mat>& out, cv::Mat in, int cropsize);
 void extractClsNme(std::string &nme);
 void extractFullNme(std::string &nme);
 int getSuffix(std::string p);
@@ -33,6 +32,6 @@ void printTextonMenu();
 void textonHandler();
 void printClassMenu();
 void classHandler();
-void imgCollectionHandle(int argc, char** argv);
+void imgCollectionHandle();
 
 #endif

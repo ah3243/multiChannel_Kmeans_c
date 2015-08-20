@@ -102,7 +102,7 @@ void modelBuildHandle(int cropsize){
 
     // Load Class imgs and store in classImgs map
     map<string, vector<Mat> > classImgs;
-    path p = "../../../TEST_IMAGES/kth-tips/classes";
+    path p = "../../../TEST_IMAGES/CapturedImgs/classes";
     loadClassImgs(p, classImgs);
 
     float bins[m.size()];

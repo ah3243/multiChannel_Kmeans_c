@@ -26,9 +26,11 @@
 #include "modelBuild.h" // Generate models from class images
 #include "imgFunctions.h" // Img Processing Functions
 
+#define INTERFACE 0
 #define DICTIONARY_BUILD 1
 #define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
+
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
 using namespace boost::filesystem;
@@ -36,7 +38,7 @@ using namespace cv;
 using namespace std;
 
 //#define cropsize  200
-#define CHISQU_threshold 10
+#define CHISQU_threshold 1
 
 // int main(int argc, char** argv){
 //     if(argc<3){
@@ -140,16 +142,13 @@ int getClsNames(map<string, vector<int> > &r, vector<string> &nme){
 }
 
 void cacheTestdata(string correct, string prediction, map<string, vector<int> >& results){
-  //cout << "Answer is: " << correct << " prediction is: " << prediction <<endl;
-  cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
+  //  cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
   if(correct.compare(prediction)==0){
     // If correct
     // add 1 to True Positive
     results[correct][0] += 1;
     // add 1 to True Negative to all other classes
-    cout << "\n\nCORRECT this is before: " << results["Cotton"][2] << " bljbjb" << endl;
     addTrueNegatives(correct, "", results);
-    cout << "CORRECT this is after: " << results["Cotton"][2] << " bljbjb" << endl;
   }else if(correct.compare(prediction)!=0){
     // If incorrect
     // add 1 to False Positive for Predicted
@@ -157,9 +156,7 @@ void cacheTestdata(string correct, string prediction, map<string, vector<int> >&
     // add 1 to False Negative to Correct
     results[correct][3] += 1;
     // add 1 to True Negative to all other classes
-    cout << "\n\nWRONG this is before: " << results["Cotton"][2] << " bljbjb" << endl;
     addTrueNegatives(correct, prediction, results);
-    cout << "WRONG this is after: " << results["Cotton"][2] << " bljbjb" << endl;
   }
 }
 
@@ -377,11 +374,11 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
 
            string prediction = "";
            // If the match is above threshold or nearest other match is to similar, return unknown
-           if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
-             prediction = "Unknown";
-           }else{
+          //  if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
+          //    prediction = "Unknown";
+          //  }else{
              prediction = match;
-           }
+          //  }
            // Populate Window with predictions
            if(prediction.compare(ent.first)==0){
              Correct += 1;
@@ -396,16 +393,11 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
       }
-      //  imshow("mywindow", disVals);
-      //  waitKey(500);
+       imshow("mywindow", disVals);
+       waitKey(500);
     }
     // END OF CLASS, CONTINUING TO NEXT CLASS //
   }
-
-  // namedWindow("ROC", CV_WINDOW_AUTOSIZE);
-  // Mat roc = Mat(400,400,CV_8UC3, Scalar(255,255,255));
-  // line(roc, Point(0,400), Point(400,0), Scalar(0,0,255), 1, 8, 0);
-  // imshow("ROC", roc);
 }
 
 void printRAWResults(map<string, vector<int> > r){
@@ -426,6 +418,16 @@ int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
   int cropsize = 50;
 
+  #if INTERFACE == 1
+  ///////////////////////
+  // Collecting images //
+  ///////////////////////
+
+  cout << "\n\n............... Passing to Img Collection Module ................\n";
+  imgCollectionHandle();
+  cout << "\n\n............... Returning to main program ..................... \n";
+
+  #endif
   #if DICTIONARY_BUILD == 1
   ////////////////////////////////
   // Creating Texton vocabulary //
@@ -452,7 +454,7 @@ int main( int argc, char** argv ){
     //////////////////////////////
 
     // Load Images to be tested
-    path p = "../../../TEST_IMAGES/kth-tips/classes";
+    path p = "../../../TEST_IMAGES/CapturedImgs/classes";
     map<string, vector<Mat> > classImages;
     loadClassImgs(p, classImages);
 
@@ -481,18 +483,6 @@ int main( int argc, char** argv ){
         count++;
       }
 
-    // Create Img Legend
-    Mat Key = Mat::zeros(400,200,CV_8UC3);
-      int cnt=0;
-      for(auto const ent1 : Colors){
-        putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-        rectangle(Key, Rect(100, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
-        cnt++;
-      }
-
-    // Window for Legend display
-    namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
-    imshow("legendWin", Key);
     // Window for segment prediction display
     namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
 
@@ -501,7 +491,7 @@ int main( int argc, char** argv ){
 
 
   int counter = 0;
-  for(int numClusters=10;numClusters<11;numClusters++){
+  for(int numClusters=5;numClusters<11;numClusters++){
     cout << "\nCount: " << counter << endl;
     initROCcnt(results, classImages); // Initilse map
     int clsAttempts = 5;
@@ -522,22 +512,50 @@ int main( int argc, char** argv ){
 
   calcROCVals(resByCls, ROCVals, clsNmes);
 
-  int wW = 400, wH = 400, buffer =40;
+
+  // Create Img Legend
+  Mat Key = Mat::zeros(400,200,CV_8UC3);
+    int cnt=0;
+    for(auto const ent1 : Colors){
+      putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+      rectangle(Key, Rect(100, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
+      cnt++;
+    }
+
+  // Window for Legend display
+  namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
+  imshow("legendWin", Key);
+
+
+  if(results.size()<2){
+    cout << "\n\nThere are not enough iterations to produce a ROC graph. Exiting." << endl;
+    return 0;
+  }
+
+  int wW = 400, wH = 400, buffer =50, border = buffer-10;
   namedWindow("ROC_Curve", CV_WINDOW_AUTOSIZE);
-  Mat rocCurve = Mat(wH,wW, CV_8UC3, Scalar(255,255,255));
+  Mat rocCurve = Mat(wH,wW, CV_8UC3, Scalar(0,0,0));
 
-  // int pointGap = ((wW-buffer)/results.size());
-  // int line1 = buffer;
-  // for(int i=0;i<results.size();i++){
-  //   cout << "creating display for ROC Curves.." << pointGap << endl;
-  //   Line(rocCurve, Point(line1,), Point(), Scalar(255,0,0), 2, 8, 0);
-  //   line1+=pointGap;
-  //   line2+=pointGap;
-  //   )
-  // }
+  line(rocCurve, Point(border,wH-border), Point(wW-border,wH-border), Scalar(255,255,255), 2, 8, 0); // X axis border
+  // putText(rocCurve, "FPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+  line(rocCurve, Point(border,border), Point(40,wH-border), Scalar(255,255,255), 2, 8, 0); // Y axis border
+  // putText(rocCurve, "TPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
 
 
-  //imshow("ROC_Curve", )
+  // Cycle through all classes
+  for(auto const ent : ROCVals){
+    cout << "Class: " << ent.first << endl;
+    // Cycle through all iterations to produce graph
+    for(int i=0;i<ent.second.size()-1;i++){
+      line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
+      Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
+      Colors[ent.first], 1, 8, 0);
+      waitKey(500);
+      imshow("ROC_Curve", rocCurve);
+      }
+  }
+waitKey(0);
+
 
   #endif
 

@@ -507,7 +507,7 @@ void classHandler(){
   }
 }
 
-void imgCollectionHandle(int argc, char** argv){
+void imgCollectionHandle(){
 
   generateDirs();
   string capture;
