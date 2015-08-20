@@ -24,7 +24,7 @@
 #include "imgCollection.h" // Img Handling Functions
 #include "modelBuild.h" // Generate models from class images
 
-#define DICTIONARY_BUILD 0
+#define DICTIONARY_BUILD 1
 #define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -33,7 +33,7 @@ using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
-#define cropsize  200
+//#define cropsize  200
 #define CHISQU_threshold 10
 
 
@@ -88,7 +88,7 @@ Mat reshapeCol(Mat in){
   return points;
 }
 
-void segmentImg(vector<Mat>& out, Mat in){
+void segmentImg(vector<Mat>& out, Mat in, int cropsize){
   int size = 200;
   if(in.rows!=200 || in.cols!=200){
     cout << "The input image was not 200x200 pixels.\nExiting.\n";
@@ -377,7 +377,7 @@ void getDictionary(Mat &dictionary, vector<float> &m){
   fs.release();
 }
 
-void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int> >& results, map<string, vector<Mat> > classImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors){
+void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int> >& results, map<string, vector<Mat> > classImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
   int clsFlags = KMEANS_PP_CENTERS;
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
   BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
@@ -420,7 +420,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
 
         // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
         vector<Mat> test;
-        segmentImg(test, hold);
+        segmentImg(test, hold, cropsize);
 
         // Counters for putting 'pixels' on display image
         int disrows = 0, discols = 0;
@@ -502,7 +502,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-
+  int cropsize = 100;
   //////////////////////////////
   // Create Texton vocabulary //
   //////////////////////////////
@@ -530,7 +530,7 @@ int main( int argc, char** argv ){
 
         // Segment the 200x200pixel image
         vector<Mat> test;
-        segmentImg(test, hold);
+        segmentImg(test, hold, cropsize);
 
         // Push each saved Mat to bowTrainer
         for(int k = 0; k < test.size(); k++){
@@ -562,7 +562,7 @@ int main( int argc, char** argv ){
     ///////////////////////////////////////////////////////////
     // Get histogram responses using vocabulary from Classes //
     ///////////////////////////////////////////////////////////
-    modelBuildHandle();
+    modelBuildHandle(cropsize);
 
     cout << "\n\n........Loading Texton Dictionary.........\n";
 
@@ -577,8 +577,10 @@ int main( int argc, char** argv ){
     //////////////////////////////
 
     // Load Images to be tested
-    map<string, vector<Mat> > classImages;
+    if(DICTIONARY_BUILD == 0){
       path p = "../../../TEST_IMAGES/kth-tips/classes";
+    }
+      map<string, vector<Mat> > classImages;
       loadClassImgs(p, classImages);
 
     map<string, vector<Mat> > savedClassHist;
@@ -629,7 +631,7 @@ int main( int argc, char** argv ){
     initROCcnt(results, classImages); // Initilse map
     cout << "This is the size of the results.." << results.size() << endl;
     int clsAttempts = 5;
-    testNovelImgHandle(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors);
+    testNovelImgHandle(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors, cropsize);
     counter++;
   }
   map<string, vector<vector<int> > > resByCls;

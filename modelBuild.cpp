@@ -24,7 +24,7 @@ using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
-#define cropsize  200
+//#define cropsize  200
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -40,7 +40,7 @@ Mat reshapeCol1(Mat in){
   return points;
 }
 
-void segmentImg1(vector<Mat>& out, Mat in){
+void segmentImg1(vector<Mat>& out, Mat in, int cropsize){
   int size = 200;
   if(in.rows!=200 || in.cols!=200){
     cout << "The input image was not 200x200 pixels.\nExiting.\n";
@@ -87,7 +87,7 @@ void vecToArr1(vector<float> v, float* m){
   }
 }
 
-void modelBuildHandle(){
+void modelBuildHandle(int cropsize){
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;
@@ -139,7 +139,7 @@ void modelBuildHandle(){
 
       // Segment the 200x200pixel image into 400x1 Mats(20x20)
       vector<Mat> test;
-      segmentImg1(test, hold);
+      segmentImg1(test, hold, cropsize);
 
       // Push each saved Mat to classTrainer
       for(int k = 0; k < test.size(); k++){
