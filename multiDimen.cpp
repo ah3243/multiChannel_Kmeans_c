@@ -38,7 +38,6 @@ using namespace std;
 //#define cropsize  200
 #define CHISQU_threshold 10
 
-
 // int main(int argc, char** argv){
 //     if(argc<3){
 //       cout << "not enough inputs entered, exiting." << endl;
@@ -82,23 +81,26 @@ using namespace std;
 // Key:               //
 // 0 == TruePositive  //
 // 1 == FalsePositive //
-// 2 == TrueNegative  //
+ // 2 == TrueNegative  //
 // 3 == FalseNegative //
 ////////////////////////
-void addOneToAllButOne(string exp1, string exp2, map<string, vector<int> >& results){
-  for(auto ent4 : results){
-    if(exp1.compare(ent4.first)!=0 && exp2.compare(ent4.first)!=0){
-      ent4.second[2] = 3;
+void addTrueNegatives(string exp1, string exp2, map<string, vector<int> >& res){
+  for(auto ent7 : res){
+    if(exp1.compare(ent7.first)!=0 && exp2.compare(ent7.first)!=0){
+      string holder = ent7.first;
+      res[holder][2] += 1;
     }
   }
 }
 
 void initROCcnt(vector<map<string, vector<int> > >& r, map<string, vector<Mat> > classImgs){
   cout << "initialising.. " << endl;
+  int possResults = 4; // allow space for TP, FP, TN, FN
+
   map<string, vector<int> > a;
   for(auto const ent5 : classImgs){
-    for(int i=0;i<4;i++){
-      a[ent5.first].push_back(1);
+    for(int i=0;i<possResults;i++){
+      a[ent5.first].push_back(0);
     }
     cout << "Initilsing..." << ent5.first << endl;
   }
@@ -139,20 +141,25 @@ int getClsNames(map<string, vector<int> > &r, vector<string> &nme){
 
 void cacheTestdata(string correct, string prediction, map<string, vector<int> >& results){
   //cout << "Answer is: " << correct << " prediction is: " << prediction <<endl;
+  cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
   if(correct.compare(prediction)==0){
     // If correct
     // add 1 to True Positive
     results[correct][0] += 1;
-    // add 1 to True Positive to all other classes
-    addOneToAllButOne(correct, "", results);
+    // add 1 to True Negative to all other classes
+    cout << "\n\nCORRECT this is before: " << results["Cotton"][2] << " bljbjb" << endl;
+    addTrueNegatives(correct, "", results);
+    cout << "CORRECT this is after: " << results["Cotton"][2] << " bljbjb" << endl;
   }else if(correct.compare(prediction)!=0){
     // If incorrect
     // add 1 to False Positive for Predicted
     results[prediction][1] += 1;
     // add 1 to False Negative to Correct
     results[correct][3] += 1;
-    // add 1 to True Positive to all other classes
-    addOneToAllButOne(correct, prediction, results);
+    // add 1 to True Negative to all other classes
+    cout << "\n\nWRONG this is before: " << results["Cotton"][2] << " bljbjb" << endl;
+    addTrueNegatives(correct, prediction, results);
+    cout << "WRONG this is after: " << results["Cotton"][2] << " bljbjb" << endl;
   }
 }
 
@@ -180,9 +187,9 @@ void organiseResultByClass(vector<map<string, vector<int> > >in, map<string, vec
 // 0 == TPR == (TP/TP+FN)//
 // 1 == FPR == (FP/FP+TN)//
 ///////////////////////////
-void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vector<int> > >& out, vector<string> clssNmes){
+void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vector<double> > >& out, vector<string> clssNmes){
   assert(clssNmes.size() == in.size());
-  vector<int> a;
+  vector<double> a;
 
   // Go through each Class
   for(int i=0;i<clssNmes.size();i++){
@@ -192,14 +199,14 @@ void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vecto
     // Go through each test iteration
     for(int j=0;j<in[curCls][0].size();j++){
       // Calculate TPR
-      int TPR, TP, FN;
+      double TPR, TP, FN;
       TP = in[curCls][0][j];
       FN = in[curCls][3][j];
       TPR = (TP/TP+FN);
       cout << " " << j << ":-  TP: " << TP << " FN: " << FN << " TPR: " << TPR;
 
       // Calculate FPR
-      int FPR, FP, TN;
+      double FPR, FP, TN;
       FP = in[curCls][1][j];
       TN = in[curCls][2][j];
       FPR = (FP/FP+TN);
@@ -210,9 +217,9 @@ void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vecto
       // Push back results
       out[curCls][j].push_back(TPR);
       out[curCls][j].push_back(FPR);
-      double TPd = TP, TNd = TN, FPd = FP, FNd = FN;
+      // double TPd = TP, TNd = TN, FPd = FP, FNd = FN;
 
-      cout << "   accuracy: " << ((TPd+TNd)/(TPd+TNd+FPd+FNd))*100 << endl;
+      cout << "   accuracy: " << ((TP+TN)/(TP+TN+FP+FN))*100 << endl;
     }
   }
 }
@@ -302,6 +309,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
     // Loop through All Classes
     for(auto const ent : classImgs){
       // Loop through all images in Class
+      cout << "\n\nEntering Class: " << ent.first << endl;
       for(int h=0;h<ent.second.size();h++){
         if(ent.second[h].rows != ent.second[h].cols){
           ERR("Novel input image was now square. Exiting");
@@ -374,7 +382,6 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
            }else{
              prediction = match;
            }
-
            // Populate Window with predictions
            if(prediction.compare(ent.first)==0){
              Correct += 1;
@@ -388,7 +395,6 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
            }
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
-
       }
       //  imshow("mywindow", disVals);
       //  waitKey(500);
@@ -402,9 +408,23 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
   // imshow("ROC", roc);
 }
 
+void printRAWResults(map<string, vector<int> > r){
+  cout << "\n\n----------------------------------------------------------\n\n";
+  cout << "                    These are the test results                  \n";
+  for(auto const ent6 : r){
+    cout << ent6.first;
+    cout << "\n      TruePositive:  " << ent6.second[0];
+    cout << "\n      TrueNegative:  " << ent6.second[1];
+    cout << "\n      FalsePositive: " << ent6.second[2];
+    cout << "\n      FalseNegative: " << ent6.second[3];
+    cout << "\n";
+  }
+  cout << "\n\n";
+}
+
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 100;
+  int cropsize = 200;
 
   #if DICTIONARY_BUILD == 1
   ////////////////////////////////
@@ -421,8 +441,8 @@ int main( int argc, char** argv ){
     ///////////////////////////////////////////////////////////
     cout << "\n\n........Generating Class Models from Imgs.........\n";
     modelBuildHandle(cropsize);
-
   #endif
+
 
 
   #if NOVELIMG_TEST == 1
@@ -479,27 +499,51 @@ int main( int argc, char** argv ){
     // Holds Class names, each holding a count for TP, FP, FN, FP Values
     vector<map<string, vector<int> > > results;
 
+
   int counter = 0;
   for(int numClusters=10;numClusters<11;numClusters++){
+    cout << "\nCount: " << counter << endl;
     initROCcnt(results, classImages); // Initilse map
-    cout << "This is the size of the results.." << results.size() << endl;
     int clsAttempts = 5;
     testNovelImgHandle(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors, cropsize);
     counter++;
   }
+
+  printRAWResults(results[0]);
+
   map<string, vector<vector<int> > > resByCls;
-  map<string, vector<vector<int> > > ROCVals;
+  map<string, vector<vector<double> > > ROCVals;
   vector<string> clsNmes;
   getClsNames(results[0], clsNmes); // Get class Names
   organiseResultByClass(results, resByCls, clsNmes);
-
 
   // print results, clsAttempts starts at 1 so is -1
   printResults(resByCls, clsNmes);
 
   calcROCVals(resByCls, ROCVals, clsNmes);
 
+  int wW = 400, wH = 400, buffer =40;
+  namedWindow("ROC_Curve", CV_WINDOW_AUTOSIZE);
+  Mat rocCurve = Mat(wH,wW, CV_8UC3, Scalar(255,255,255));
+
+  // int pointGap = ((wW-buffer)/results.size());
+  // int line1 = buffer;
+  // for(int i=0;i<results.size();i++){
+  //   cout << "creating display for ROC Curves.." << pointGap << endl;
+  //   Line(rocCurve, Point(line1,), Point(), Scalar(255,0,0), 2, 8, 0);
+  //   line1+=pointGap;
+  //   line2+=pointGap;
+  //   )
+  // }
+
+
+  //imshow("ROC_Curve", )
+
   #endif
 
   return 0;
+}
+
+void drawROC(){
+
 }
