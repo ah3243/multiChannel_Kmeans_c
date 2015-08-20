@@ -111,6 +111,126 @@ multiDimen/fast:
 	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/build
 .PHONY : multiDimen/fast
 
+dictCreation.o: dictCreation.cpp.o
+.PHONY : dictCreation.o
+
+# target to build an object file
+dictCreation.cpp.o:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/dictCreation.cpp.o
+.PHONY : dictCreation.cpp.o
+
+dictCreation.i: dictCreation.cpp.i
+.PHONY : dictCreation.i
+
+# target to preprocess a source file
+dictCreation.cpp.i:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/dictCreation.cpp.i
+.PHONY : dictCreation.cpp.i
+
+dictCreation.s: dictCreation.cpp.s
+.PHONY : dictCreation.s
+
+# target to generate assembly for a file
+dictCreation.cpp.s:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/dictCreation.cpp.s
+.PHONY : dictCreation.cpp.s
+
+filterbank.o: filterbank.cpp.o
+.PHONY : filterbank.o
+
+# target to build an object file
+filterbank.cpp.o:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/filterbank.cpp.o
+.PHONY : filterbank.cpp.o
+
+filterbank.i: filterbank.cpp.i
+.PHONY : filterbank.i
+
+# target to preprocess a source file
+filterbank.cpp.i:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/filterbank.cpp.i
+.PHONY : filterbank.cpp.i
+
+filterbank.s: filterbank.cpp.s
+.PHONY : filterbank.s
+
+# target to generate assembly for a file
+filterbank.cpp.s:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/filterbank.cpp.s
+.PHONY : filterbank.cpp.s
+
+imgCollection.o: imgCollection.cpp.o
+.PHONY : imgCollection.o
+
+# target to build an object file
+imgCollection.cpp.o:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgCollection.cpp.o
+.PHONY : imgCollection.cpp.o
+
+imgCollection.i: imgCollection.cpp.i
+.PHONY : imgCollection.i
+
+# target to preprocess a source file
+imgCollection.cpp.i:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgCollection.cpp.i
+.PHONY : imgCollection.cpp.i
+
+imgCollection.s: imgCollection.cpp.s
+.PHONY : imgCollection.s
+
+# target to generate assembly for a file
+imgCollection.cpp.s:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgCollection.cpp.s
+.PHONY : imgCollection.cpp.s
+
+imgFunctions.o: imgFunctions.cpp.o
+.PHONY : imgFunctions.o
+
+# target to build an object file
+imgFunctions.cpp.o:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgFunctions.cpp.o
+.PHONY : imgFunctions.cpp.o
+
+imgFunctions.i: imgFunctions.cpp.i
+.PHONY : imgFunctions.i
+
+# target to preprocess a source file
+imgFunctions.cpp.i:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgFunctions.cpp.i
+.PHONY : imgFunctions.cpp.i
+
+imgFunctions.s: imgFunctions.cpp.s
+.PHONY : imgFunctions.s
+
+# target to generate assembly for a file
+imgFunctions.cpp.s:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgFunctions.cpp.s
+.PHONY : imgFunctions.cpp.s
+
+modelBuild.o: modelBuild.cpp.o
+.PHONY : modelBuild.o
+
+# target to build an object file
+modelBuild.cpp.o:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/modelBuild.cpp.o
+.PHONY : modelBuild.cpp.o
+
+modelBuild.i: modelBuild.cpp.i
+.PHONY : modelBuild.i
+
+# target to preprocess a source file
+modelBuild.cpp.i:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/modelBuild.cpp.i
+.PHONY : modelBuild.cpp.i
+
+modelBuild.s: modelBuild.cpp.s
+.PHONY : modelBuild.s
+
+# target to generate assembly for a file
+modelBuild.cpp.s:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/modelBuild.cpp.s
+.PHONY : modelBuild.cpp.s
+
 multiDimen.o: multiDimen.cpp.o
 .PHONY : multiDimen.o
 
@@ -144,6 +264,21 @@ help:
 	@echo "... edit_cache"
 	@echo "... multiDimen"
 	@echo "... rebuild_cache"
+	@echo "... dictCreation.o"
+	@echo "... dictCreation.i"
+	@echo "... dictCreation.s"
+	@echo "... filterbank.o"
+	@echo "... filterbank.i"
+	@echo "... filterbank.s"
+	@echo "... imgCollection.o"
+	@echo "... imgCollection.i"
+	@echo "... imgCollection.s"
+	@echo "... imgFunctions.o"
+	@echo "... imgFunctions.i"
+	@echo "... imgFunctions.s"
+	@echo "... modelBuild.o"
+	@echo "... modelBuild.i"
+	@echo "... modelBuild.s"
 	@echo "... multiDimen.o"
 	@echo "... multiDimen.i"
 	@echo "... multiDimen.s"

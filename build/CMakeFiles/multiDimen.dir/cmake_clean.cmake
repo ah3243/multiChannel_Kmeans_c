@@ -1,5 +1,10 @@
 FILE(REMOVE_RECURSE
   "CMakeFiles/multiDimen.dir/multiDimen.cpp.o"
+  "CMakeFiles/multiDimen.dir/filterbank.cpp.o"
+  "CMakeFiles/multiDimen.dir/imgCollection.cpp.o"
+  "CMakeFiles/multiDimen.dir/modelBuild.cpp.o"
+  "CMakeFiles/multiDimen.dir/imgFunctions.cpp.o"
+  "CMakeFiles/multiDimen.dir/dictCreation.cpp.o"
   "multiDimen.pdb"
   "multiDimen"
 )

@@ -72,47 +72,176 @@ CMakeFiles/multiDimen.dir/multiDimen.cpp.o.provides: CMakeFiles/multiDimen.dir/m
 
 CMakeFiles/multiDimen.dir/multiDimen.cpp.o.provides.build: CMakeFiles/multiDimen.dir/multiDimen.cpp.o
 
+CMakeFiles/multiDimen.dir/filterbank.cpp.o: CMakeFiles/multiDimen.dir/flags.make
+CMakeFiles/multiDimen.dir/filterbank.cpp.o: ../filterbank.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles $(CMAKE_PROGRESS_2)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/multiDimen.dir/filterbank.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multiDimen.dir/filterbank.cpp.o -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.cpp
+
+CMakeFiles/multiDimen.dir/filterbank.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/multiDimen.dir/filterbank.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.cpp > CMakeFiles/multiDimen.dir/filterbank.cpp.i
+
+CMakeFiles/multiDimen.dir/filterbank.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/multiDimen.dir/filterbank.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.cpp -o CMakeFiles/multiDimen.dir/filterbank.cpp.s
+
+CMakeFiles/multiDimen.dir/filterbank.cpp.o.requires:
+.PHONY : CMakeFiles/multiDimen.dir/filterbank.cpp.o.requires
+
+CMakeFiles/multiDimen.dir/filterbank.cpp.o.provides: CMakeFiles/multiDimen.dir/filterbank.cpp.o.requires
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/filterbank.cpp.o.provides.build
+.PHONY : CMakeFiles/multiDimen.dir/filterbank.cpp.o.provides
+
+CMakeFiles/multiDimen.dir/filterbank.cpp.o.provides.build: CMakeFiles/multiDimen.dir/filterbank.cpp.o
+
+CMakeFiles/multiDimen.dir/imgCollection.cpp.o: CMakeFiles/multiDimen.dir/flags.make
+CMakeFiles/multiDimen.dir/imgCollection.cpp.o: ../imgCollection.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles $(CMAKE_PROGRESS_3)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/multiDimen.dir/imgCollection.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multiDimen.dir/imgCollection.cpp.o -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.cpp
+
+CMakeFiles/multiDimen.dir/imgCollection.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/multiDimen.dir/imgCollection.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.cpp > CMakeFiles/multiDimen.dir/imgCollection.cpp.i
+
+CMakeFiles/multiDimen.dir/imgCollection.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/multiDimen.dir/imgCollection.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.cpp -o CMakeFiles/multiDimen.dir/imgCollection.cpp.s
+
+CMakeFiles/multiDimen.dir/imgCollection.cpp.o.requires:
+.PHONY : CMakeFiles/multiDimen.dir/imgCollection.cpp.o.requires
+
+CMakeFiles/multiDimen.dir/imgCollection.cpp.o.provides: CMakeFiles/multiDimen.dir/imgCollection.cpp.o.requires
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgCollection.cpp.o.provides.build
+.PHONY : CMakeFiles/multiDimen.dir/imgCollection.cpp.o.provides
+
+CMakeFiles/multiDimen.dir/imgCollection.cpp.o.provides.build: CMakeFiles/multiDimen.dir/imgCollection.cpp.o
+
+CMakeFiles/multiDimen.dir/modelBuild.cpp.o: CMakeFiles/multiDimen.dir/flags.make
+CMakeFiles/multiDimen.dir/modelBuild.cpp.o: ../modelBuild.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles $(CMAKE_PROGRESS_4)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/multiDimen.dir/modelBuild.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multiDimen.dir/modelBuild.cpp.o -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.cpp
+
+CMakeFiles/multiDimen.dir/modelBuild.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/multiDimen.dir/modelBuild.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.cpp > CMakeFiles/multiDimen.dir/modelBuild.cpp.i
+
+CMakeFiles/multiDimen.dir/modelBuild.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/multiDimen.dir/modelBuild.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.cpp -o CMakeFiles/multiDimen.dir/modelBuild.cpp.s
+
+CMakeFiles/multiDimen.dir/modelBuild.cpp.o.requires:
+.PHONY : CMakeFiles/multiDimen.dir/modelBuild.cpp.o.requires
+
+CMakeFiles/multiDimen.dir/modelBuild.cpp.o.provides: CMakeFiles/multiDimen.dir/modelBuild.cpp.o.requires
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/modelBuild.cpp.o.provides.build
+.PHONY : CMakeFiles/multiDimen.dir/modelBuild.cpp.o.provides
+
+CMakeFiles/multiDimen.dir/modelBuild.cpp.o.provides.build: CMakeFiles/multiDimen.dir/modelBuild.cpp.o
+
+CMakeFiles/multiDimen.dir/imgFunctions.cpp.o: CMakeFiles/multiDimen.dir/flags.make
+CMakeFiles/multiDimen.dir/imgFunctions.cpp.o: ../imgFunctions.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles $(CMAKE_PROGRESS_5)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/multiDimen.dir/imgFunctions.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multiDimen.dir/imgFunctions.cpp.o -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.cpp
+
+CMakeFiles/multiDimen.dir/imgFunctions.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/multiDimen.dir/imgFunctions.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.cpp > CMakeFiles/multiDimen.dir/imgFunctions.cpp.i
+
+CMakeFiles/multiDimen.dir/imgFunctions.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/multiDimen.dir/imgFunctions.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.cpp -o CMakeFiles/multiDimen.dir/imgFunctions.cpp.s
+
+CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.requires:
+.PHONY : CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.requires
+
+CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.provides: CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.requires
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.provides.build
+.PHONY : CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.provides
+
+CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.provides.build: CMakeFiles/multiDimen.dir/imgFunctions.cpp.o
+
+CMakeFiles/multiDimen.dir/dictCreation.cpp.o: CMakeFiles/multiDimen.dir/flags.make
+CMakeFiles/multiDimen.dir/dictCreation.cpp.o: ../dictCreation.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles $(CMAKE_PROGRESS_6)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/multiDimen.dir/dictCreation.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multiDimen.dir/dictCreation.cpp.o -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.cpp
+
+CMakeFiles/multiDimen.dir/dictCreation.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/multiDimen.dir/dictCreation.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.cpp > CMakeFiles/multiDimen.dir/dictCreation.cpp.i
+
+CMakeFiles/multiDimen.dir/dictCreation.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/multiDimen.dir/dictCreation.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.cpp -o CMakeFiles/multiDimen.dir/dictCreation.cpp.s
+
+CMakeFiles/multiDimen.dir/dictCreation.cpp.o.requires:
+.PHONY : CMakeFiles/multiDimen.dir/dictCreation.cpp.o.requires
+
+CMakeFiles/multiDimen.dir/dictCreation.cpp.o.provides: CMakeFiles/multiDimen.dir/dictCreation.cpp.o.requires
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/dictCreation.cpp.o.provides.build
+.PHONY : CMakeFiles/multiDimen.dir/dictCreation.cpp.o.provides
+
+CMakeFiles/multiDimen.dir/dictCreation.cpp.o.provides.build: CMakeFiles/multiDimen.dir/dictCreation.cpp.o
+
 # Object files for target multiDimen
 multiDimen_OBJECTS = \
-"CMakeFiles/multiDimen.dir/multiDimen.cpp.o"
+"CMakeFiles/multiDimen.dir/multiDimen.cpp.o" \
+"CMakeFiles/multiDimen.dir/filterbank.cpp.o" \
+"CMakeFiles/multiDimen.dir/imgCollection.cpp.o" \
+"CMakeFiles/multiDimen.dir/modelBuild.cpp.o" \
+"CMakeFiles/multiDimen.dir/imgFunctions.cpp.o" \
+"CMakeFiles/multiDimen.dir/dictCreation.cpp.o"
 
 # External object files for target multiDimen
 multiDimen_EXTERNAL_OBJECTS =
 
 multiDimen: CMakeFiles/multiDimen.dir/multiDimen.cpp.o
+multiDimen: CMakeFiles/multiDimen.dir/filterbank.cpp.o
+multiDimen: CMakeFiles/multiDimen.dir/imgCollection.cpp.o
+multiDimen: CMakeFiles/multiDimen.dir/modelBuild.cpp.o
+multiDimen: CMakeFiles/multiDimen.dir/imgFunctions.cpp.o
+multiDimen: CMakeFiles/multiDimen.dir/dictCreation.cpp.o
 multiDimen: CMakeFiles/multiDimen.dir/build.make
-multiDimen: /usr/local/lib/libopencv_videostab.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_videoio.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_video.so.3.0.0
+multiDimen: /usr/local/lib/libopencv_videostab.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_video.so.2.4.9
 multiDimen: /usr/local/lib/libopencv_ts.a
-multiDimen: /usr/local/lib/libopencv_superres.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_stitching.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_shape.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_photo.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_objdetect.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_ml.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_imgproc.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_imgcodecs.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_highgui.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_hal.a
-multiDimen: /usr/local/lib/libopencv_flann.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_features2d.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_core.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_calib3d.so.3.0.0
+multiDimen: /usr/local/lib/libopencv_superres.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_stitching.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_photo.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_ocl.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_objdetect.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_nonfree.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_ml.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_legacy.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_imgproc.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_highgui.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_gpu.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_flann.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_features2d.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_core.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_contrib.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_calib3d.so.2.4.9
 multiDimen: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so
 multiDimen: /usr/lib/x86_64-linux-gnu/libboost_system.so
 multiDimen: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so
-multiDimen: /usr/local/lib/libopencv_features2d.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_ml.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_highgui.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_videoio.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_imgcodecs.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_flann.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_video.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_imgproc.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_core.so.3.0.0
-multiDimen: /usr/local/lib/libopencv_hal.a
-multiDimen: /usr/local/share/OpenCV/3rdparty/lib/libippicv.a
+multiDimen: /usr/local/lib/libopencv_nonfree.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_ocl.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_gpu.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_photo.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_objdetect.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_legacy.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_video.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_ml.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_calib3d.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_features2d.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_highgui.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_imgproc.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_flann.so.2.4.9
+multiDimen: /usr/local/lib/libopencv_core.so.2.4.9
 multiDimen: /usr/lib/x86_64-linux-gnu/libboost_system.so
 multiDimen: CMakeFiles/multiDimen.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking CXX executable multiDimen"
@@ -123,6 +252,11 @@ CMakeFiles/multiDimen.dir/build: multiDimen
 .PHONY : CMakeFiles/multiDimen.dir/build
 
 CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/multiDimen.cpp.o.requires
+CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/filterbank.cpp.o.requires
+CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/imgCollection.cpp.o.requires
+CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/modelBuild.cpp.o.requires
+CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.requires
+CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/dictCreation.cpp.o.requires
 .PHONY : CMakeFiles/multiDimen.dir/requires
 
 CMakeFiles/multiDimen.dir/clean:

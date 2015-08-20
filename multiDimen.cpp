@@ -22,7 +22,9 @@
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Handling Functions
+#include "dictCreation.h" // Generate and store Texton Dictionary
 #include "modelBuild.h" // Generate models from class images
+#include "imgFunctions.h" // Img Processing Functions
 
 #define DICTIONARY_BUILD 1
 #define MODEL_BUILD 1
@@ -76,106 +78,6 @@ using namespace std;
 //    waitKey(0);
 //   }
 
-Mat reshapeCol(Mat in){
-  Mat points(in.rows*in.cols, 1,CV_32F);
-  int cnt = 0;
-  for(int i =0;i<in.rows;i++){
-    for(int j=0;j<in.cols;j++){
-      points.at<float>(cnt, 0) = in.at<Vec3b>(i,j)[0];
-      cnt++;
-    }
-  }
-  return points;
-}
-
-void segmentImg(vector<Mat>& out, Mat in, int cropsize){
-  int size = 200;
-  if(in.rows!=200 || in.cols!=200){
-    cout << "The input image was not 200x200 pixels.\nExiting.\n";
-    exit(-1);
-  }
-  for(int i=0;i<size;i+=cropsize){
-    for(int j=0;j<size;j+=cropsize){
-     Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
-     tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));
-     out.push_back(tmp);
-    }
-  }
-  cout << "This is the size: " << out.size() << " and the average cols: " << out[0].rows << endl;
-}
-
-void textonFind(Mat& clus, Mat dictionary){
-  if(clus.empty() || dictionary.empty()){
-    ERR("Texton Find inputs were empty");
-    exit(-1);
-  }
-  // Loop through input centers
-  for(int h=0;h<clus.rows;h++){
-    float distance = 0.0, nearest = 0.0;
-
-    distance = abs(dictionary.at<float>(0,0) - clus.at<float>(h,0));
-    nearest = dictionary.at<float>(0,0);
-
-    // Compare current centre with all values in texton dictionary
-    for(int k = 0; k < dictionary.rows; k++){
-      if(abs(dictionary.at<float>(k,0) - clus.at<float>(h,0)) < distance){
-        nearest = dictionary.at<float>(k,0);
-        distance = abs(dictionary.at<float>(k,0) - clus.at<float>(h,0));
-      }
-    }
-    // Replace input Center with closest Texton Center
-    clus.at<float>(h,0) = nearest;
-  }
-}
-
-// Create bins for each textonDictionary Value
-void binLimits(vector<float>& tex){
-  cout << "inside binLimits" << endl;
-
-  vector<float> bins;
-  bins.push_back(0);
-  for(int i = 0;i <= tex.size()-1;i++){
-      bins.push_back(tex[i] + 0.00001);
-  }
-  bins.push_back(256);
-
-  for(int i=0;i<bins.size();i++)
-    cout << "texDict: " << i << ": "<< tex[i] << " becomes: " << bins[i+1] << endl;
-  tex.clear();
-  tex = bins;
-}
-
-// Assign vector to Set to remove duplicates
-void removeDups(vector<float>& v){
-  cout << "inside.." << endl;
-  sort(v.begin(), v.end());
-  auto last = unique(v.begin(), v.end());
-  v.erase(last, v.end());
-}
-
-vector<float> matToVec(Mat m){
-  vector<float> v;
-  for(int i=0;i<m.rows;i++){
-    v.push_back(m.at<float>(i,0));
-  }
-  return v;
-}
-
-void vecToArr(vector<float> v, float* m){
-  int size = v.size();
-  for(int i=0;i<size;i++){
-    m[i] = v[i];
-  }
-}
-
-vector<float> createBins(Mat texDic){
-  vector<float> v = matToVec(texDic);
-  cout << "\n\nThis is the bin vector size BEFORE: " << v.size() << endl;
-  binLimits(v);
-  cout << "\n\nThis is the bin vector size AFTER: " << v.size() << endl;
-  return v;
-}
-
 ////////////////////////
 // Key:               //
 // 0 == TruePositive  //
@@ -198,7 +100,7 @@ void initROCcnt(vector<map<string, vector<int> > >& r, map<string, vector<Mat> >
     for(int i=0;i<4;i++){
       a[ent5.first].push_back(1);
     }
-    cout << "Initilseing..." << ent5.first << endl;
+    cout << "Initilsing..." << ent5.first << endl;
   }
   r.push_back(a);
   cout << "\n";
@@ -503,69 +405,22 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
   int cropsize = 100;
-  //////////////////////////////
-  // Create Texton vocabulary //
-  //////////////////////////////
+
   #if DICTIONARY_BUILD == 1
-    cout << "\n\n.......Generating Texton Dictionary...... \n" ;
-    int dictSize = 10;
-    int attempts = 5;
-    int flags = KMEANS_PP_CENTERS;
-    TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-    BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
+  ////////////////////////////////
+  // Creating Texton vocabulary //
+  ////////////////////////////////
 
-    map<string, vector<Mat> > textonImgs;
-    path p = "../../../TEST_IMAGES/kth-tips/classes";
-    loadClassImgs(p, textonImgs);
-
-    Mat dictionary;
-    for(auto const ent1 : textonImgs){
-      for(int j=0;j<ent1.second.size();j++){
-        Mat in = Mat::zeros(200,200,CV_32FC1);
-        Mat hold = Mat::zeros(200,200,CV_32FC1);
-        // Send img to be filtered, and responses aggregated with addWeighted
-        in = ent1.second[j];
-        if(!in.empty())
-          filterHandle(in, hold);
-
-        // Segment the 200x200pixel image
-        vector<Mat> test;
-        segmentImg(test, hold, cropsize);
-
-        // Push each saved Mat to bowTrainer
-        for(int k = 0; k < test.size(); k++){
-          if(!test[k].empty()){
-            bowTrainer.add(test[k]);
-          }
-        }
-      cout << "This is the bowTrainer.size(): " << bowTrainer.descripotorsCount() << endl;
-      // Generate 10 clusters per class and store in Mat
-      dictionary.push_back(bowTrainer.cluster());
-      bowTrainer.clear();
-      }
-    }
-
-    vector<float> bins = createBins(dictionary);
-
-    removeDups(bins);
-
-    //Save to file
-    cout << "Saving Dictionary.." << endl;
-    FileStorage fs("dictionary.xml",FileStorage::WRITE);
-    fs << "vocabulary" << dictionary;
-    fs << "bins" << bins;
-    fs.release();
+  cout << "\n\n.......Generating Texton Dictionary...... \n" ;
+  dictCreateHandler(cropsize);
   #endif
 
   #if MODEL_BUILD == 1
-  cout << "\n\n........Generating Class Models from Imgs.........\n";
     ///////////////////////////////////////////////////////////
     // Get histogram responses using vocabulary from Classes //
     ///////////////////////////////////////////////////////////
+    cout << "\n\n........Generating Class Models from Imgs.........\n";
     modelBuildHandle(cropsize);
-
-    cout << "\n\n........Loading Texton Dictionary.........\n";
-
 
   #endif
 
@@ -577,11 +432,9 @@ int main( int argc, char** argv ){
     //////////////////////////////
 
     // Load Images to be tested
-    if(DICTIONARY_BUILD == 0){
-      path p = "../../../TEST_IMAGES/kth-tips/classes";
-    }
-      map<string, vector<Mat> > classImages;
-      loadClassImgs(p, classImages);
+    path p = "../../../TEST_IMAGES/kth-tips/classes";
+    map<string, vector<Mat> > classImages;
+    loadClassImgs(p, classImages);
 
     map<string, vector<Mat> > savedClassHist;
 
