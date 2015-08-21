@@ -29,7 +29,7 @@ void menuPrint(){
   cout << "- Texton" << endl;
   cout << "- Class" << endl;
   cout << "- Novel" << endl;
-  cout << "- Import Imgs" << endl;
+  cout << "- Import" << endl;
   cout << "- Quit" << endl;
   cout << "\n----------------------------------\n\n";
 }
@@ -350,7 +350,7 @@ void printNovelImgMenu(){
 
 void novelImgHandler(){
   cout << "\n........Entering textonHandler........\n\n";
-   cvStartWindowThread(); // Start the window thread(essential for deleting windows)
+  cvStartWindowThread(); // Start the window thread(essential for deleting windows)
   string novel = "../../../TEST_IMAGES/CapturedImgs/novel/";
   vector<Mat> imgArr;
   string vidDir;
@@ -382,6 +382,7 @@ void novelImgHandler(){
         cout << "Please enter the directory to import video from.\n";
         cin >> vidDir;
         cout << "This is the dir: " << vidDir << endl;
+        printNovelImgMenu();
         break;
       case 'q':
         cout << "\nExiting to main\n";
@@ -425,8 +426,6 @@ void textonHandler(){
         retnFileNmes(clsPath, "", s);
         printImgDis(s);
         s.clear();
-
-
         printTextonMenu();
         break;
       case '2':
@@ -517,6 +516,14 @@ void classHandler(){
   }
 }
 
+void importHandler(){
+  cout << "Please enter the dir from which to import the images.\n";
+  string imgDir;
+  cin >> imgDir;
+  cout << "This is your image import location: " << imgDir << endl;
+  map<string, vector<Mat> > in;
+  loadClassImgs("../../../TEST_IMAGES/kth-tips/classes",in);
+}
 void imgCollectionHandle(){
 
   generateDirs();
@@ -534,19 +541,13 @@ void imgCollectionHandle(){
       classHandler();
     }else if(capture.compare("novel")==0){
       novelImgHandler();
-    }else if (capture.compare("Import Imgs")){
-      cout << "Please enter the dir from which to import the images.\n";
-      string imgDir;
-      cin >> imgDir;
-      cout << "This is your image import location: " << imgDir << endl;
+    }else if (capture.compare("import")==0){
+      importHandler();
     }else if(capture.compare("quit")==0){
-      cout << "quitting\n";
+      cout << "\nReturning to main program\n";
       return;
-    }else if(capture.compare("import")==0){
-      cout << "importing.." << endl;
-      map<string, vector<Mat> > in;
-      loadClassImgs("../../../TEST_IMAGES/kth-tips/classes",in);
-    }else{
+    }
+    else{
       cout << "Your input of: " << capture << " was not recognised.\n" << endl;
     }
   }

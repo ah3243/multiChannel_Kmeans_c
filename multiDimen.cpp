@@ -27,8 +27,8 @@
 #include "imgFunctions.h" // Img Processing Functions
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 0
-#define MODEL_BUILD 0
+#define DICTIONARY_BUILD 1
+#define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -289,7 +289,9 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
   BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
 
   // Window for segment prediction display
-  namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
+  namedWindow("segmentPredictions", CV_WINDOW_AUTOSIZE);
+  namedWindow("novelImg", CV_WINDOW_AUTOSIZE);
+  namedWindow("correct", CV_WINDOW_AUTOSIZE);
 
   // Import Texton Dictionary
   Mat dictionary;
@@ -331,7 +333,8 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
         segmentImg(test, hold, cropsize);
 
         int imgSize = ent.second[h].rows;
-        Mat disVals = Mat(200,200,CV_8UC3);
+        Mat disVals = Mat(200,200,CV_8UC3, Scalar(0,0,0));
+        Mat matchDisplay = Mat(50,50,CV_8UC3, Scalar(0,0,0));
 
         // Counters for putting 'pixels' on display image
         int disrows = 0, discols = 0;
@@ -383,25 +386,30 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           //  }else{
              prediction = match;
           //  }
+            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
            // Populate Window with predictions
-           if(prediction.compare(ent.first)==0){
-             Correct += 1;
-            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
-           }else if(prediction.compare("Unknown")==0){
-            //  Unknown +=1;
-            // rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
-           }else{
-             Incorrect += 1;
-//            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
-           }
+          //  if(prediction.compare(ent.first)==0){
+          //    Correct += 1;
+          //   rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
+          //  }else if(prediction.compare("Unknown")==0){
+          //    Unknown +=1;
+          //   rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+          //  }else{
+          //    Incorrect += 1;
+          //  rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
+          //  }
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
       }
-       imshow("mywindow", disVals);
-       waitKey(500);
+       rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
+       imshow("correct", matchDisplay);
+       imshow("novelImg", ent.second[h]);
+       imshow("segmentPredictions", disVals);
+      //  waitKey(500);
     }
     // END OF CLASS, CONTINUING TO NEXT CLASS //
   }
+  // waitKey(0);
 }
 
 void printRAWResults(map<string, vector<int> > r){
@@ -420,7 +428,7 @@ void printRAWResults(map<string, vector<int> > r){
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 50;
+  int cropsize = 20;
 
   #if INTERFACE == 1
   ///////////////////////
@@ -515,7 +523,7 @@ int main( int argc, char** argv ){
 
 
   int counter = 0;
-  for(int numClusters=5;numClusters<6;numClusters++){
+  for(int numClusters=3;numClusters<8;numClusters++){
     cout << "\nCount: " << counter << endl;
     initROCcnt(results, classImages); // Initilse map
     int clsAttempts = 5;
@@ -557,9 +565,15 @@ int main( int argc, char** argv ){
     cout << "Class: " << ent.first << endl;
     // Cycle through all iterations to produce graph
     for(int i=0;i<ent.second.size()-1;i++){
-      line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
-      Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
-      Colors[ent.first], 1, 8, 0);
+      if(i==0){
+        line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
+        Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
+        Scalar(255,255,255), 1, 8, 0);
+      }else{
+        line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
+        Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
+        Colors[ent.first], 1, 8, 0);        
+      }
       waitKey(500);
       imshow("ROC_Curve", rocCurve);
       }
