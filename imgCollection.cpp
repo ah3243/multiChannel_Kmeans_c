@@ -86,7 +86,7 @@ int getHighestSuffix(path p, string cls){
       }
     }
   }
-  return highVal;
+  return highVal+1;
 }
 
 void getUniqueClassNme(path p, vector<string>& classes){
@@ -171,7 +171,6 @@ void  cropImage(Mat img, Mat& out){
     size = 200;
 
     Mat cropped = img(Rect(w,h,200,200));
-
     out = cropped.clone();
 }
 
@@ -181,6 +180,7 @@ void saveImage(string path, string cls , int num, vector<Mat>& img){
     cout << "Path was not valid. Returning. " << path << endl;
     return;
   }
+  cout << "This is the img.size(): " << img.size() << endl;
   for(int i=0;i<img.size();i++){
     stringstream ss;
     string a = path;
@@ -354,6 +354,7 @@ void novelImgHandler(){
   string novel = "../../../TEST_IMAGES/CapturedImgs/novel/";
   vector<Mat> imgArr;
   string vidDir;
+  int highVal;
   map<string, vector<string> > fileNmes;
   printNovelImgMenu();
   while(true){
@@ -370,7 +371,8 @@ void novelImgHandler(){
         cout << "Starting Novel image collection\n";
         imgArr.clear();
         getImages(imgArr);
-        saveImage(novel, "novelImg", 0, imgArr);
+        highVal = getHighestSuffix(novel,"novelImg");
+        saveImage(novel, "novelImg", highVal, imgArr);
         printNovelImgMenu();
         break;
       case '2':

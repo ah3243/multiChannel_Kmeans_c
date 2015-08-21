@@ -27,8 +27,8 @@
 #include "imgFunctions.h" // Img Processing Functions
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 1
-#define MODEL_BUILD 1
+#define DICTIONARY_BUILD 0
+#define MODEL_BUILD 0
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -333,7 +333,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
         segmentImg(test, hold, cropsize);
 
         int imgSize = ent.second[h].rows;
-        Mat disVals = Mat(200,200,CV_8UC3, Scalar(0,0,0));
+        Mat disVals = Mat(second[h].cols, second[h].rows,CV_8UC3, Scalar(0,0,0));
         Mat matchDisplay = Mat(50,50,CV_8UC3, Scalar(0,0,0));
 
         // Counters for putting 'pixels' on display image
@@ -400,12 +400,13 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           //  }
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
+//          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
       }
        rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
        imshow("correct", matchDisplay);
        imshow("novelImg", ent.second[h]);
        imshow("segmentPredictions", disVals);
-      //  waitKey(500);
+       waitKey(500);
     }
     // END OF CLASS, CONTINUING TO NEXT CLASS //
   }
@@ -441,9 +442,9 @@ int main( int argc, char** argv ){
 
   #endif
   #if DICTIONARY_BUILD == 1
-  ////////////////////////////////
-  // Creating Texton vocabulary //
-  ////////////////////////////////
+    ////////////////////////////////
+    // Creating Texton vocabulary //
+    ////////////////////////////////
 
   cout << "\n\n.......Generating Texton Dictionary...... \n" ;
   dictCreateHandler(cropsize);
@@ -572,7 +573,7 @@ int main( int argc, char** argv ){
       }else{
         line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
         Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
-        Colors[ent.first], 1, 8, 0);        
+        Colors[ent.first], 1, 8, 0);
       }
       waitKey(500);
       imshow("ROC_Curve", rocCurve);
