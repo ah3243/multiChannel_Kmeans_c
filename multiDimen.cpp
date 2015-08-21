@@ -27,8 +27,8 @@
 #include "imgFunctions.h" // Img Processing Functions
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 1
-#define MODEL_BUILD 1
+#define DICTIONARY_BUILD 0
+#define MODEL_BUILD 0
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -216,7 +216,7 @@ void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vecto
       out[curCls][j].push_back(FPR);
       // double TPd = TP, TNd = TN, FPd = FP, FNd = FN;
 
-      cout << "   accuracy: " << ((TP+TN)/(TP+TN+FP+FN))*100 << endl;
+      cout << "\naccuracy: " << ((TP+TN)/(TP+TN+FP+FN))*100 << "\n\n";
     }
   }
 }
@@ -288,6 +288,9 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
   BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
 
+  // Window for segment prediction display
+  namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
+
   // Import Texton Dictionary
   Mat dictionary;
   vector<float> m;
@@ -312,8 +315,6 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           ERR("Novel input image was now square. Exiting");
           exit(-1);
         }
-        int imgSize = ent.second[h].rows;
-        Mat disVals = Mat(imgSize,imgSize,CV_8UC3);
 
         Mat in, hold;
         in = ent.second[h];
@@ -328,6 +329,9 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
         // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
         vector<Mat> test;
         segmentImg(test, hold, cropsize);
+
+        int imgSize = ent.second[h].rows;
+        Mat disVals = Mat(200,200,CV_8UC3);
 
         // Counters for putting 'pixels' on display image
         int disrows = 0, discols = 0;
@@ -382,13 +386,13 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
            // Populate Window with predictions
            if(prediction.compare(ent.first)==0){
              Correct += 1;
-             rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
+            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
            }else if(prediction.compare("Unknown")==0){
-             Unknown +=1;
-             rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+            //  Unknown +=1;
+            // rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
            }else{
              Incorrect += 1;
-             rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
+//            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
            }
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
@@ -473,25 +477,45 @@ int main( int argc, char** argv ){
         clsColor.push_back(Scalar(255,0,255)); // Purple
         clsColor.push_back(Scalar(255,0,127)); // Pink/Red
 
-      Colors["Correct"] = Scalar(0,255,0);
-      Colors["Incorrect"] = Scalar(255,0,0);
+      Colors["Correct"] = Scalar(0,255,0); // Green
+      Colors["Incorrect"] = Scalar(255,0,0); // Red
       Colors["Unknown"] = Scalar(100,100,100);
 
       int count =0;
+      double txtWidth =0, txtHeight =0;
       for(auto const ent : savedClassHist){
         Colors[ent.first] = clsColor[count];
+        int bseline;
+        Size s = getTextSize(ent.first, CV_FONT_HERSHEY_SIMPLEX, 0.5, 1, &bseline);
+        // Get txtLength
+        if(s.width > txtWidth){
+          txtWidth = s.width;
+        }
+        // Get txtHeight
+        txtHeight += s.height;
+
         count++;
       }
-
-    // Window for segment prediction display
-    namedWindow("mywindow", CV_WINDOW_AUTOSIZE);
 
     // Holds Class names, each holding a count for TP, FP, FN, FP Values
     vector<map<string, vector<int> > > results;
 
+    // Create Img Legend
+    Mat Key = Mat::zeros(txtHeight+120,txtWidth+80,CV_8UC3);
+      int cnt=0;
+      for(auto const ent1 : Colors){
+        putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+        rectangle(Key, Rect(txtWidth+50, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
+        cnt++;
+      }
+
+    // Window for Legend display
+    namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
+    imshow("legendWin", Key);
+
 
   int counter = 0;
-  for(int numClusters=5;numClusters<11;numClusters++){
+  for(int numClusters=5;numClusters<6;numClusters++){
     cout << "\nCount: " << counter << endl;
     initROCcnt(results, classImages); // Initilse map
     int clsAttempts = 5;
@@ -511,20 +535,6 @@ int main( int argc, char** argv ){
   printResults(resByCls, clsNmes);
 
   calcROCVals(resByCls, ROCVals, clsNmes);
-
-
-  // Create Img Legend
-  Mat Key = Mat::zeros(400,200,CV_8UC3);
-    int cnt=0;
-    for(auto const ent1 : Colors){
-      putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-      rectangle(Key, Rect(100, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
-      cnt++;
-    }
-
-  // Window for Legend display
-  namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
-  imshow("legendWin", Key);
 
 
   if(results.size()<2){

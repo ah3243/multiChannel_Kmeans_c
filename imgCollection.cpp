@@ -29,6 +29,7 @@ void menuPrint(){
   cout << "- Texton" << endl;
   cout << "- Class" << endl;
   cout << "- Novel" << endl;
+  cout << "- Import Imgs" << endl;
   cout << "- Quit" << endl;
   cout << "\n----------------------------------\n\n";
 }
@@ -309,7 +310,9 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs){
     directory_iterator itr_end;
     for(directory_iterator itr(p); itr != itr_end; ++itr){
       string nme = itr -> path().string();
-      Mat img = imread(nme, CV_LOAD_IMAGE_GRAYSCALE);
+      Mat in = imread(nme, CV_LOAD_IMAGE_GRAYSCALE);
+      Mat img;
+      equalizeHist(in, img);
       extractClsNme(nme);
       cout << "Pushing back: " << nme << " img.size(): " << img.size() << endl;
       classImgs[nme].push_back(img);
@@ -341,6 +344,7 @@ void printNovelImgMenu(){
   cout << "0 List number of Novel images\n";
   cout << "1 Collect new Novel Images\n";
   cout << "2 Clear all Novel Images\n";
+  cout << "3 Import Test Video\n";
   cout << "q Return to Main Menu\n";
 }
 
@@ -349,6 +353,7 @@ void novelImgHandler(){
    cvStartWindowThread(); // Start the window thread(essential for deleting windows)
   string novel = "../../../TEST_IMAGES/CapturedImgs/novel/";
   vector<Mat> imgArr;
+  string vidDir;
   map<string, vector<string> > fileNmes;
   printNovelImgMenu();
   while(true){
@@ -372,6 +377,11 @@ void novelImgHandler(){
         cout << "Clearing All Novel images\n";
         clearDir(novel);
         printNovelImgMenu();
+        break;
+      case '3':
+        cout << "Please enter the directory to import video from.\n";
+        cin >> vidDir;
+        cout << "This is the dir: " << vidDir << endl;
         break;
       case 'q':
         cout << "\nExiting to main\n";
@@ -524,6 +534,11 @@ void imgCollectionHandle(){
       classHandler();
     }else if(capture.compare("novel")==0){
       novelImgHandler();
+    }else if (capture.compare("Import Imgs")){
+      cout << "Please enter the dir from which to import the images.\n";
+      string imgDir;
+      cin >> imgDir;
+      cout << "This is your image import location: " << imgDir << endl;
     }else if(capture.compare("quit")==0){
       cout << "quitting\n";
       return;
