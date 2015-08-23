@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<Serial>716169230</Serial>
 <modelsInfo>
+  <Serial>198654725</Serial>
   <Num_Models>3</Num_Models>
   <cropSize>1000</cropSize>
   <modelsNumOfClusters>10</modelsNumOfClusters>

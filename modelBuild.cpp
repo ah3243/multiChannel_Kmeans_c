@@ -6,7 +6,7 @@
 #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
-#include <stdlib.h>
+#include <stdlib.h> // rand
 #include <fstream>
 #include <string>
 #include <unistd.h>
@@ -15,6 +15,7 @@
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 #include <boost/filesystem.hpp>
 #include <assert.h>
+#include <time.h> // randTimeSeed
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Import Functions
@@ -26,6 +27,13 @@ using namespace std;
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
+int modelSerialNum(){
+  int serial;
+  srand(time(NULL));
+  serial = rand();
+  cout << "This is the randomNumber" << serial << endl;
+  return serial;
+}
 
 void modelBuildHandle(int cropsize){
   // Load TextonDictionary
@@ -58,7 +66,9 @@ void modelBuildHandle(int cropsize){
     int clsNumClusters = 10;
     int clsAttempts = 5;
     int clsFlags = KMEANS_PP_CENTERS;
-    TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+    int kmeansIteration = 1000;
+    double kmeansEpsilon = 0.0001;
+    TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
     BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
     cout << "\n\n.......Generating Models...... \n" ;
@@ -101,15 +111,37 @@ void modelBuildHandle(int cropsize){
 
     classTrainer.clear();
   }
+  int serial = modelSerialNum();
 
   FileStorage fs2("models.xml",FileStorage::WRITE);
-  // int numClasses = classHist.size();
-  // fs2 << "Num_Models" << numClasses;
+  int clsHist =  classHist.size();
+  //Save to file
+  cout << "Saving Dictionary.." << endl;
+  fs2 << "Serial" << serial;
+  fs2 << "modelsInfo" << "{";
+    fs2 << "Num_Models" << clsHist;
+    fs2 << "cropSize" << cropsize;
+    fs2 << "modelsNumOfClusters" << clsNumClusters;
+    fs2 << "modelsFlagType" << clsFlags;
+    fs2 << "modelsAttempts" << clsAttempts;
+    fs2 << "Kmeans" << "{";
+      fs2 << "Iterations" << kmeansIteration;
+      fs2 << "Epsilon" << kmeansEpsilon;
+    fs2 << "}";
+  fs2 << "}";
+
+  fs2 << "textonDictInfo" << "{";
+    fs2 << "totalDictSize" << dictionary.size();
+    fs2 << "vocabulary" << dictionary;
+    fs2 << "bins" << m;
+  fs2 << "}";
+
+  fs2 << "classes" << "{";
   int cont=0;
   for(auto const ent1 : classHist){
-    stringstream ss;
-    ss << "class_" << cont;
-    fs2 << ss.str() << "{";
+    stringstream ss1;
+    ss1 << "class_" << cont;
+    fs2 << ss1.str() << "{";
       fs2 << "Name" << ent1.first;
       fs2 << "Models" << "{";
         for(int i=0;i<ent1.second.size();i++){
@@ -121,5 +153,6 @@ void modelBuildHandle(int cropsize){
     fs2 << "}";
     cont++;
   }
+  fs2 << "}";
   fs2.release();
 }

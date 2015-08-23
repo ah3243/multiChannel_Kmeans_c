@@ -86,7 +86,7 @@ using namespace std;
 // 2 == TrueNegative  //
 // 3 == FalseNegative //
 ////////////////////////
-void addTrueNegatives(string exp1, string exp2, map<string, vector<int> >& res){
+void addTrueNegatives(string exp1, string exp2, map<string, vector<double> >& res){
   for(auto ent7 : res){
     if(exp1.compare(ent7.first)!=0 && exp2.compare(ent7.first)!=0){
       string holder = ent7.first;
@@ -95,14 +95,14 @@ void addTrueNegatives(string exp1, string exp2, map<string, vector<int> >& res){
   }
 }
 
-void initROCcnt(vector<map<string, vector<int> > >& r, vector<string> clsNames){
+void initROCcnt(vector<map<string, vector<double> > >& r, vector<string> clsNames){
   cout << "initialising.. " << endl;
   int possResults = 4; // allow space for TP, FP, TN, FN
 
-  map<string, vector<int> > a;
+  map<string, vector<double> > a;
   for(int i=0;i<clsNames.size();i++){
     for(int j=0;j<possResults;j++){
-      a[clsNames[i]].push_back(0);
+      a[clsNames[i]].push_back(0.0);
     }
     cout << "Initilsing..." << clsNames[i] << endl;
   }
@@ -110,7 +110,7 @@ void initROCcnt(vector<map<string, vector<int> > >& r, vector<string> clsNames){
   cout << "\n";
 }
 
-void printResults(map<string, vector<vector<int> > > r, vector<string> clsNmes){
+void printResults(map<string, vector<vector<double> > > r, vector<string> clsNmes){
   assert(r.size()==clsNmes.size());
   string testtype[] = {"TruePositive", "FalsePositive", "TrueNegative", "FalseNegative"};
   cout << "\n\n----------------------------------------------------------\n\n";
@@ -132,7 +132,7 @@ void printResults(map<string, vector<vector<int> > > r, vector<string> clsNmes){
   }
 }
 
-int getClsNames(map<string, vector<int> > &r, vector<string> &nme){
+int getClsNames(map<string, vector<double> > &r, vector<string> &nme){
   for(auto const ent5 : r){
     if(ent5.second.size()<=0){
       return 0;
@@ -141,7 +141,7 @@ int getClsNames(map<string, vector<int> > &r, vector<string> &nme){
   }
 }
 
-void cacheTestdata(string correct, string prediction, map<string, vector<int> >& results){
+void cacheTestdata(string correct, string prediction, map<string, vector<double> >& results){
   // cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
   if(correct.compare(prediction)==0){
     // If correct
@@ -161,10 +161,10 @@ void cacheTestdata(string correct, string prediction, map<string, vector<int> >&
   }
 }
 
-void organiseResultByClass(vector<map<string, vector<int> > >in, map<string, vector<vector<int> > > &out, vector<string> clsNmes){
+void organiseResultByClass(vector<map<string, vector<double> > >in, map<string, vector<vector<double> > > &out, vector<string> clsNmes){
   int numTests = in.size();
 
-  vector<int> a;
+  vector<double> a;
   cout << "\n\nNumber of tests: " << in.size() << endl;
   // Go through each class
   for(int i=0;i<clsNmes.size();i++){
@@ -181,11 +181,11 @@ void organiseResultByClass(vector<map<string, vector<int> > >in, map<string, vec
   }
 }
 
-///////////////////////////
-// 0 == TPR == (TP/TP+FN)//
-// 1 == FPR == (FP/FP+TN)//
-///////////////////////////
-void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vector<double> > >& out, vector<string> clssNmes){
+//////////////////////////////////////
+// 0 == TPR(Sensitity) == (TP/TP+FN)//
+// 1 == PPV(Precision) == (TP/TP+FP)//
+//////////////////////////////////////
+void calcROCVals(map<string, vector<vector<double> > > in, map<string, vector<vector<double> > >& out, vector<string> clssNmes){
   assert(clssNmes.size() == in.size());
   vector<double> a;
 
@@ -196,57 +196,72 @@ void calcROCVals(map<string, vector<vector<int> > > in, map<string, vector<vecto
 
     // Go through each test iteration
     for(int j=0;j<in[curCls][0].size();j++){
-      // Calculate TPR
-      double TPR, TP, FN;
+      double TPR, PPV, TP, FN, TN, FP;
       TP = in[curCls][0][j];
+      FP = in[curCls][1][j];
+      TN = in[curCls][2][j];
       FN = in[curCls][3][j];
+
+      // Calculate TPR
       TPR = (TP/(TP+FN));
       cout << " " << j << ":-  TP: " << TP << " FN: " << FN << " TPR: " << TPR;
 
       // Calculate FPR
-      double FPR, FP, TN;
-      FP = in[curCls][1][j];
-      TN = in[curCls][2][j];
-      FPR = (FP/(FP+TN));
-      cout << " FP: " << FP << " TN: " << TN << " FPR: " << FPR;
+      PPV = (TP/(TP+FP));
+      cout << " TP: " << TP << " FP: " << FP << " PPV: " << PPV;
 
       // Pushback vector for each test
       out[curCls].push_back(a);
       // Push back results
       out[curCls][j].push_back(TPR);
-      out[curCls][j].push_back(FPR);
-      // double TPd = TP, TNd = TN, FPd = FP, FNd = FN;
-
+      out[curCls][j].push_back(PPV);
       cout << "\naccuracy: " << ((TP+TN)/(TP+TN+FP+FN))*100 << "\n\n";
     }
   }
 }
 
-// void saveTestData(vector<map<string, vector<int> > > r){
-  //   cout << "inside test data.." << endl;
-  //   vector<string> nme;
-  //   assert(getClsNames(r[0], nme));
-  //
-  //   FileStorage fs("results.xml", FileStorage::WRITE);
-  //   for(int i=0;i<r.size();i++){
-  //     cout << "Test: " << i << endl;
-  //     stringstream ss;
-  //     ss << "TEST:" << i;
-  //     fs << ss.str() << "{";
-  //     for(const auto ent : r){
-  //       cout << "Class: " << ent.first << endl;
-  //       fs
-  //       for(int j=0;j<ent.second.size();j++){
-  //
-  //       }
-  //     }
-  //   }
-  // }
+void saveTestData(vector<map<string, vector<double> > > r, int serial){
+  cout << "Saving test data" << endl;
+  vector<string> nme;
+  assert(getClsNames(r[0], nme));
 
-void getClassHist(map<string, vector<Mat> >& savedClassHist){
+  FileStorage fs("results.xml", FileStorage::WRITE);
+  fs << "modelSerial" << serial;
+  for(int i=0;i<r.size();i++){
+    cout << "Iteration " << i << endl;
+
+    stringstream ss;
+    ss << "Iteration" << i;
+    fs << ss.str() << "{";
+    for(const auto ent : r[i]){
+      fs << ent.first << "{";
+        double TP, FP, TN, FN, PPV, TPR;
+        TP = ent.second[0];
+        FP = ent.second[1];
+        TN = ent.second[2];
+        FN = ent.second[3];
+        PPV = (TP/(TP+FP));
+        TPR = (TP/(TP+FN));
+
+        fs << "TP" << TP;
+        fs << "FP" << FP;
+        fs << "TN" << TN;
+        fs << "FN" << FN;
+        fs << "PPV" << PPV;
+        fs << "TPR" << TPR;
+      fs << "}";
+    }
+    fs << "}";
+  }
+}
+
+int getClassHist(map<string, vector<Mat> >& savedClassHist){
+  int serial;
   // Load in Class Histograms(Models)
   FileStorage fs3("models.xml", FileStorage::READ);
-  FileNode fn = fs3.root();
+  fs3["Serial"] >> serial;
+  cout << "This is the serial: " << serial << endl;
+  FileNode fn = fs3["classes"];
   if(fn.type() == FileNode::MAP){
 
     // Create iterator to go through all the classes
@@ -269,6 +284,7 @@ void getClassHist(map<string, vector<Mat> >& savedClassHist){
     ERR("Class file was not map. Exiting");
     exit(-1);
   }
+  return serial;
 }
 
 void getDictionary(Mat &dictionary, vector<float> &m){
@@ -284,7 +300,7 @@ void getDictionary(Mat &dictionary, vector<float> &m){
   fs.release();
 }
 
-void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int> >& results, map<string, vector<Mat> > classImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
+void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > classImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
   int clsFlags = KMEANS_PP_CENTERS;
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
   BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
@@ -307,19 +323,13 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
   bool uniform = false;
   bool accumulate = false;
 
-    // Store aggregated correct, incorrect and unknown results for segment prediction display
-    int Correct = 0, Incorrect =0, Unknown =0;
-    // Loop through All Classes
+  // Store aggregated correct, incorrect and unknown results for segment prediction display
+  int Correct = 0, Incorrect =0, Unknown =0;
+  // Loop through All Classes
     for(auto const ent : classImgs){
       // Loop through all images in Class
       cout << "\n\nEntering Class: " << ent.first << endl;
       for(int h=0;h<ent.second.size();h++){
-
-        cout << "this is the image.. " << endl;
-        imshow("novelImg", ent.second[h]);
-        waitKey(1000000);
-        return;
-
         Mat in = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1, Scalar(0));
         Mat hold = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1,Scalar(0));
         in = ent.second[h];
@@ -386,10 +396,10 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           //  if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
           //    prediction = "Unknown";
           //  }else{
-             prediction = match;
+          prediction = match;
           //  }
-           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
-           // Populate Window with predictions
+          rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+          // Populate Window with predictions
           //  if(prediction.compare(ent.first)==0){
           //    Correct += 1;
           //   rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
@@ -404,19 +414,18 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
 //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
+        }
+         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
+         imshow("correct", matchDisplay);
+         imshow("novelImg", ent.second[h]);
+         imshow("segmentPredictions", disVals);
       }
-       rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
-       imshow("correct", matchDisplay);
-       imshow("novelImg", ent.second[h]);
-       imshow("segmentPredictions", disVals);
-       waitKey(0);
+      // END OF CLASS, CONTINUING TO NEXT CLASS //
     }
-    // END OF CLASS, CONTINUING TO NEXT CLASS //
-  }
   // waitKey(0);
 }
 
-void printRAWResults(map<string, vector<int> > r){
+void printRAWResults(map<string, vector<double> > r){
   cout << "\n\n----------------------------------------------------------\n\n";
   cout << "                    These are the test results                  \n";
   for(auto const ent6 : r){
@@ -432,7 +441,7 @@ void printRAWResults(map<string, vector<int> > r){
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 100;
+  int cropsize = 1000;
 
   path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
   path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
@@ -482,8 +491,8 @@ int main( int argc, char** argv ){
     loadClassImgs(testPath, classImages);
 
     map<string, vector<Mat> > savedClassHist;
-
-    getClassHist(savedClassHist);
+    int serial;
+    serial = getClassHist(savedClassHist);
 
     // Stock Scalar Colors
     map<string, Scalar> Colors;
@@ -517,7 +526,7 @@ int main( int argc, char** argv ){
       }
 
     // Holds Class names, each holding a count for TP, FP, FN, FP Values
-    vector<map<string, vector<int> > > results;
+    vector<map<string, vector<double> > > results;
 
     // Create Img Legend
     Mat Key = Mat::zeros(txtHeight+120,txtWidth+80,CV_8UC3);
@@ -545,10 +554,10 @@ int main( int argc, char** argv ){
     testNovelImgHandle(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors, cropsize);
     counter++;
   }
-
   printRAWResults(results[0]);
+  saveTestData(results, serial);
 
-  map<string, vector<vector<int> > > resByCls;
+  map<string, vector<vector<double> > > resByCls;
   map<string, vector<vector<double> > > ROCVals;
   vector<string> clsNmes;
   getClsNames(results[0], clsNmes); // Get class Names

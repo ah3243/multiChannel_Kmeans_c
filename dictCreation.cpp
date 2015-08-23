@@ -66,10 +66,12 @@ vector<float> createBins(Mat texDic){
 }
 
 void dictCreateHandler(int cropsize){
-  int dictSize = 10;
+  int dictSize = 50;
   int attempts = 5;
   int flags = KMEANS_PP_CENTERS;
-  TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+  int kmeansIteration = 1000;
+  double kmeansEpsilon = 0.0001;
+  TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
   BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
 
   map<string, vector<Mat> > textonImgs;
@@ -110,6 +112,20 @@ void dictCreateHandler(int cropsize){
   //Save to file
   cout << "Saving Dictionary.." << endl;
   FileStorage fs("dictionary.xml",FileStorage::WRITE);
+  fs << "cropSize" << cropsize;
+  fs << "clustersPerClass" << dictSize;
+  fs << "totalDictSize" << dictionary.size();
+  fs << "flagType" << flags;
+  fs << "attempts" << attempts;
+  stringstream ss;
+  for(auto const ent1 : textonImgs){
+    ss << ent1.first << " ";
+  }
+  fs << "classes" << ss.str();
+  fs << "Kmeans" << "{";
+    fs << "Iterations" << kmeansIteration;
+    fs << "Epsilon" << kmeansEpsilon;
+  fs << "}";
   fs << "vocabulary" << dictionary;
   fs << "bins" << bins;
   fs.release();

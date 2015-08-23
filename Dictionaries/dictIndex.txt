@@ -1,0 +1,11 @@
+......dictionary's index.......
+
+Dictionary_1:- 
+cropsize = 1000 pixels
+dictsize/class = 50
+totalDictSize = 150
+attempts = 5
+clustering type = KMeans_PP_Centers
+Classes = CrossPatternBlocks, Grass, LargeSquareEvenBlocks
+
+
