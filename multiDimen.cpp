@@ -83,30 +83,28 @@ using namespace std;
 // Key:               //
 // 0 == TruePositive  //
 // 1 == FalsePositive //
- // 2 == TrueNegative  //
+// 2 == TrueNegative  //
 // 3 == FalseNegative //
 ////////////////////////
 void addTrueNegatives(string exp1, string exp2, map<string, vector<int> >& res){
-  cout << "inside add TrueNegative .." << endl;
   for(auto ent7 : res){
     if(exp1.compare(ent7.first)!=0 && exp2.compare(ent7.first)!=0){
       string holder = ent7.first;
       res[holder][2] += 1;
     }
   }
-  cout << "leaving add TrueNegative.. " << endl;
 }
 
-void initROCcnt(vector<map<string, vector<int> > >& r, map<string, vector<Mat> > classImgs){
+void initROCcnt(vector<map<string, vector<int> > >& r, vector<string> clsNames){
   cout << "initialising.. " << endl;
   int possResults = 4; // allow space for TP, FP, TN, FN
 
   map<string, vector<int> > a;
-  for(auto const ent5 : classImgs){
-    for(int i=0;i<possResults;i++){
-      a[ent5.first].push_back(0);
+  for(int i=0;i<clsNames.size();i++){
+    for(int j=0;j<possResults;j++){
+      a[clsNames[i]].push_back(0);
     }
-    cout << "Initilsing..." << ent5.first << endl;
+    cout << "Initilsing..." << clsNames[i] << endl;
   }
   r.push_back(a);
   cout << "\n";
@@ -144,10 +142,7 @@ int getClsNames(map<string, vector<int> > &r, vector<string> &nme){
 }
 
 void cacheTestdata(string correct, string prediction, map<string, vector<int> >& results){
-  cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
-  cout << "This is the results size of correct: " << results[correct].size() << endl;
-  cout << "This is the results size of prediction: " << results[prediction].size() << endl;
-
+  // cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
   if(correct.compare(prediction)==0){
     // If correct
     // add 1 to True Positive
@@ -155,11 +150,9 @@ void cacheTestdata(string correct, string prediction, map<string, vector<int> >&
     // add 1 to True Negative to all other classes
     addTrueNegatives(correct, "", results);
   }else if(correct.compare(prediction)!=0){
-    cout << "number one Grass : " << results[correct][1] << endl;
     // If incorrect
     // add 1 to False Positive for Predicted
     results[prediction][1] += 1;
-
     // add 1 to False Negative to Correct
     results[correct][3] += 1;
     // cout << "number 3." << endl;
@@ -322,6 +315,11 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
       cout << "\n\nEntering Class: " << ent.first << endl;
       for(int h=0;h<ent.second.size();h++){
 
+        cout << "this is the image.. " << endl;
+        imshow("novelImg", ent.second[h]);
+        waitKey(1000000);
+        return;
+
         Mat in = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1, Scalar(0));
         Mat hold = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1,Scalar(0));
         in = ent.second[h];
@@ -358,7 +356,6 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
            Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
            clus = novelTrainer.cluster();
 
-           cout << "going into texton find x: " << x << endl;
            // Replace Cluster Centers with the closest matching texton
            textonFind(clus, dictionary);
 
@@ -370,7 +367,6 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
            double high = DBL_MAX, secHigh = DBL_MAX;
            string match, secMatch;
            for(auto const ent2 : savedClassHist){
-             cout << "going into loop class name: " << ent2.first << endl;
              for(int j=0;j < ent2.second.size();j++){
                double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
                // Save best match value and name
@@ -385,7 +381,6 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
                }
              }
            }
-           cout << "after the loop x : " << x << endl;
            string prediction = "";
            // If the match is above threshold or nearest other match is to similar, return unknown
           //  if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
@@ -393,7 +388,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           //  }else{
              prediction = match;
           //  }
-//            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
            // Populate Window with predictions
           //  if(prediction.compare(ent.first)==0){
           //    Correct += 1;
@@ -406,17 +401,15 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           //  rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
           //  }
 
-          cout << "before cacheTestdata.. " << endl;
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
 //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
-          cout << "after cacheTestdata.. " << endl;
       }
-      //  rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
-      //  imshow("correct", matchDisplay);
-      //  imshow("novelImg", ent.second[h]);
-      //  imshow("segmentPredictions", disVals);
-      //  waitKey(500);
+       rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
+       imshow("correct", matchDisplay);
+       imshow("novelImg", ent.second[h]);
+       imshow("segmentPredictions", disVals);
+       waitKey(0);
     }
     // END OF CLASS, CONTINUING TO NEXT CLASS //
   }
@@ -440,6 +433,10 @@ void printRAWResults(map<string, vector<int> > r){
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
   int cropsize = 100;
+
+  path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
+  path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
+  path testPath = "../../../TEST_IMAGES/CapturedImgs/novel";
 
   #if INTERFACE == 1
   ///////////////////////
@@ -481,9 +478,8 @@ int main( int argc, char** argv ){
     cout << "\n\n.......Testing Against Novel Images...... \n" ;
 
     // Load Images to be tested
-    path p = "../../../TEST_IMAGES/CapturedImgs/novel";
     map<string, vector<Mat> > classImages;
-    loadClassImgs(p, classImages);
+    loadClassImgs(testPath, classImages);
 
     map<string, vector<Mat> > savedClassHist;
 
@@ -536,12 +532,15 @@ int main( int argc, char** argv ){
     namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
     imshow("legendWin", Key);
 
+  vector<string> clsNames;
+  getUniqueClassNme(clsPath, clsNames);
+  printClasses(clsNames);
 
   int counter = 0;
   // For loop to get data while varying an input parameter stored as a for condition
   for(int numClusters=7;numClusters<8;numClusters++){
     cout << "\nCount: " << counter << endl;
-    initROCcnt(results, classImages); // Initilse map
+    initROCcnt(results, clsNames); // Initilse map
     int clsAttempts = 5;
     testNovelImgHandle(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors, cropsize);
     counter++;
