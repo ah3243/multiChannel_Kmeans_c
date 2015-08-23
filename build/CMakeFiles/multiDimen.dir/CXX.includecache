@@ -17,8 +17,6 @@ boost/filesystem.hpp
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
-boost/filesystem.hpp
--
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/multiDimen.cpp
 opencv2/highgui/highgui.hpp

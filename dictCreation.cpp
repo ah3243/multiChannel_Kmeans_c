@@ -79,17 +79,17 @@ void dictCreateHandler(int cropsize){
   Mat dictionary;
   for(auto const ent1 : textonImgs){
     for(int j=0;j<ent1.second.size();j++){
-      Mat in = Mat::zeros(200,200,CV_32FC1);
-      Mat hold = Mat::zeros(200,200,CV_32FC1);
+      Mat in = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);
+      Mat hold = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);
       // Send img to be filtered, and responses aggregated with addWeighted
       in = ent1.second[j];
+      cout << "before of filterbank handle texton dict..\n\n" << endl;
       if(!in.empty())
         filterHandle(in, hold);
-
+      cout << "outside of filterbank handle texton dict..\n\n" << endl;
       // Segment the 200x200pixel image
       vector<Mat> test;
       segmentImg(test, hold, cropsize);
-
       // Push each saved Mat to bowTrainer
       for(int k = 0; k < test.size(); k++){
         if(!test[k].empty()){
@@ -97,10 +97,10 @@ void dictCreateHandler(int cropsize){
         }
       }
     cout << "This is the bowTrainer.size(): " << bowTrainer.descripotorsCount() << endl;
+    }
     // Generate 10 clusters per class and store in Mat
     dictionary.push_back(bowTrainer.cluster());
     bowTrainer.clear();
-    }
   }
 
   vector<float> bins = createBins(dictionary);

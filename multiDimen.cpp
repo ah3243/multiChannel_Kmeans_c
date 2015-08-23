@@ -87,12 +87,14 @@ using namespace std;
 // 3 == FalseNegative //
 ////////////////////////
 void addTrueNegatives(string exp1, string exp2, map<string, vector<int> >& res){
+  cout << "inside add TrueNegative .." << endl;
   for(auto ent7 : res){
     if(exp1.compare(ent7.first)!=0 && exp2.compare(ent7.first)!=0){
       string holder = ent7.first;
       res[holder][2] += 1;
     }
   }
+  cout << "leaving add TrueNegative.. " << endl;
 }
 
 void initROCcnt(vector<map<string, vector<int> > >& r, map<string, vector<Mat> > classImgs){
@@ -142,7 +144,10 @@ int getClsNames(map<string, vector<int> > &r, vector<string> &nme){
 }
 
 void cacheTestdata(string correct, string prediction, map<string, vector<int> >& results){
-  //  cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
+  cout << " This was the prediction: " << prediction << " ACTUAL: " << correct << endl;
+  cout << "This is the results size of correct: " << results[correct].size() << endl;
+  cout << "This is the results size of prediction: " << results[prediction].size() << endl;
+
   if(correct.compare(prediction)==0){
     // If correct
     // add 1 to True Positive
@@ -150,11 +155,14 @@ void cacheTestdata(string correct, string prediction, map<string, vector<int> >&
     // add 1 to True Negative to all other classes
     addTrueNegatives(correct, "", results);
   }else if(correct.compare(prediction)!=0){
+    cout << "number one Grass : " << results[correct][1] << endl;
     // If incorrect
     // add 1 to False Positive for Predicted
     results[prediction][1] += 1;
+
     // add 1 to False Negative to Correct
     results[correct][3] += 1;
+    // cout << "number 3." << endl;
     // add 1 to True Negative to all other classes
     addTrueNegatives(correct, prediction, results);
   }
@@ -313,12 +321,9 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
       // Loop through all images in Class
       cout << "\n\nEntering Class: " << ent.first << endl;
       for(int h=0;h<ent.second.size();h++){
-        if(ent.second[h].rows != ent.second[h].cols){
-          ERR("Novel input image was now square. Exiting");
-          exit(-1);
-        }
 
-        Mat in, hold;
+        Mat in = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1, Scalar(0));
+        Mat hold = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1,Scalar(0));
         in = ent.second[h];
          if(in.empty()){
           ERR("Novel image was not able to be imported. Exiting.");
@@ -328,12 +333,12 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
         // Send img to be filtered, and responses aggregated with addWeighted
         filterHandle(in, hold);
 
-        // Divide the 200x200pixel image into 100 segments of 400x1 (20x20)
+        // Divide the image into segments specified in 'cropsize' and flatten for clustering
         vector<Mat> test;
         segmentImg(test, hold, cropsize);
 
         int imgSize = ent.second[h].rows;
-        Mat disVals = Mat(second[h].cols, second[h].rows,CV_8UC3, Scalar(0,0,0));
+        Mat disVals = Mat(ent.second[h].cols, ent.second[h].rows,CV_8UC3, Scalar(0,0,0));
         Mat matchDisplay = Mat(50,50,CV_8UC3, Scalar(0,0,0));
 
         // Counters for putting 'pixels' on display image
@@ -343,7 +348,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           // handle segment prediction printing
           discols = (discols + cropsize)%imgSize;
           if(discols==0){
-            disrows += 20;
+            disrows += 100;
           }
           if(!test[x].empty()){
              novelTrainer.add(test[x]);
@@ -353,6 +358,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
            Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
            clus = novelTrainer.cluster();
 
+           cout << "going into texton find x: " << x << endl;
            // Replace Cluster Centers with the closest matching texton
            textonFind(clus, dictionary);
 
@@ -364,6 +370,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
            double high = DBL_MAX, secHigh = DBL_MAX;
            string match, secMatch;
            for(auto const ent2 : savedClassHist){
+             cout << "going into loop class name: " << ent2.first << endl;
              for(int j=0;j < ent2.second.size();j++){
                double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
                // Save best match value and name
@@ -378,7 +385,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
                }
              }
            }
-
+           cout << "after the loop x : " << x << endl;
            string prediction = "";
            // If the match is above threshold or nearest other match is to similar, return unknown
           //  if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
@@ -386,7 +393,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           //  }else{
              prediction = match;
           //  }
-            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+//            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
            // Populate Window with predictions
           //  if(prediction.compare(ent.first)==0){
           //    Correct += 1;
@@ -398,15 +405,18 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<int
           //    Incorrect += 1;
           //  rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
           //  }
+
+          cout << "before cacheTestdata.. " << endl;
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
 //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
+          cout << "after cacheTestdata.. " << endl;
       }
-       rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
-       imshow("correct", matchDisplay);
-       imshow("novelImg", ent.second[h]);
-       imshow("segmentPredictions", disVals);
-       waitKey(500);
+      //  rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
+      //  imshow("correct", matchDisplay);
+      //  imshow("novelImg", ent.second[h]);
+      //  imshow("segmentPredictions", disVals);
+      //  waitKey(500);
     }
     // END OF CLASS, CONTINUING TO NEXT CLASS //
   }
@@ -429,7 +439,7 @@ void printRAWResults(map<string, vector<int> > r){
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 20;
+  int cropsize = 100;
 
   #if INTERFACE == 1
   ///////////////////////
@@ -437,7 +447,9 @@ int main( int argc, char** argv ){
   ///////////////////////
 
   cout << "\n\n............... Passing to Img Collection Module ................\n";
+
   imgCollectionHandle();
+
   cout << "\n\n............... Returning to main program ..................... \n";
 
   #endif
@@ -447,27 +459,29 @@ int main( int argc, char** argv ){
     ////////////////////////////////
 
   cout << "\n\n.......Generating Texton Dictionary...... \n" ;
-  dictCreateHandler(cropsize);
-  #endif
 
+  dictCreateHandler(cropsize);
+
+  #endif
   #if MODEL_BUILD == 1
     ///////////////////////////////////////////////////////////
     // Get histogram responses using vocabulary from Classes //
     ///////////////////////////////////////////////////////////
+
     cout << "\n\n........Generating Class Models from Imgs.........\n";
+
     modelBuildHandle(cropsize);
+
   #endif
-
-
-
   #if NOVELIMG_TEST == 1
-  cout << "\n\n.......Testing Against Novel Images...... \n" ;
     //////////////////////////////
     // Test Against Novel Image //
     //////////////////////////////
 
+    cout << "\n\n.......Testing Against Novel Images...... \n" ;
+
     // Load Images to be tested
-    path p = "../../../TEST_IMAGES/CapturedImgs/classes";
+    path p = "../../../TEST_IMAGES/CapturedImgs/novel";
     map<string, vector<Mat> > classImages;
     loadClassImgs(p, classImages);
 
@@ -524,7 +538,8 @@ int main( int argc, char** argv ){
 
 
   int counter = 0;
-  for(int numClusters=3;numClusters<8;numClusters++){
+  // For loop to get data while varying an input parameter stored as a for condition
+  for(int numClusters=7;numClusters<8;numClusters++){
     cout << "\nCount: " << counter << endl;
     initROCcnt(results, classImages); // Initilse map
     int clsAttempts = 5;

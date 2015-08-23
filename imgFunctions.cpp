@@ -34,13 +34,11 @@ Mat reshapeCol(Mat in){
 }
 
 void segmentImg(vector<Mat>& out, Mat in, int cropsize){
-  int size = 200;
-  if(in.rows!=200 || in.cols!=200){
-    cout << "The input image was not 200x200 pixels.\nExiting.\n";
-    exit(-1);
-  }
-  for(int i=0;i<size;i+=cropsize){
-    for(int j=0;j<size;j+=cropsize){
+  cout << "entering segmentImg this is the img.size(): " << in.size() << endl;
+  for(int i=0;i<(in.rows-cropsize);i+=cropsize){
+    cout << "count: " << i << endl;
+    for(int j=0;j<(in.rows-cropsize);j+=cropsize){
+    //  cout << "inside inner segment j: " << j << " and count: " << (in.rows-cropsize) << endl;
      Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
      tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));
      out.push_back(tmp);

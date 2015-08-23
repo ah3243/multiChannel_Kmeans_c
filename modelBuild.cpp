@@ -17,75 +17,15 @@
 #include <assert.h>
 
 #include "filterbank.h" // Filterbank Handling Functions
-#include "imgCollection.h" // Img Handling Functions
-
+#include "imgCollection.h" // Img Import Functions
+#include "imgFunctions.h" // img cropping and handling functions
 
 using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
-//#define cropsize  200
-
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
-Mat reshapeCol1(Mat in){
-  Mat points(in.rows*in.cols, 1,CV_32F);
-  int cnt = 0;
-  for(int i =0;i<in.rows;i++){
-    for(int j=0;j<in.cols;j++){
-      points.at<float>(cnt, 0) = in.at<Vec3b>(i,j)[0];
-      cnt++;
-    }
-  }
-  return points;
-}
-
-void segmentImg1(vector<Mat>& out, Mat in, int cropsize){
-  int size = 200;
-  if(in.rows!=200 || in.cols!=200){
-    cout << "The input image was not 200x200 pixels.\nExiting.\n";
-    exit(-1);
-  }
-  for(int i=0;i<size;i+=cropsize){
-    for(int j=0;j<size;j+=cropsize){
-     Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
-     tmp = reshapeCol1(in(Rect(i, j, cropsize, cropsize)));
-     out.push_back(tmp);
-    }
-  }
-  cout << "This is the size: " << out.size() << " and the average cols: " << out[0].rows << endl;
-}
-
-void textonFind1(Mat& clus, Mat dictionary){
-  if(clus.empty() || dictionary.empty()){
-    ERR("Texton Find inputs were empty");
-    exit(-1);
-  }
-  // Loop through input centers
-  for(int h=0;h<clus.rows;h++){
-    float distance = 0.0, nearest = 0.0;
-
-    distance = abs(dictionary.at<float>(0,0) - clus.at<float>(h,0));
-    nearest = dictionary.at<float>(0,0);
-
-    // Compare current centre with all values in texton dictionary
-    for(int k = 0; k < dictionary.rows; k++){
-      if(abs(dictionary.at<float>(k,0) - clus.at<float>(h,0)) < distance){
-        nearest = dictionary.at<float>(k,0);
-        distance = abs(dictionary.at<float>(k,0) - clus.at<float>(h,0));
-      }
-    }
-    // Replace input Center with closest Texton Center
-    clus.at<float>(h,0) = nearest;
-  }
-}
-
-void vecToArr1(vector<float> v, float* m){
-  int size = v.size();
-  for(int i=0;i<size;i++){
-    m[i] = v[i];
-  }
-}
 
 void modelBuildHandle(int cropsize){
   // Load TextonDictionary
@@ -106,7 +46,7 @@ void modelBuildHandle(int cropsize){
     loadClassImgs(p, classImgs);
 
     float bins[m.size()];
-    vecToArr1(m, bins);
+    vecToArr(m, bins);
 
     // Initilse Histogram parameters
     int histSize = m.size()-1;
@@ -137,9 +77,9 @@ void modelBuildHandle(int cropsize){
        if(!in.empty())
           filterHandle(in, hold);
 
-      // Segment the 200x200pixel image into 400x1 Mats(20x20)
+      // Segment and flatten the image then push each single column Mat onto a vector
       vector<Mat> test;
-      segmentImg1(test, hold, cropsize);
+      segmentImg(test, hold, cropsize);
 
       // Push each saved Mat to classTrainer
       for(int k = 0; k < test.size(); k++){
@@ -153,7 +93,7 @@ void modelBuildHandle(int cropsize){
     clus = classTrainer.cluster();
 
     // Replace Cluster Centers with the closest matching texton
-    textonFind1(clus, dictionary);
+    textonFind(clus, dictionary);
 
     Mat out;
     calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
