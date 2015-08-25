@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<modelSerial>1126189961</modelSerial>
+<Iteration0>
+  <BlackTarmac>
+    <TP>68.</TP>
+    <FP>311.</FP>
+    <TN>473.</TN>
+    <FN>128.</FN>
+    <PPV>1.7941952506596306e-01</PPV>
+    <TPR>3.4693877551020408e-01</TPR></BlackTarmac>
+  <Grass>
+    <TP>22.</TP>
+    <FP>160.</FP>
+    <TN>624.</TN>
+    <FN>174.</FN>
+    <PPV>1.2087912087912088e-01</PPV>
+    <TPR>1.1224489795918367e-01</TPR></Grass>
+  <LargeSquareEvenBlocks>
+    <TP>44.</TP>
+    <FP>112.</FP>
+    <TN>672.</TN>
+    <FN>152.</FN>
+    <PPV>2.8205128205128205e-01</PPV>
+    <TPR>2.2448979591836735e-01</TPR></LargeSquareEvenBlocks>
+  <LinearBlocksBAD>
+    <TP>46.</TP>
+    <FP>90.</FP>
+    <TN>694.</TN>
+    <FN>150.</FN>
+    <PPV>3.3823529411764708e-01</PPV>
+    <TPR>2.3469387755102042e-01</TPR></LinearBlocksBAD>
+  <UnevenLinearBlocks>
+    <TP>16.</TP>
+    <FP>111.</FP>
+    <TN>673.</TN>
+    <FN>180.</FN>
+    <PPV>1.2598425196850394e-01</PPV>
+    <TPR>8.1632653061224483e-02</TPR></UnevenLinearBlocks></Iteration0>
+</opencv_storage>

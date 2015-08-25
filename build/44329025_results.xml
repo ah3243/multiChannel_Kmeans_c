@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<modelSerial>44329025</modelSerial>
+<Iteration0>
+  <BlackTarmac>
+    <TP>39.</TP>
+    <FP>65.</FP>
+    <TN>33.</TN>
+    <FN>10.</FN>
+    <PPV>3.7500000000000000e-01</PPV>
+    <TPR>7.9591836734693877e-01</TPR></BlackTarmac>
+  <LargeSquareEvenBlocks>
+    <TP>12.</TP>
+    <FP>19.</FP>
+    <TN>79.</TN>
+    <FN>37.</FN>
+    <PPV>3.8709677419354838e-01</PPV>
+    <TPR>2.4489795918367346e-01</TPR></LargeSquareEvenBlocks>
+  <LinearBlocks>
+    <TP>10.</TP>
+    <FP>2.</FP>
+    <TN>96.</TN>
+    <FN>39.</FN>
+    <PPV>8.3333333333333337e-01</PPV>
+    <TPR>2.0408163265306123e-01</TPR></LinearBlocks></Iteration0>
+</opencv_storage>

@@ -19,6 +19,8 @@
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 #include <boost/filesystem.hpp>
 #include <assert.h>
+#include <chrono>  // time measurement
+#include <thread>  // time measurement
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Handling Functions
@@ -225,7 +227,10 @@ void saveTestData(vector<map<string, vector<double> > > r, int serial){
   vector<string> nme;
   assert(getClsNames(r[0], nme));
 
-  FileStorage fs("results.xml", FileStorage::WRITE);
+  stringstream fileName;
+  //  fileName << serial << "_";
+  fileName << "results.xml";
+  FileStorage fs(fileName.str(), FileStorage::WRITE);
   fs << "modelSerial" << serial;
   for(int i=0;i<r.size();i++){
     cout << "Iteration " << i << endl;
@@ -376,9 +381,15 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
 
            double high = DBL_MAX, secHigh = DBL_MAX;
            string match, secMatch;
+           map<string, double> matchResults;
            for(auto const ent2 : savedClassHist){
+             matchResults[ent2.first] = DBL_MAX;
+
              for(int j=0;j < ent2.second.size();j++){
                double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+               if(val < matchResults[ent2.first]){
+                 matchResults[ent2.first] = val;
+               }
                // Save best match value and name
                if(val < high){
                  high = val;
@@ -397,6 +408,13 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
           //    prediction = "Unknown";
           //  }else{
           prediction = match;
+          cout << "ACT: " << ent.first << " PD: " << match;
+          for(auto const ag : matchResults){
+            cout << ", " << ag.first << ": " << ag.second;
+          }
+          cout << "\n";
+
+          //cout << "First Prediction: " << match << " Actual: " << ent.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
           //  }
           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
@@ -413,7 +431,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
 
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
-//          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
+          //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
         }
          rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
          imshow("correct", matchDisplay);
@@ -429,11 +447,20 @@ void printRAWResults(map<string, vector<double> > r){
   cout << "\n\n----------------------------------------------------------\n\n";
   cout << "                    These are the test results                  \n";
   for(auto const ent6 : r){
+    double TP=0, TN=0, FP=0, FN=0, PPV = 0, TPR = 0;
+    TP = ent6.second[0];
+    FP = ent6.second[1];
+    TN = ent6.second[2];
+    FN = ent6.second[3];
+    PPV = (TP/(TP+FP));
+    TPR = (TP/(TP+FN));
     cout << ent6.first;
-    cout << "\n      TruePositive:  " << ent6.second[0];
-    cout << "\n      TrueNegative:  " << ent6.second[1];
-    cout << "\n      FalsePositive: " << ent6.second[2];
-    cout << "\n      FalseNegative: " << ent6.second[3];
+    cout << "\n      TruePositive:  " << TP;
+    cout << "\n      FalsePositive: " << FP;
+    cout << "\n      TrueNegative:  " << TN;
+    cout << "\n      FalseNegative: " << FN;
+    cout << "\n      PPV:           " << PPV;
+    cout << "\n      TPR:           " << TPR;
     cout << "\n";
   }
   cout << "\n\n";
@@ -441,7 +468,10 @@ void printRAWResults(map<string, vector<double> > r){
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 1000;
+  int cropsize = 225;
+  double scale = 0.5; // Convert Image 2048x1152 -> 1280x720
+  int dictDur, modDur, novDur;
+  int numClusters = 40;
 
   path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
   path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
@@ -465,8 +495,15 @@ int main( int argc, char** argv ){
     ////////////////////////////////
 
   cout << "\n\n.......Generating Texton Dictionary...... \n" ;
+  // Measure start time
+  auto t1 = std::chrono::high_resolution_clock::now();
 
-  dictCreateHandler(cropsize);
+  dictCreateHandler(cropsize, scale, numClusters);
+
+  // Measure time efficiency
+  auto t2 = std::chrono::high_resolution_clock::now();
+
+  dictDur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
   #endif
   #if MODEL_BUILD == 1
@@ -475,8 +512,14 @@ int main( int argc, char** argv ){
     ///////////////////////////////////////////////////////////
 
     cout << "\n\n........Generating Class Models from Imgs.........\n";
+    // Measure start time
+    auto t3 = std::chrono::high_resolution_clock::now();
 
-    modelBuildHandle(cropsize);
+    modelBuildHandle(cropsize, scale, numClusters);
+
+    // Measure time efficiency
+    auto t4 = std::chrono::high_resolution_clock::now();
+    modDur = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
 
   #endif
   #if NOVELIMG_TEST == 1
@@ -485,10 +528,12 @@ int main( int argc, char** argv ){
     //////////////////////////////
 
     cout << "\n\n.......Testing Against Novel Images...... \n" ;
+    // Measure time efficiency
+    auto t5 = std::chrono::high_resolution_clock::now();
 
     // Load Images to be tested
     map<string, vector<Mat> > classImages;
-    loadClassImgs(testPath, classImages);
+    loadClassImgs(testPath, classImages, scale);
 
     map<string, vector<Mat> > savedClassHist;
     int serial;
@@ -545,15 +590,14 @@ int main( int argc, char** argv ){
   getUniqueClassNme(clsPath, clsNames);
   printClasses(clsNames);
 
-  int counter = 0;
+  int counter =0;
   // For loop to get data while varying an input parameter stored as a for condition
-  for(int numClusters=7;numClusters<8;numClusters++){
-    cout << "\nCount: " << counter << endl;
+  // for(int numClusters=7;numClusters<8;numClusters++){
     initROCcnt(results, clsNames); // Initilse map
     int clsAttempts = 5;
     testNovelImgHandle(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors, cropsize);
-    counter++;
-  }
+  counter++;
+//  }
   printRAWResults(results[0]);
   saveTestData(results, serial);
 
@@ -569,44 +613,63 @@ int main( int argc, char** argv ){
   calcROCVals(resByCls, ROCVals, clsNmes);
 
 
-  if(results.size()<2){
+  if(results.size()>1){
+    int wW = 400, wH = 400, buffer =50, border = buffer-10;
+    namedWindow("ROC_Curve", CV_WINDOW_AUTOSIZE);
+    Mat rocCurve = Mat(wH,wW, CV_8UC3, Scalar(0,0,0));
+
+    line(rocCurve, Point(border,wH-border), Point(wW-border,wH-border), Scalar(255,255,255), 2, 8, 0); // X axis border
+    // putText(rocCurve, "FPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+    line(rocCurve, Point(border,border), Point(40,wH-border), Scalar(255,255,255), 2, 8, 0); // Y axis border
+    // putText(rocCurve, "TPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+
+    // Cycle through all classes
+    for(auto const ent : ROCVals){
+      cout << "Class: " << ent.first << endl;
+      // Cycle through all iterations to produce graph
+      for(int i=0;i<ent.second.size()-1;i++){
+        if(i==0){
+          line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
+          Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
+          Scalar(255,255,255), 1, 8, 0);
+        }else{
+          line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
+          Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
+          Colors[ent.first], 1, 8, 0);
+        }
+        waitKey(500);
+        imshow("ROC_Curve", rocCurve);
+        }
+    }
+  }else{
     cout << "\n\nThere are not enough iterations to produce a ROC graph. Exiting." << endl;
-    return 0;
   }
-
-  int wW = 400, wH = 400, buffer =50, border = buffer-10;
-  namedWindow("ROC_Curve", CV_WINDOW_AUTOSIZE);
-  Mat rocCurve = Mat(wH,wW, CV_8UC3, Scalar(0,0,0));
-
-  line(rocCurve, Point(border,wH-border), Point(wW-border,wH-border), Scalar(255,255,255), 2, 8, 0); // X axis border
-  // putText(rocCurve, "FPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-  line(rocCurve, Point(border,border), Point(40,wH-border), Scalar(255,255,255), 2, 8, 0); // Y axis border
-  // putText(rocCurve, "TPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-
-
-  // Cycle through all classes
-  for(auto const ent : ROCVals){
-    cout << "Class: " << ent.first << endl;
-    // Cycle through all iterations to produce graph
-    for(int i=0;i<ent.second.size()-1;i++){
-      if(i==0){
-        line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
-        Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
-        Scalar(255,255,255), 1, 8, 0);
-      }else{
-        line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
-        Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
-        Colors[ent.first], 1, 8, 0);
-      }
-      waitKey(500);
-      imshow("ROC_Curve", rocCurve);
-      }
-  }
-waitKey(0);
-
-
+  // Measure time efficiency
+  auto t6 = std::chrono::high_resolution_clock::now();
+  novDur = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
   #endif
 
+  int totalTime =0;
+  cout << "\n";
+  if(DICTIONARY_BUILD == 1){
+    cout << "Texton Dictionary Creation took: "
+            << dictDur
+            << " milliseconds\n";
+            totalTime +=dictDur;
+  }
+  if(MODEL_BUILD == 1){
+    cout << "Model Creation took: "
+            << modDur
+            << " milliseconds\n";
+            totalTime+=modDur;
+  }
+  if(NOVELIMG_TEST == 1){
+    cout << "Novel Image Testing took: "
+            << novDur
+            << " milliseconds\n";
+            totalTime+=novDur;
+  }
+  cout << "The Total Time was: " << totalTime << "\n\n";
   return 0;
 }
 

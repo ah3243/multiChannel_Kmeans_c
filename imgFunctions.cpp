@@ -43,6 +43,9 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize){
      out.push_back(tmp);
     }
   }
+  // Mat out1 = Mat::zeros(in.cols, in.rows, CV_32FC1);
+  // out1 = reshapeCol(in);
+  // out.push_back(out1);
   cout << "This is the size: " << out.size() << " and the average cols: " << out[0].rows << endl;
 }
 

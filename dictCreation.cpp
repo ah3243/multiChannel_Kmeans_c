@@ -65,8 +65,8 @@ vector<float> createBins(Mat texDic){
   return v;
 }
 
-void dictCreateHandler(int cropsize){
-  int dictSize = 50;
+void dictCreateHandler(int cropsize, double scale, int numClusters){
+  int dictSize = numClusters;
   int attempts = 5;
   int flags = KMEANS_PP_CENTERS;
   int kmeansIteration = 1000;
@@ -76,10 +76,12 @@ void dictCreateHandler(int cropsize){
 
   map<string, vector<Mat> > textonImgs;
   path p = "../../../TEST_IMAGES/CapturedImgs/textons";
-  loadClassImgs(p, textonImgs);
+  loadClassImgs(p, textonImgs, scale);
 
   Mat dictionary;
+  // Cycle through Classes
   for(auto const ent1 : textonImgs){
+    // Cycle through all images in Class
     for(int j=0;j<ent1.second.size();j++){
       Mat in = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);
       Mat hold = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);

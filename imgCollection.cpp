@@ -302,7 +302,7 @@ void retnFileNmes(path p, string name, map<string, vector<string> >& matches){
   }
 }
 
-void loadClassImgs(path p, map<string, vector<Mat> > &classImgs){
+void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, double scale){
     if(!exists(p) || !is_directory(p)){
       cout << "\nClass loading path was not valid.\nExiting.\n";
       exit(-1);
@@ -311,11 +311,12 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs){
     for(directory_iterator itr(p); itr != itr_end; ++itr){
       string nme = itr -> path().string();
       Mat in = imread(nme, CV_LOAD_IMAGE_GRAYSCALE);
-      Mat img;
+      Mat img, imgsm;
       equalizeHist(in, img);
       extractClsNme(nme);
-      cout << "Pushing back: " << nme << " img.size(): " << img.size() << endl;
-      classImgs[nme].push_back(img);
+      resize(img, imgsm, imgsm.size(), scale, scale, INTER_AREA);
+      cout << "Pushing back: " << nme << " img.size(): " << imgsm.size() << endl;
+      classImgs[nme].push_back(imgsm);
     }
     cout << "This is the total for each class: " << endl;
     for(auto const & ent1 : classImgs){
@@ -519,12 +520,15 @@ void classHandler(){
 }
 
 void importHandler(){
+  double scale;
   cout << "Please enter the dir from which to import the images.\n";
   string imgDir;
   cin >> imgDir;
   cout << "This is your image import location: " << imgDir << endl;
+  cout << "Please enter the amount you would like the images scaled by, 0 for no scaling." << endl;
+  cin >> scale;
   map<string, vector<Mat> > in;
-  loadClassImgs("../../../TEST_IMAGES/kth-tips/classes",in);
+  loadClassImgs("../../../TEST_IMAGES/kth-tips/classes",in, scale);
 }
 void imgCollectionHandle(){
 

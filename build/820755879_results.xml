@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<modelSerial>820755879</modelSerial>
+<Iteration0>
+  <LargeSquareEvenBlocks>
+    <TP>0.</TP>
+    <FP>1.</FP>
+    <TN>1.</TN>
+    <FN>1.</FN>
+    <PPV>0.</PPV>
+    <TPR>0.</TPR></LargeSquareEvenBlocks>
+  <LinearBlocks>
+    <TP>0.</TP>
+    <FP>1.</FP>
+    <TN>1.</TN>
+    <FN>1.</FN>
+    <PPV>0.</PPV>
+    <TPR>0.</TPR></LinearBlocks>
+  <UnevenLinearBlocks>
+    <TP>1.</TP>
+    <FP>0.</FP>
+    <TN>2.</TN>
+    <FN>0.</FN>
+    <PPV>1.</PPV>
+    <TPR>1.</TPR></UnevenLinearBlocks></Iteration0>
+</opencv_storage>

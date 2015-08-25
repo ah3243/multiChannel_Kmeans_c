@@ -35,10 +35,11 @@ int modelSerialNum(){
   return serial;
 }
 
-void modelBuildHandle(int cropsize){
+void modelBuildHandle(int cropsize, double scale, int numClusters){
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;
+
     FileStorage fs("dictionary.xml",FileStorage::READ);
     fs["vocabulary"] >> dictionary;
     fs["bins"] >> m;
@@ -51,7 +52,7 @@ void modelBuildHandle(int cropsize){
     // Load Class imgs and store in classImgs map
     map<string, vector<Mat> > classImgs;
     path p = "../../../TEST_IMAGES/CapturedImgs/classes";
-    loadClassImgs(p, classImgs);
+    loadClassImgs(p, classImgs, scale);
 
     float bins[m.size()];
     vecToArr(m, bins);
@@ -63,7 +64,7 @@ void modelBuildHandle(int cropsize){
     bool accumulate = false;
 
 
-    int clsNumClusters = 10;
+    int clsNumClusters = numClusters;
     int clsAttempts = 5;
     int clsFlags = KMEANS_PP_CENTERS;
     int kmeansIteration = 1000;
@@ -97,23 +98,22 @@ void modelBuildHandle(int cropsize){
           classTrainer.add(test[k]);
         }
       }
+      // Generate 10 clusters per Image and store in Mat
+      Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+      clus = classTrainer.cluster();
+      // Replace Cluster Centers with the closest matching texton
+      textonFind(clus, dictionary);
+      Mat out;
+      calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
+      classHist[ent1.first].push_back(out);
+      classTrainer.clear();
     }
-    // Generate 10 clusters per class and store in Mat
-    Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
-    clus = classTrainer.cluster();
-
-    // Replace Cluster Centers with the closest matching texton
-    textonFind(clus, dictionary);
-
-    Mat out;
-    calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-    classHist[ent1.first].push_back(out);
-
-    classTrainer.clear();
   }
   int serial = modelSerialNum();
-
-  FileStorage fs2("models.xml",FileStorage::WRITE);
+  stringstream fileName;
+//  fileName << serial << "_";
+  fileName<< "models.xml";
+  FileStorage fs2(fileName.str(),FileStorage::WRITE);
   int clsHist =  classHist.size();
   //Save to file
   cout << "Saving Dictionary.." << endl;
