@@ -30,7 +30,7 @@
 
 #define INTERFACE 0
 #define DICTIONARY_BUILD 0
-#define MODEL_BUILD 1
+#define MODEL_BUILD 0
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -40,7 +40,7 @@ using namespace cv;
 using namespace std;
 
 #define CHISQU_MAX_threshold 10
-#define CHISQU_DIS_threshold 0
+#define CHISQU_DIS_threshold 4
 
 // int main(int argc, char** argv){
 //     if(argc<3){
@@ -335,14 +335,16 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
         // Loop through and classify all image segments
         for(int x=0;x<test.size();x++){
           // handle segment prediction printing
-          discols = (discols + cropsize)%imgSize;
-          if(discols==0){
-            disrows += 100;
+          if(discols>imgSize){
+            discols=0;
           }
+          if(discols==0&& x>0){
+            disrows += cropsize;
+          }
+
           if(!test[x].empty()){
              novelTrainer.add(test[x]);
            }
-
            // Generate specified number of clusters per segment and store in Mat
            Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
            clus = novelTrainer.cluster();
@@ -387,11 +389,11 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
            cout << "high: " << high << " secHigh: " << secHigh << endl;
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
-           if(high>CHISQU_MAX_threshold || (high - secHigh)==CHISQU_DIS_threshold || secHigh==DBL_MAX){
+           if(high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX){
              prediction = "UnDefined";
            }
           else{
-          prediction = match;
+            prediction = match;
           }
           cout << "ACT: " << ent.first << " PD: " << prediction;
           for(auto const ag : matchResults){
@@ -403,29 +405,31 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
           //cout << "First Prediction: " << match << " Actual: " << ent.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
-          //  if(prediction.compare(ent.first)==0){
-          //    Correct += 1;
-          //   rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
-          //  }else if(prediction.compare("Unknown")==0){
-          //    Unknown +=1;
-          //   rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
-          //  }else{
-          //    Incorrect += 1;
-          //  rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
-          //  }
+           if(prediction.compare(ent.first)==0){
+             Correct += 1;
+            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
+           }else if(prediction.compare("UnDefined")==0){
+             Unknown +=1;
+            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+           }else{
+             Incorrect += 1;
+           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
+           }
 
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, match, results);
           //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
+          discols +=cropsize;
         }
          rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
          imshow("correct", matchDisplay);
-         imshow("novelImg", ent.second[h]);
+//         imshow("novelImg", ent.second[h]);
          imshow("segmentPredictions", disVals);
+         waitKey(500);
       }
+
       // END OF CLASS, CONTINUING TO NEXT CLASS //
     }
-  // waitKey(0);
 }
 
 void printRAWResults(map<string, vector<double> > r){
@@ -453,7 +457,7 @@ void printRAWResults(map<string, vector<double> > r){
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 225;
+  int cropsize = 200;
   double scale = 0.5; // Convert Image 2048x1152 -> 1280x720
   int dictDur, modDur, novDur;
   int numClusters = 10;
@@ -528,7 +532,7 @@ int main( int argc, char** argv ){
     // Stock Scalar Colors
     map<string, Scalar> Colors;
       vector<Scalar> clsColor;
-        clsColor.push_back(Scalar(0,0,250)); // Blue
+        clsColor.push_back(Scalar(255,0,0)); // Blue
         clsColor.push_back(Scalar(255,128,0)); // Orange
         clsColor.push_back(Scalar(255,255,0)); // Yellow
         clsColor.push_back(Scalar(0,255,255)); // Turquoise
@@ -537,8 +541,8 @@ int main( int argc, char** argv ){
         clsColor.push_back(Scalar(255,0,127)); // Pink/Red
 
       Colors["Correct"] = Scalar(0,255,0); // Green
-      Colors["Incorrect"] = Scalar(255,0,0); // Red
-      Colors["Unknown"] = Scalar(100,100,100);
+      Colors["Incorrect"] = Scalar(0,0,255); // Red
+      Colors["Unknown"] = Scalar(100,100,100); // Gray
 
       int count =0;
       double txtWidth =0, txtHeight =0;
@@ -552,7 +556,6 @@ int main( int argc, char** argv ){
         }
         // Get txtHeight
         txtHeight += s.height;
-
         count++;
       }
 

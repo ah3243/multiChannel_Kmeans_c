@@ -327,10 +327,6 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, double scale){
     cout << "\n";
 }
 
-void rotateImg(Mat & in){
-  
-}
-
 void printImgDis(map<string ,vector<string> > s){
   vector<int> count;
   cout << "\nprinting Texton Distribution\n";

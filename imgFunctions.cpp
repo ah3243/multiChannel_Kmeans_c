@@ -34,10 +34,9 @@ Mat reshapeCol(Mat in){
 }
 
 void segmentImg(vector<Mat>& out, Mat in, int cropsize){
-  cout << "entering segmentImg this is the img.size(): " << in.size() << endl;
+//  cout << "entering segmentImg this is the img.size(): " << in.size() << endl;
   for(int i=0;i<(in.cols-cropsize);i+=cropsize){
     for(int j=0;j<(in.rows-cropsize);j+=cropsize){
-      cout << "inside inner segment j: " << j << " and count: " << (in.rows-cropsize) << endl;
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
       tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));
       out.push_back(tmp);

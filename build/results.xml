@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<modelSerial>1234646343</modelSerial>
+<modelSerial>1430155300</modelSerial>
 <Iteration0>
   <LargeSquareEvenBlocks>
-    <TP>5.</TP>
-    <FP>7.</FP>
-    <TN>9.</TN>
-    <FN>11.</FN>
-    <PPV>4.1666666666666669e-01</PPV>
-    <TPR>3.1250000000000000e-01</TPR></LargeSquareEvenBlocks>
+    <TP>4.</TP>
+    <FP>2.</FP>
+    <TN>18.</TN>
+    <FN>16.</FN>
+    <PPV>6.6666666666666663e-01</PPV>
+    <TPR>2.0000000000000001e-01</TPR></LargeSquareEvenBlocks>
   <UnevenLinearBricks>
-    <TP>9.</TP>
-    <FP>11.</FP>
-    <TN>5.</TN>
-    <FN>7.</FN>
-    <PPV>4.5000000000000001e-01</PPV>
-    <TPR>5.6250000000000000e-01</TPR></UnevenLinearBricks></Iteration0>
+    <TP>18.</TP>
+    <FP>16.</FP>
+    <TN>4.</TN>
+    <FN>2.</FN>
+    <PPV>5.2941176470588236e-01</PPV>
+    <TPR>9.0000000000000002e-01</TPR></UnevenLinearBricks></Iteration0>
 </opencv_storage>
