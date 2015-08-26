@@ -30,7 +30,7 @@
 
 #define INTERFACE 0
 #define DICTIONARY_BUILD 0
-#define MODEL_BUILD 0
+#define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -39,8 +39,8 @@ using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
-//#define cropsize  200
-#define CHISQU_threshold 1
+#define CHISQU_MAX_threshold 10
+#define CHISQU_DIS_threshold 0
 
 // int main(int argc, char** argv){
 //     if(argc<3){
@@ -112,28 +112,6 @@ void initROCcnt(vector<map<string, vector<double> > >& r, vector<string> clsName
   cout << "\n";
 }
 
-void printResults(map<string, vector<vector<double> > > r, vector<string> clsNmes){
-  assert(r.size()==clsNmes.size());
-  string testtype[] = {"TruePositive", "FalsePositive", "TrueNegative", "FalseNegative"};
-  cout << "\n\n----------------------------------------------------------\n\n";
-  cout << "                    These are the test results                  \n";
-
-  for(int i = 0;i<clsNmes.size();i++){
-    string clss = clsNmes[i];
-    cout << "\nClass: " << clss << "\n\n";
-    // Loop through both TPR and FPR results
-    for(int j = 0 ;j<4;j++){
-      cout << testtype[j] << " : " ;
-      // Loop through all test iterations
-      for(int k = 0;k<r[clss][j].size();k++){
-        cout << r[clss][j][k] << ", ";
-      }
-      cout << "\n";
-    }
-    cout << "\n\n";
-  }
-}
-
 int getClsNames(map<string, vector<double> > &r, vector<string> &nme){
   for(auto const ent5 : r){
     if(ent5.second.size()<=0){
@@ -171,9 +149,7 @@ void organiseResultByClass(vector<map<string, vector<double> > >in, map<string, 
   // Go through each class
   for(int i=0;i<clsNmes.size();i++){
     // Go through the 4 types of result for each class
-    cout << "\nnumber of classes: " << clsNmes.size() << endl;
     for(int j=0;j<4;j++){
-      cout << "going through test.." << endl;
       // Go through each test
       for(int k=0;k<in.size();k++){
         out[clsNmes[i]].push_back(a); // Initilse with vector
@@ -367,7 +343,7 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
              novelTrainer.add(test[x]);
            }
 
-           // Generate 10 clusters per segment and store in Mat
+           // Generate specified number of clusters per segment and store in Mat
            Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
            clus = novelTrainer.cluster();
 
@@ -391,12 +367,16 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
                  matchResults[ent2.first] = val;
                }
                // Save best match value and name
-               if(val < high){
+               if(val < high||val==high){
+                 //Save high value as second high
+                 secHigh = high;
+                 secMatch = match;
+                 // Replace high with new value
                  high = val;
                  match = ent2.first;
                }
-               // save second best match and name
-               else if(val < secHigh && val > high && match.compare(ent2.first) != 0){
+               // save second best match in case only one activation of high if()
+               if(val < secHigh && val > high && match.compare(ent2.first) != 0){
                  secHigh = val;
                  secMatch = ent2.first;
                }
@@ -404,18 +384,23 @@ void testNovelImgHandle(int clsAttempts, int numClusters, map<string, vector<dou
            }
            string prediction = "";
            // If the match is above threshold or nearest other match is to similar, return unknown
-          //  if(high>CHISQU_threshold || secHigh<CHISQU_threshold){
-          //    prediction = "Unknown";
-          //  }else{
+           cout << "high: " << high << " secHigh: " << secHigh << endl;
+
+           // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
+           if(high>CHISQU_MAX_threshold || (high - secHigh)==CHISQU_DIS_threshold || secHigh==DBL_MAX){
+             prediction = "UnDefined";
+           }
+          else{
           prediction = match;
-          cout << "ACT: " << ent.first << " PD: " << match;
+          }
+          cout << "ACT: " << ent.first << " PD: " << prediction;
           for(auto const ag : matchResults){
             cout << ", " << ag.first << ": " << ag.second;
-          }
+           }
+
           cout << "\n";
 
           //cout << "First Prediction: " << match << " Actual: " << ent.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
-          //  }
           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
           //  if(prediction.compare(ent.first)==0){
@@ -471,7 +456,8 @@ int main( int argc, char** argv ){
   int cropsize = 225;
   double scale = 0.5; // Convert Image 2048x1152 -> 1280x720
   int dictDur, modDur, novDur;
-  int numClusters = 40;
+  int numClusters = 10;
+  int DictSize = 10;
 
   path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
   path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
@@ -498,7 +484,7 @@ int main( int argc, char** argv ){
   // Measure start time
   auto t1 = std::chrono::high_resolution_clock::now();
 
-  dictCreateHandler(cropsize, scale, numClusters);
+  dictCreateHandler(cropsize, scale, DictSize);
 
   // Measure time efficiency
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -589,7 +575,6 @@ int main( int argc, char** argv ){
   vector<string> clsNames;
   getUniqueClassNme(clsPath, clsNames);
   printClasses(clsNames);
-
   int counter =0;
   // For loop to get data while varying an input parameter stored as a for condition
   // for(int numClusters=7;numClusters<8;numClusters++){
@@ -606,9 +591,6 @@ int main( int argc, char** argv ){
   vector<string> clsNmes;
   getClsNames(results[0], clsNmes); // Get class Names
   organiseResultByClass(results, resByCls, clsNmes);
-
-  // print results, clsAttempts starts at 1 so is -1
-  printResults(resByCls, clsNmes);
 
   calcROCVals(resByCls, ROCVals, clsNmes);
 
@@ -652,24 +634,25 @@ int main( int argc, char** argv ){
   int totalTime =0;
   cout << "\n";
   if(DICTIONARY_BUILD == 1){
-    cout << "Texton Dictionary Creation took: "
-            << dictDur
-            << " milliseconds\n";
+//    cout << "Texton Dictionary Creation took: "
+          cout  << dictDur << "\n";
+//            << " milliseconds\n";
             totalTime +=dictDur;
   }
   if(MODEL_BUILD == 1){
-    cout << "Model Creation took: "
-            << modDur
-            << " milliseconds\n";
+//    cout << "Model Creation took: "
+        cout << modDur << "\n";
+          //  << " milliseconds\n";
             totalTime+=modDur;
   }
   if(NOVELIMG_TEST == 1){
-    cout << "Novel Image Testing took: "
-            << novDur
-            << " milliseconds\n";
+//    cout << "Novel Image Testing took: "
+          cout << novDur << "\n";
+  //          << " milliseconds\n";
             totalTime+=novDur;
   }
-  cout << "The Total Time was: " << totalTime << "\n\n";
+//  cout << "The Total Time was: "
+  cout<< totalTime << "\n\n";
   return 0;
 }
 

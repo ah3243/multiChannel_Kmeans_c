@@ -6,19 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.h
-
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.h
-
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.h
-boost/filesystem.hpp
--
-
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
-
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
-
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/multiDimen.cpp
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.cpp
 opencv2/highgui/highgui.hpp
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/highgui/highgui.hpp
 opencv2/imgproc/imgproc.hpp
@@ -51,22 +39,6 @@ algorithm
 -
 boost/filesystem.hpp
 -
-assert.h
--
-chrono
--
-thread
--
-filterbank.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.h
-imgCollection.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.h
-dictCreation.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.h
-modelBuild.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
-imgFunctions.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
 
 /usr/local/include/opencv2/calib3d/calib3d.hpp
 opencv2/core/core.hpp
