@@ -249,6 +249,10 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
   float bins[m.size()];
   vecToArr(m, bins);
 
+  vector<vector<Mat> > filterbank;
+  int n_sigmas, n_orientations;
+  createFilterbank(filterbank, n_sigmas, n_orientations);
+
   // Initilse Histogram parameters
   int histSize = m.size()-1;
   const float* histRange = {bins};
@@ -257,7 +261,7 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
 
   // Store aggregated correct, incorrect and unknown results for segment prediction display
   int Correct = 0, Incorrect =0, Unknown =0;
-  // Loop through All Classes
+    // Loop through All Classes
     for(auto const ent : testImgs){
       // Loop through all images in Class
       cout << "\n\nEntering Class: " << ent.first << endl;
@@ -269,10 +273,9 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           ERR("Novel image was not able to be imported. Exiting.");
           exit(-1);
         }
-        cout << "Filtering.." << endl;
+        cout << "Filtering image:  " << h << endl;
         // Send img to be filtered, and responses aggregated with addWeighted
-        filterHandle(in, hold);
-        cout << "segmenting.. " << endl;
+        filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
         // Divide the image into segments specified in 'cropsize' and flatten for clustering
         vector<Mat> test;
         segmentImg(test, hold, cropsize);
@@ -296,21 +299,19 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           if(!test[x].empty()){
              novelTrainer.add(test[x]);
            }
-           cout << "Clustering.. " << endl;
+
            // Generate specified number of clusters per segment and store in Mat
            Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
            clus = novelTrainer.cluster();
 
-           cout << "finding.. " << endl;
            // Replace Cluster Centers with the closest matching texton
            textonFind(clus, dictionary);
-           cout << "calculating histogram" << endl;
+
           // Calculate the histogram
            Mat out1;
            calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
            novelTrainer.clear();
 
-           cout << "MAtching.." << endl;
            double high = DBL_MAX, secHigh = DBL_MAX;
            string match, secMatch;
            map<string, double> matchResults;
@@ -340,7 +341,7 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
            }
            string prediction = "";
            // If the match is above threshold or nearest other match is to similar, return unknown
-           cout << "high: " << high << " secHigh: " << secHigh << endl;
+           //cout << "high: " << high << " secHigh: " << secHigh << endl;
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
            if(high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX){
@@ -349,12 +350,11 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           else{
             prediction = match;
           }
-          cout << "ACT: " << ent.first << " PD: " << prediction;
-          for(auto const ag : matchResults){
-            cout << ", " << ag.first << ": " << ag.second;
-           }
-
-          cout << "\n";
+          // cout << "ACT: " << ent.first << " PD: " << prediction;
+          // for(auto const ag : matchResults){
+          //   cout << ", " << ag.first << ": " << ag.second;
+          //  }
+          // cout << "\n";
 
           //cout << "First Prediction: " << match << " Actual: " << ent.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
@@ -426,7 +426,6 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
     stream >> tmp;
     resize(tmp, tmp1, tmp1.size(), scale, scale, INTER_AREA);
     testImages[path].push_back(tmp1);
-    cout << "This is the size: " << tmp1.size() << endl;
   }
   cout << "Video Loaded, this is the frame count: " << stream.get(CV_CAP_PROP_FRAME_COUNT) << endl;
 };

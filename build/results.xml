@@ -1,47 +1,40 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<modelSerial>11199651</modelSerial>
+<modelSerial>858848651</modelSerial>
 <Iteration0>
   <BlackTarmac>
-    <TP>11.</TP>
-    <FP>6.</FP>
-    <TN>194.</TN>
-    <FN>39.</FN>
-    <PPV>6.4705882352941180e-01</PPV>
-    <TPR>2.2000000000000000e-01</TPR></BlackTarmac>
+    <TP>0.</TP>
+    <FP>1392.</FP>
+    <TN>1434.</TN>
+    <FN>0.</FN>
+    <PPV>0.</PPV>
+    <TPR>.Nan</TPR></BlackTarmac>
   <Grass>
-    <TP>10.</TP>
-    <FP>5.</FP>
-    <TN>195.</TN>
-    <FN>40.</FN>
-    <PPV>6.6666666666666663e-01</PPV>
-    <TPR>2.0000000000000001e-01</TPR></Grass>
+    <TP>0.</TP>
+    <FP>37.</FP>
+    <TN>2789.</TN>
+    <FN>0.</FN>
+    <PPV>0.</PPV>
+    <TPR>.Nan</TPR></Grass>
   <LargeSquareEvenBlocks>
-    <TP>3.</TP>
-    <FP>4.</FP>
-    <TN>196.</TN>
-    <FN>47.</FN>
-    <PPV>4.2857142857142855e-01</PPV>
-    <TPR>5.9999999999999998e-02</TPR></LargeSquareEvenBlocks>
-  <LinearBlocksBAD>
-    <TP>4.</TP>
-    <FP>1.</FP>
-    <TN>199.</TN>
-    <FN>46.</FN>
-    <PPV>8.0000000000000004e-01</PPV>
-    <TPR>8.0000000000000002e-02</TPR></LinearBlocksBAD>
+    <TP>0.</TP>
+    <FP>434.</FP>
+    <TN>2392.</TN>
+    <FN>0.</FN>
+    <PPV>0.</PPV>
+    <TPR>.Nan</TPR></LargeSquareEvenBlocks>
   <UnDefined>
     <TP>0.</TP>
-    <FP>183.</FP>
-    <TN>67.</TN>
+    <FP>384.</FP>
+    <TN>2442.</TN>
     <FN>0.</FN>
     <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
-  <UnevenLinearBlocks>
-    <TP>10.</TP>
-    <FP>13.</FP>
-    <TN>187.</TN>
-    <FN>40.</FN>
-    <PPV>4.3478260869565216e-01</PPV>
-    <TPR>2.0000000000000001e-01</TPR></UnevenLinearBlocks></Iteration0>
+  <UnevenLinearBricks>
+    <TP>579.</TP>
+    <FP>0.</FP>
+    <TN>0.</TN>
+    <FN>2247.</FN>
+    <PPV>1.</PPV>
+    <TPR>2.0488322717622082e-01</TPR></UnevenLinearBricks></Iteration0>
 </opencv_storage>

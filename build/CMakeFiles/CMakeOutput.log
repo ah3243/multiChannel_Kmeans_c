@@ -261,3 +261,53 @@ Parsed CXX implicit link information from above output:
   implicit fwks: []
 
 
+Performing C SOURCE FILE Test OpenMP_FLAG_DETECTED succeded with the following output:
+Change Dir: /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec2765597865/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec2765597865.dir/build.make CMakeFiles/cmTryCompileExec2765597865.dir/build
+make[1]: Entering directory `/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec2765597865.dir/src.c.o
+/usr/bin/cc   -DOpenMP_FLAG_DETECTED -fopenmp   -o CMakeFiles/cmTryCompileExec2765597865.dir/src.c.o   -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTryCompileExec2765597865
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec2765597865.dir/link.txt --verbose=1
+/usr/bin/cc   -DOpenMP_FLAG_DETECTED -fopenmp    CMakeFiles/cmTryCompileExec2765597865.dir/src.c.o  -o cmTryCompileExec2765597865 -rdynamic 
+make[1]: Leaving directory `/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp'
+
+Source file was:
+
+#include <omp.h>
+int main() {
+#ifdef _OPENMP
+  return 0;
+#else
+  breaks_on_purpose
+#endif
+}
+
+Performing C++ SOURCE FILE Test OpenMP_FLAG_DETECTED succeded with the following output:
+Change Dir: /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec213729399/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec213729399.dir/build.make CMakeFiles/cmTryCompileExec213729399.dir/build
+make[1]: Entering directory `/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec213729399.dir/src.cxx.o
+/usr/bin/c++    -DOpenMP_FLAG_DETECTED -fopenmp   -o CMakeFiles/cmTryCompileExec213729399.dir/src.cxx.o -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTryCompileExec213729399
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec213729399.dir/link.txt --verbose=1
+/usr/bin/c++    -DOpenMP_FLAG_DETECTED -fopenmp    CMakeFiles/cmTryCompileExec213729399.dir/src.cxx.o  -o cmTryCompileExec213729399 -rdynamic 
+make[1]: Leaving directory `/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/CMakeTmp'
+
+Source file was:
+
+#include <omp.h>
+int main() {
+#ifdef _OPENMP
+  return 0;
+#else
+  breaks_on_purpose
+#endif
+}
+

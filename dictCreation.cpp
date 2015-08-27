@@ -78,6 +78,10 @@ void dictCreateHandler(int cropsize, double scale, int numClusters){
   path p = "../../../TEST_IMAGES/CapturedImgs/textons";
   loadClassImgs(p, textonImgs, scale);
 
+  vector<vector<Mat> > filterbank;
+  int n_sigmas, n_orientations;
+  createFilterbank(filterbank, n_sigmas, n_orientations);
+
   Mat dictionary;
   // Cycle through Classes
   for(auto const ent1 : textonImgs){
@@ -89,7 +93,7 @@ void dictCreateHandler(int cropsize, double scale, int numClusters){
       in = ent1.second[j];
       cout << "before of filterbank handle texton dict..\n\n" << endl;
       if(!in.empty())
-        filterHandle(in, hold);
+        filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
       cout << "outside of filterbank handle texton dict..\n\n" << endl;
       // Segment the 200x200pixel image
       vector<Mat> test;

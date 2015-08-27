@@ -19,6 +19,6 @@ void makeRFSfilters(std::vector<cv::Mat>& edge, std::vector<cv::Mat>& bar, std::
 void  apply_filterbank(cv::Mat &img, std::vector<std::vector<cv::Mat> >filterbank, std::vector<std::vector<cv::Mat> > &response, int n_sigmas, int n_orientations);
 void createFilterbank(std::vector<std::vector<cv::Mat> > &filterbank, int &n_sigmas, int &n_orientations);
 void aggregateImg(int num, double alpha, cv::Mat &aggImg, cv::Mat input);
-int filterHandle(cv::Mat &in, cv::Mat &out);
+int filterHandle(cv::Mat &in, cv::Mat &out, std::vector<std::vector<cv::Mat> > filterbank, int n_sigmas, int n_orientations);
 
 #endif

@@ -171,56 +171,77 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
     vector<Mat>& edges = filterbank[0];
     vector<Mat>& bar = filterbank[1];
     vector<Mat>& rot = filterbank[2];
-
-    // Apply Edge Filters //
     int i = 0;
-    for(int sigmaIndex = 0; sigmaIndex < n_sigmas; sigmaIndex++)
-    {
-        Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
-        for(int orient = 0; orient < n_orientations; orient++)
+//  #pragma omp parallel
+//  {
+        i=0;
+//      {
+        // Apply Edge Filters //
+  //      #pragma omp for ordered
+        for(int sigmaIndex = 0; sigmaIndex < n_sigmas; sigmaIndex++)
         {
-            Mat dst;
-            filter2D(img, dst,  -1, edges[i], Point( -1, -1 ), 0, BORDER_DEFAULT );
-            newMat = cv::max(dst, newMat);
-            i++;
-        }
-        Mat newMatUchar;
-        newMat = cv::abs(newMat);
-        newMat.convertTo(newMatUchar, CV_8UC1);
-        response[0].push_back(newMatUchar);
-    }
+          Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
+          for(int orient = 0; orient < n_orientations; orient++)
+          {
+              Mat dst;
+              filter2D(img, dst,  -1, edges[i], Point( -1, -1 ), 0, BORDER_DEFAULT );
+              newMat = cv::max(dst, newMat);
+              i++;
+          }
+          Mat newMatUchar;
+          newMat = cv::abs(newMat);
+          newMat.convertTo(newMatUchar, CV_8UC1);
 
-    // Apply Bar Filters //
-    i = 0;
-    for(int sigmaIndex = 0; sigmaIndex < n_sigmas; sigmaIndex++)
-    {
-        Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
-        for(int orient = 0; orient < n_orientations; orient++)
+  //        #pragma omp ordered
+          response[0].push_back(newMatUchar);
+          cout << "here we area.." << endl;
+        }
+//      }
+
+//      {
+        i = 0;
+        // Apply Bar Filters
+//        #pragma omp for ordered
+        for(int sigmaIndex = 0; sigmaIndex < n_sigmas; sigmaIndex++)
         {
-            Mat dst;
-            filter2D(img, dst,  -1 , bar[i], Point( -1, -1 ), 0, BORDER_DEFAULT );
-            newMat = max(dst, newMat);
-            i++;
+          Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
+          for(int orient = 0; orient < n_orientations; orient++)
+          {
+              Mat dst;
+              filter2D(img, dst,  -1 , bar[i], Point( -1, -1 ), 0, BORDER_DEFAULT );
+              newMat = max(dst, newMat);
+              i++;
+          }
+          Mat newMatUchar;
+          newMat = cv::abs(newMat);
+          newMat.convertTo(newMatUchar, CV_8UC1);
+
+//          #pragma omp ordered
+          response[1].push_back(newMatUchar);
+            cout << "here we area..2" << endl;
         }
-        Mat newMatUchar;
-        newMat = cv::abs(newMat);
-        newMat.convertTo(newMatUchar, CV_8UC1);
-        response[1].push_back(newMatUchar);
-    }
+//      }
 
-    // Apply Gaussian and LoG Filters //
-    for(uint i = 0; i < 2; i++)
-    {
-        Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
-        Mat dst;
-        filter2D(img, dst,  -1 , rot[i], Point( -1, -1 ), 0, BORDER_DEFAULT );
-        newMat = max(dst, newMat);
-        Mat newMatUchar;
-        newMat = cv::abs(newMat);
-        newMat.convertTo(newMatUchar, CV_8UC1);
-        response[2].push_back(newMatUchar);
+//      {
+        // Apply Gaussian and LoG Filters
+//        #pragma omp for ordered
+        for(uint i = 0; i < 2; i++)
+        {
+          Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
+          Mat dst;
+          filter2D(img, dst,  -1 , rot[i], Point( -1, -1 ), 0, BORDER_DEFAULT );
+          newMat = max(dst, newMat);
+          Mat newMatUchar;
+          newMat = cv::abs(newMat);
+          newMat.convertTo(newMatUchar, CV_8UC1);
 
-      }
+//          #pragma omp ordered
+          response[2].push_back(newMatUchar);
+            cout << "here we area..4" << endl;
+
+        }
+//      }
+//  }
   cout <<"leaving apply filterbank" << endl;
 }
 
@@ -252,17 +273,14 @@ void aggregateImg(int num, double alpha, Mat &aggImg, Mat input) {
   }
 }
 
-int filterHandle(Mat &in, Mat &out){
-  vector<vector<Mat> > filterbank, response;
-  int n_sigmas, n_orientations;
-
-  createFilterbank(filterbank, n_sigmas, n_orientations);
+int filterHandle(Mat &in, Mat &out, vector<vector<Mat> > filterbank, int n_sigmas, int n_orientations){
+  vector<vector<Mat> > response;
+  cout << "before apply filterbank.." << endl;
   apply_filterbank(in, filterbank, response, n_sigmas, n_orientations);
   if(response.empty()){
     cout << "\n\nERROR: filtered image response is empty.\nReturning.\n";
-    return 0;
+     return 0;
   }
-
   // Aggrgate filter responses to single img
   int flag = 0;
   double alpha = 0.5;

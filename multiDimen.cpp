@@ -20,7 +20,7 @@
 #define INTERFACE 0
 #define DICTIONARY_BUILD 0
 #define MODEL_BUILD 0
-#define NOVELIMG_TEST 1
+#define NOVELIMG_TEST 0
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -40,7 +40,7 @@ using namespace std;
 //     {
 //         printf("Can't read one of the images\n");
 //         return -1;
-//     }
+//     }system
 //
 //     // detecting keypoints
 //     SurfFeatureDetector detector(400);

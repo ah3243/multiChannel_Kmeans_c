@@ -56,6 +56,10 @@ void modelBuildHandle(int cropsize, double scale, int numClusters){
     float bins[m.size()];
     vecToArr(m, bins);
 
+    vector<vector<Mat> > filterbank;
+    int n_sigmas, n_orientations;
+    createFilterbank(filterbank, n_sigmas, n_orientations);
+
     // Initilse Histogram parameters
     int histSize = m.size()-1;
     const float* histRange = {bins};
@@ -86,7 +90,7 @@ void modelBuildHandle(int cropsize, double scale, int numClusters){
       // Send img to be filtered, and responses aggregated with addWeighted
       in = ent1.second[j];
        if(!in.empty())
-          filterHandle(in, hold);
+          filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
 
       // Segment and flatten the image then push each single column Mat onto a vector
       vector<Mat> test;
