@@ -172,12 +172,12 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
     vector<Mat>& bar = filterbank[1];
     vector<Mat>& rot = filterbank[2];
     int i = 0;
-//  #pragma omp parallel
-//  {
+ // #pragma omp parallel
+ // {
         i=0;
-//      {
+
         // Apply Edge Filters //
-  //      #pragma omp for ordered
+      //  #pragma omp for ordered
         for(int sigmaIndex = 0; sigmaIndex < n_sigmas; sigmaIndex++)
         {
           Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
@@ -191,17 +191,15 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
           Mat newMatUchar;
           newMat = cv::abs(newMat);
           newMat.convertTo(newMatUchar, CV_8UC1);
-
-  //        #pragma omp ordered
+          cout << "here we area..multi" << endl;
+//         #pragma omp ordered
           response[0].push_back(newMatUchar);
           cout << "here we area.." << endl;
         }
-//      }
 
-//      {
         i = 0;
         // Apply Bar Filters
-//        #pragma omp for ordered
+//       #pragma omp for ordered
         for(int sigmaIndex = 0; sigmaIndex < n_sigmas; sigmaIndex++)
         {
           Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
@@ -216,15 +214,13 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
           newMat = cv::abs(newMat);
           newMat.convertTo(newMatUchar, CV_8UC1);
 
-//          #pragma omp ordered
+//         #pragma omp ordered
           response[1].push_back(newMatUchar);
             cout << "here we area..2" << endl;
         }
-//      }
 
-//      {
         // Apply Gaussian and LoG Filters
-//        #pragma omp for ordered
+//       #pragma omp for ordered
         for(uint i = 0; i < 2; i++)
         {
           Mat newMat = Mat::zeros(img.rows, img.cols, img.type());
@@ -235,13 +231,12 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
           newMat = cv::abs(newMat);
           newMat.convertTo(newMatUchar, CV_8UC1);
 
-//          #pragma omp ordered
+//         #pragma omp ordered
           response[2].push_back(newMatUchar);
             cout << "here we area..4" << endl;
 
         }
-//      }
-//  }
+//     }
   cout <<"leaving apply filterbank" << endl;
 }
 

@@ -18,9 +18,9 @@
 #include "novelImgTest.h" // Novel Image Testing module
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 0
-#define MODEL_BUILD 0
-#define NOVELIMG_TEST 0
+#define DICTIONARY_BUILD 1
+#define MODEL_BUILD 1
+#define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -71,8 +71,8 @@ using namespace std;
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  int cropsize = 100;
-  double scale = 0.5;
+  double scale = 0.0625;
+  int cropsize = (400*scale);
   int dictDur, modDur, novDur;
   int numClusters = 10;
   int DictSize = 10;

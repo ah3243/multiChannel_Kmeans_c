@@ -29,7 +29,7 @@ using namespace cv;
 using namespace std;
 
 #define CHISQU_MAX_threshold 6
-#define CHISQU_DIS_threshold 0
+#define CHISQU_DIS_threshold 1
 
 
 ////////////////////////
@@ -233,6 +233,8 @@ void getDictionary(Mat &dictionary, vector<float> &m){
 }
 
 void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
+  auto novelStart = std::chrono::high_resolution_clock::now();
+
   int clsFlags = KMEANS_PP_CENTERS;
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
   BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
@@ -340,8 +342,8 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
              }
            }
            string prediction = "";
-           // If the match is above threshold or nearest other match is to similar, return unknown
-           //cout << "high: " << high << " secHigh: " << secHigh << endl;
+//           // If the match is above threshold or nearest other match is to similar, return unknown
+//           cout << "high: " << high << " secHigh: " << secHigh << endl;
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
            if(high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX){
@@ -384,6 +386,10 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
 
       // END OF CLASS, CONTINUING TO NEXT CLASS //
     }
+    int novelTime=0;
+    auto novelEnd = std::chrono::high_resolution_clock::now();
+    novelTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelEnd - novelStart).count();
+    cout << "\n\n\nnovelTime: " << novelTime << endl;
 }
 
 void printRAWResults(map<string, vector<double> > r){
@@ -431,20 +437,22 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
 };
 
 void novelImgHandle(path testPath, path clsPath, double scale, int cropsize, int numClusters, int DictSize){
+    auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     map<string, vector<Mat> > testImages;
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/UnevenLinearBricks_4.mp4";
-    string s;
-    cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
-    cin >> s;
-    boost::algorithm::to_lower(s);
-    if(s.compare("y")==0){
-      cout << "\nLoading Video.\n";
-      loadVideo(vPath, testImages, scale);
-    }else{
+
+    // string s;
+    // cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
+    // cin >> s;
+    // boost::algorithm::to_lower(s);
+    // if(s.compare("y")==0){
+    //   cout << "\nLoading Video.\n";
+    //   loadVideo(vPath, testImages, scale);
+    // }else{
       cout << "\nLoading images.\n";
       loadClassImgs(testPath, testImages, scale);
-    }
+    // }
 
     map<string, vector<Mat> > savedClassHist;
     int serial;
@@ -551,4 +559,8 @@ void novelImgHandle(path testPath, path clsPath, double scale, int cropsize, int
   }else{
     cout << "\n\nThere are not enough iterations to produce a ROC graph. Exiting." << endl;
   }
+  int novelHandleTime=0;
+  auto novelHandleEnd = std::chrono::high_resolution_clock::now();
+  novelHandleTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelHandleEnd - novelHandleStart).count();
+  cout << "\nnovelHandleTime: " << novelHandleTime << endl;
 }

@@ -8,34 +8,6 @@
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.h
 
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.cpp
-opencv2/highgui/highgui.hpp
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/highgui/highgui.hpp
-opencv2/opencv.hpp
--
-opencv2/core/core.hpp
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/core/core.hpp
-iostream
--
-stdio.h
--
-stdlib.h
--
-fstream
--
-string
--
-dirent.h
--
-unistd.h
--
-sys/stat.h
--
-sys/types.h
--
-algorithm
--
-
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/multiDimen.cpp

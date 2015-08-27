@@ -1,40 +1,40 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<modelSerial>858848651</modelSerial>
+<modelSerial>1362238248</modelSerial>
 <Iteration0>
   <BlackTarmac>
     <TP>0.</TP>
-    <FP>1392.</FP>
-    <TN>1434.</TN>
-    <FN>0.</FN>
-    <PPV>0.</PPV>
-    <TPR>.Nan</TPR></BlackTarmac>
+    <FP>0.</FP>
+    <TN>30.</TN>
+    <FN>10.</FN>
+    <PPV>.Nan</PPV>
+    <TPR>0.</TPR></BlackTarmac>
   <Grass>
     <TP>0.</TP>
-    <FP>37.</FP>
-    <TN>2789.</TN>
-    <FN>0.</FN>
-    <PPV>0.</PPV>
-    <TPR>.Nan</TPR></Grass>
-  <LargeSquareEvenBlocks>
+    <FP>0.</FP>
+    <TN>30.</TN>
+    <FN>10.</FN>
+    <PPV>.Nan</PPV>
+    <TPR>0.</TPR></Grass>
+  <LightTarmac>
     <TP>0.</TP>
-    <FP>434.</FP>
-    <TN>2392.</TN>
-    <FN>0.</FN>
+    <FP>2.</FP>
+    <TN>28.</TN>
+    <FN>10.</FN>
     <PPV>0.</PPV>
-    <TPR>.Nan</TPR></LargeSquareEvenBlocks>
+    <TPR>0.</TPR></LightTarmac>
   <UnDefined>
     <TP>0.</TP>
-    <FP>384.</FP>
-    <TN>2442.</TN>
+    <FP>30.</FP>
+    <TN>10.</TN>
     <FN>0.</FN>
     <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
-  <UnevenLinearBricks>
-    <TP>579.</TP>
+  <UnevenLinearBlocks>
+    <TP>8.</TP>
     <FP>0.</FP>
-    <TN>0.</TN>
-    <FN>2247.</FN>
+    <TN>30.</TN>
+    <FN>2.</FN>
     <PPV>1.</PPV>
-    <TPR>2.0488322717622082e-01</TPR></UnevenLinearBricks></Iteration0>
+    <TPR>8.0000000000000004e-01</TPR></UnevenLinearBlocks></Iteration0>
 </opencv_storage>
