@@ -53,7 +53,6 @@ void modelBuildHandle(int cropsize, double scale, int numClusters){
     map<string, vector<Mat> > classImgs;
     path p = "../../../TEST_IMAGES/CapturedImgs/classes";
     loadClassImgs(p, classImgs, scale);
-    cout << "classImgs[LargeSquareEvenBlocks][8].size(): " << classImgs["LargeSquareEvenBlocks"][7].size() << endl;
     float bins[m.size()];
     vecToArr(m, bins);
 

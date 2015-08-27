@@ -5,6 +5,7 @@ FILE(REMOVE_RECURSE
   "CMakeFiles/multiDimen.dir/modelBuild.cpp.o"
   "CMakeFiles/multiDimen.dir/imgFunctions.cpp.o"
   "CMakeFiles/multiDimen.dir/dictCreation.cpp.o"
+  "CMakeFiles/multiDimen.dir/novelImgTest.cpp.o"
   "multiDimen.pdb"
   "multiDimen"
 )

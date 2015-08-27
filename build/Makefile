@@ -255,6 +255,30 @@ multiDimen.cpp.s:
 	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/multiDimen.cpp.s
 .PHONY : multiDimen.cpp.s
 
+novelImgTest.o: novelImgTest.cpp.o
+.PHONY : novelImgTest.o
+
+# target to build an object file
+novelImgTest.cpp.o:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/novelImgTest.cpp.o
+.PHONY : novelImgTest.cpp.o
+
+novelImgTest.i: novelImgTest.cpp.i
+.PHONY : novelImgTest.i
+
+# target to preprocess a source file
+novelImgTest.cpp.i:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/novelImgTest.cpp.i
+.PHONY : novelImgTest.cpp.i
+
+novelImgTest.s: novelImgTest.cpp.s
+.PHONY : novelImgTest.s
+
+# target to generate assembly for a file
+novelImgTest.cpp.s:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/novelImgTest.cpp.s
+.PHONY : novelImgTest.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -282,6 +306,9 @@ help:
 	@echo "... multiDimen.o"
 	@echo "... multiDimen.i"
 	@echo "... multiDimen.s"
+	@echo "... novelImgTest.o"
+	@echo "... novelImgTest.i"
+	@echo "... novelImgTest.s"
 .PHONY : help
 
 

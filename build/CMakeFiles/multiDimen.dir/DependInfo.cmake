@@ -10,6 +10,7 @@ SET(CMAKE_DEPENDS_CHECK_CXX
   "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.cpp" "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/multiDimen.dir/imgFunctions.cpp.o"
   "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.cpp" "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/multiDimen.dir/modelBuild.cpp.o"
   "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/multiDimen.cpp" "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/multiDimen.dir/multiDimen.cpp.o"
+  "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.cpp" "/home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles/multiDimen.dir/novelImgTest.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 

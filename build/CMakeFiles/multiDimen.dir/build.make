@@ -187,6 +187,29 @@ CMakeFiles/multiDimen.dir/dictCreation.cpp.o.provides: CMakeFiles/multiDimen.dir
 
 CMakeFiles/multiDimen.dir/dictCreation.cpp.o.provides.build: CMakeFiles/multiDimen.dir/dictCreation.cpp.o
 
+CMakeFiles/multiDimen.dir/novelImgTest.cpp.o: CMakeFiles/multiDimen.dir/flags.make
+CMakeFiles/multiDimen.dir/novelImgTest.cpp.o: ../novelImgTest.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/james-tt/Desktop/MyFilterbankCode/multiDimen/build/CMakeFiles $(CMAKE_PROGRESS_7)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/multiDimen.dir/novelImgTest.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/multiDimen.dir/novelImgTest.cpp.o -c /home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.cpp
+
+CMakeFiles/multiDimen.dir/novelImgTest.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/multiDimen.dir/novelImgTest.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.cpp > CMakeFiles/multiDimen.dir/novelImgTest.cpp.i
+
+CMakeFiles/multiDimen.dir/novelImgTest.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/multiDimen.dir/novelImgTest.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.cpp -o CMakeFiles/multiDimen.dir/novelImgTest.cpp.s
+
+CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.requires:
+.PHONY : CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.requires
+
+CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.provides: CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.requires
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.provides.build
+.PHONY : CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.provides
+
+CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.provides.build: CMakeFiles/multiDimen.dir/novelImgTest.cpp.o
+
 # Object files for target multiDimen
 multiDimen_OBJECTS = \
 "CMakeFiles/multiDimen.dir/multiDimen.cpp.o" \
@@ -194,7 +217,8 @@ multiDimen_OBJECTS = \
 "CMakeFiles/multiDimen.dir/imgCollection.cpp.o" \
 "CMakeFiles/multiDimen.dir/modelBuild.cpp.o" \
 "CMakeFiles/multiDimen.dir/imgFunctions.cpp.o" \
-"CMakeFiles/multiDimen.dir/dictCreation.cpp.o"
+"CMakeFiles/multiDimen.dir/dictCreation.cpp.o" \
+"CMakeFiles/multiDimen.dir/novelImgTest.cpp.o"
 
 # External object files for target multiDimen
 multiDimen_EXTERNAL_OBJECTS =
@@ -205,6 +229,7 @@ multiDimen: CMakeFiles/multiDimen.dir/imgCollection.cpp.o
 multiDimen: CMakeFiles/multiDimen.dir/modelBuild.cpp.o
 multiDimen: CMakeFiles/multiDimen.dir/imgFunctions.cpp.o
 multiDimen: CMakeFiles/multiDimen.dir/dictCreation.cpp.o
+multiDimen: CMakeFiles/multiDimen.dir/novelImgTest.cpp.o
 multiDimen: CMakeFiles/multiDimen.dir/build.make
 multiDimen: /usr/local/lib/libopencv_videostab.so.2.4.9
 multiDimen: /usr/local/lib/libopencv_video.so.2.4.9
@@ -257,6 +282,7 @@ CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/imgCollection.cpp.
 CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/modelBuild.cpp.o.requires
 CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/imgFunctions.cpp.o.requires
 CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/dictCreation.cpp.o.requires
+CMakeFiles/multiDimen.dir/requires: CMakeFiles/multiDimen.dir/novelImgTest.cpp.o.requires
 .PHONY : CMakeFiles/multiDimen.dir/requires
 
 CMakeFiles/multiDimen.dir/clean:
