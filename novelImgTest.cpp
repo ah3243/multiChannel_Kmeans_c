@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
+#include <boost/algorithm/string.hpp> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 #include <boost/filesystem.hpp>
 #include <assert.h>
 #include <chrono>  // time measurement
@@ -28,7 +28,7 @@ using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
-#define CHISQU_MAX_threshold 3
+#define CHISQU_MAX_threshold 6
 #define CHISQU_DIS_threshold 0
 
 
@@ -232,7 +232,7 @@ void getDictionary(Mat &dictionary, vector<float> &m){
   fs.release();
 }
 
-void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > classImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
+void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
   int clsFlags = KMEANS_PP_CENTERS;
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
   BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
@@ -258,7 +258,7 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
   // Store aggregated correct, incorrect and unknown results for segment prediction display
   int Correct = 0, Incorrect =0, Unknown =0;
   // Loop through All Classes
-    for(auto const ent : classImgs){
+    for(auto const ent : testImgs){
       // Loop through all images in Class
       cout << "\n\nEntering Class: " << ent.first << endl;
       for(int h=0;h<ent.second.size();h++){
@@ -269,10 +269,10 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           ERR("Novel image was not able to be imported. Exiting.");
           exit(-1);
         }
-
+        cout << "Filtering.." << endl;
         // Send img to be filtered, and responses aggregated with addWeighted
         filterHandle(in, hold);
-
+        cout << "segmenting.. " << endl;
         // Divide the image into segments specified in 'cropsize' and flatten for clustering
         vector<Mat> test;
         segmentImg(test, hold, cropsize);
@@ -296,18 +296,21 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           if(!test[x].empty()){
              novelTrainer.add(test[x]);
            }
+           cout << "Clustering.. " << endl;
            // Generate specified number of clusters per segment and store in Mat
            Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
            clus = novelTrainer.cluster();
 
+           cout << "finding.. " << endl;
            // Replace Cluster Centers with the closest matching texton
            textonFind(clus, dictionary);
-
+           cout << "calculating histogram" << endl;
           // Calculate the histogram
            Mat out1;
            calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
            novelTrainer.clear();
 
+           cout << "MAtching.." << endl;
            double high = DBL_MAX, secHigh = DBL_MAX;
            string match, secMatch;
            map<string, double> matchResults;
@@ -372,11 +375,11 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
           discols +=cropsize;
         }
-         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
-         imshow("correct", matchDisplay);
-         //         imshow("novelImg", ent.second[h]);
-         imshow("segmentPredictions", disVals);
-         waitKey(500);
+        //  rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
+        //  imshow("correct", matchDisplay);
+        //  imshow("novelImg", ent.second[h]);
+        //  imshow("segmentPredictions", disVals);
+        //  waitKey(1);
       }
 
       // END OF CLASS, CONTINUING TO NEXT CLASS //
@@ -406,10 +409,43 @@ void printRAWResults(map<string, vector<double> > r){
   cout << "\n\n";
 }
 
+void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
+  cout << "Loading test video" << endl;
+  string path = p.string();
+  VideoCapture stream;
+  stream.open(path);
+  if(!stream.isOpened()){
+    ERR("Video Stream unable to be opened. Exiting.");
+    exit(1);
+  }
+  vector<string> name;
+  extractClsNme(path);
+
+  for(int i=0;i<stream.get(CV_CAP_PROP_FRAME_COUNT);i++){
+    Mat tmp, tmp1;
+    stream >> tmp;
+    resize(tmp, tmp1, tmp1.size(), scale, scale, INTER_AREA);
+    testImages[path].push_back(tmp1);
+    cout << "This is the size: " << tmp1.size() << endl;
+  }
+  cout << "Video Loaded, this is the frame count: " << stream.get(CV_CAP_PROP_FRAME_COUNT) << endl;
+};
+
 void novelImgHandle(path testPath, path clsPath, double scale, int cropsize, int numClusters, int DictSize){
     // Load Images to be tested
-    map<string, vector<Mat> > classImages;
-    loadClassImgs(testPath, classImages, scale);
+    map<string, vector<Mat> > testImages;
+    path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/UnevenLinearBricks_4.mp4";
+    string s;
+    cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
+    cin >> s;
+    boost::algorithm::to_lower(s);
+    if(s.compare("y")==0){
+      cout << "\nLoading Video.\n";
+      loadVideo(vPath, testImages, scale);
+    }else{
+      cout << "\nLoading images.\n";
+      loadClassImgs(testPath, testImages, scale);
+    }
 
     map<string, vector<Mat> > savedClassHist;
     int serial;
@@ -470,7 +506,7 @@ void novelImgHandle(path testPath, path clsPath, double scale, int cropsize, int
   // for(int numClusters=7;numClusters<8;numClusters++){
     initROCcnt(results, clsNames); // Initilse map
     int clsAttempts = 5;
-    testNovelImg(clsAttempts, numClusters, results[counter], classImages, savedClassHist, Colors, cropsize);
+    testNovelImg(clsAttempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize);
   counter++;
   //  }
   printRAWResults(results[0]);

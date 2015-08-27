@@ -22,7 +22,6 @@ void warnFuncImg(string input){
   cerr << "\nWARNING!: " << input << endl;
 };
 
-
 void menuPrint(){
   cout << "\n\n---------------------------------\n";
   cout << "Please enter the keyword for you option:\n\n";
