@@ -142,6 +142,8 @@ CMakeFiles/multiDimen.dir/modelBuild.cpp.o: /usr/local/include/opencv2/video/tra
 CMakeFiles/multiDimen.dir/modelBuild.cpp.o: /usr/local/include/opencv2/video/video.hpp
 
 CMakeFiles/multiDimen.dir/multiDimen.cpp.o: ../dictCreation.h
+CMakeFiles/multiDimen.dir/multiDimen.cpp.o: ../filterbank.h
+CMakeFiles/multiDimen.dir/multiDimen.cpp.o: ../imgFunctions.h
 CMakeFiles/multiDimen.dir/multiDimen.cpp.o: ../modelBuild.h
 CMakeFiles/multiDimen.dir/multiDimen.cpp.o: ../multiDimen.cpp
 CMakeFiles/multiDimen.dir/multiDimen.cpp.o: ../novelImgTest.h

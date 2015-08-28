@@ -19,7 +19,19 @@
 using namespace std;
 using namespace cv;
 
+#define imgFuncDEBUG 0
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
+
+void imgFDEBUG(string msg, double in){
+  if(imgFuncDEBUG){
+
+    cout << msg;
+  if(in!=0){
+    cout << in;
+  }
+  cout << "\n";
+  }
+}
 
 Mat reshapeCol(Mat in){
   Mat points(in.rows*in.cols, 1,CV_32F);
@@ -34,7 +46,11 @@ Mat reshapeCol(Mat in){
 }
 
 void segmentImg(vector<Mat>& out, Mat in, int cropsize){
-//  cout << "entering segmentImg this is the img.size(): " << in.size() << endl;
+  stringstream ss;
+  ss << "entering segmentImg this is the img rows: ";
+  ss << in.rows << " cols: " << in.cols;
+  imgFDEBUG(ss.str(), 0);
+
   for(int i=0;i<(in.cols-cropsize);i+=cropsize){
     for(int j=0;j<(in.rows-cropsize);j+=cropsize){
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
@@ -45,7 +61,9 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize){
   // Mat out1 = Mat::zeros(in.cols, in.rows, CV_32FC1);
   // out1 = reshapeCol(in);
   // out.push_back(out1);
-  cout << "This is the size: " << out.size() << " and the average cols: " << out[0].rows << endl;
+  ss.str("");
+  ss << "This is the size: " << out.size() << " and the average cols: " << out[0].cols;
+  imgFDEBUG(ss.str(), 0);
 }
 
 void textonFind(Mat& clus, Mat dictionary){

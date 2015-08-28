@@ -20,7 +20,18 @@ using namespace std;
 
 const float PI = 3.1415;
 
+#define filterBankDEBUG 0
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
+
+void filterDEBUG(string msg, double in){
+  if(filterBankDEBUG){
+    cout << msg;
+    if(in != 0){
+      cout << in;
+    }
+    cout << "\n";
+  }
+}
 
 //response = np.exp(-x ** 2 / (2. * sigma ** 2))
 void func1(float *response, float *lengths, float sigma, int size) {
@@ -195,7 +206,7 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
           newMat.convertTo(newMatUchar, CV_8UC1);
 //         #pragma omp ordered
           response[0].push_back(newMatUchar);
-          cout << "Applying Edge Filters.." << endl;
+          filterDEBUG("Applying Edge Filters..", 0);
         }
 
         i = 0;
@@ -217,7 +228,7 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
 
 //         #pragma omp ordered
           response[1].push_back(newMatUchar);
-            cout << "Applying Bar Filters.." << endl;
+          filterDEBUG("Applying Bar Filters..", 0);
         }
 
         // Apply Gaussian and LoG Filters
@@ -234,11 +245,10 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
 
 //         #pragma omp ordered
           response[2].push_back(newMatUchar);
-            cout << "Applying Gaussian Filters" << endl;
-
+          filterDEBUG("Applying Gaussian Filters..", 0);
         }
 //     }
-  cout <<"leaving apply filterbank" << endl;
+  filterDEBUG("Leaving Filterbank", 0);
 }
 
 
@@ -271,7 +281,7 @@ void aggregateImg(int num, double alpha, Mat &aggImg, Mat input) {
 
 int filterHandle(Mat &in, Mat &out, vector<vector<Mat> > filterbank, int n_sigmas, int n_orientations){
   vector<vector<Mat> > response;
-  cout << "before apply filterbank.." << endl;
+  filterDEBUG("Before Applying Filterbank",0);
   apply_filterbank(in, filterbank, response, n_sigmas, n_orientations);
   if(response.empty()){
     ERR("Filtered image response is empty.");

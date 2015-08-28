@@ -21,12 +21,24 @@
 #include "imgCollection.h"
 #include "imgFunctions.h"
 
+#define DicDEBUG 0
+
 using namespace cv;
 using namespace std;
 
+void dicDEBUG(string msg, double in){
+  if(DicDEBUG){
+    cout << msg;
+    if(in!=0){
+      cout << in;
+    }
+    cout << "\n";
+  }
+}
+
 // Create bins for each textonDictionary Value
 void binLimits(vector<float>& tex){
-  cout << "inside binLimits" << endl;
+  dicDEBUG("inside binLimits", 0);
 
   vector<float> bins;
   bins.push_back(0);
@@ -43,7 +55,7 @@ void binLimits(vector<float>& tex){
 
 // Assign vector to Set to remove duplicates
 void removeDups(vector<float>& v){
-  cout << "inside.." << endl;
+  dicDEBUG("inside removeDups", 0);
   sort(v.begin(), v.end());
   auto last = unique(v.begin(), v.end());
   v.erase(last, v.end());
@@ -59,9 +71,9 @@ vector<float> matToVec(Mat m){
 
 vector<float> createBins(Mat texDic){
   vector<float> v = matToVec(texDic);
-  cout << "\n\nThis is the bin vector size BEFORE: " << v.size() << endl;
+  dicDEBUG("\n\nThis is the bin vector size BEFORE: ", v.size());
   binLimits(v);
-  cout << "\n\nThis is the bin vector size AFTER: " << v.size() << endl;
+  dicDEBUG("\n\nThis is the bin vector size AFTER: ", v.size());
   return v;
 }
 
@@ -91,21 +103,21 @@ void dictCreateHandler(int cropsize, int scale, int numClusters){
       Mat hold = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);
       // Send img to be filtered, and responses aggregated with addWeighted
       in = ent1.second[j];
-      cout << "before of filterbank handle texton dict..\n\n" << endl;
+      dicDEBUG("before of filterbank handle texton dict..\n", 0);
       if(!in.empty())
         filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
-      cout << "outside of filterbank handle texton dict..\n\n" << endl;
+      dicDEBUG("outside of filterbank handle texton dict..\n", 0);
       // Segment the 200x200pixel image
       vector<Mat> test;
       segmentImg(test, hold, cropsize);
-      cout << "after segmenation: " << test.size() << endl;
+      dicDEBUG("after segmenation: ", test.size());
       // Push each saved Mat to bowTrainer
       for(int k = 0; k < test.size(); k++){
         if(!test[k].empty()){
           bowTrainer.add(test[k]);
         }
       }
-    cout << "This is the bowTrainer.size(): " << bowTrainer.descripotorsCount() << endl;
+    dicDEBUG("This is the bowTrainer.size(): ", bowTrainer.descripotorsCount());
     }
     // Generate 10 clusters per class and store in Mat
     dictionary.push_back(bowTrainer.cluster());
@@ -117,7 +129,7 @@ void dictCreateHandler(int cropsize, int scale, int numClusters){
   removeDups(bins);
 
   //Save to file
-  cout << "Saving Dictionary.." << endl;
+  dicDEBUG("Saving Dictionary..", 0);
   FileStorage fs("dictionary.xml",FileStorage::WRITE);
   fs << "cropSize" << cropsize;
   fs << "clustersPerClass" << dictSize;

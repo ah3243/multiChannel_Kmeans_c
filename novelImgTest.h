@@ -12,7 +12,7 @@ void calcROCVals(std::map<std::string, std::vector<std::vector<double> > > in, s
 void saveTestData(std::vector<std::map<std::string, std::vector<double> > > r, int serial);
 int getClassHist(std::map<std::string, std::vector<cv::Mat> >& savedClassHist);
 void getDictionary(cv::Mat &dictionary, std::vector<float> &m);
-void testNovelImg(int clsAttempts, int numClusters, std::map<std::string, std::vector<double> >& results, std::map<std::string, std::vector<cv::Mat> > classImgs, std::map<std::string, std::vector<cv::Mat> > savedClassHist, std::map<std::string, cv::Scalar> Colors, int cropsize);
+double testNovelImg(int clsAttempts, int numClusters, std::map<std::string, std::vector<double> >& results, std::map<std::string, std::vector<cv::Mat> > classImgs, std::map<std::string, std::vector<cv::Mat> > savedClassHist, std::map<std::string, cv::Scalar> Colors, int cropsize);
 void printRAWResults(std::map<std::string, std::vector<double> > r);
 void loadVideo(boost::filesystem::path p, std::map<std::string, std::vector<cv::Mat> > &classImages, int scale);
 void novelImgHandle(boost::filesystem::path testPath,boost::filesystem::path clsPath, int scale, int cropsize, int numClusters, int DictSize);

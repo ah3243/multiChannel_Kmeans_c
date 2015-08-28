@@ -13,6 +13,8 @@
 #include <chrono>  // time measurement
 #include <thread>  // time measurement
 
+#include "imgFunctions.h"
+#include "filterbank.h"
 #include "dictCreation.h" // Generate and store Texton Dictionary
 #include "modelBuild.h" // Generate models from class images
 #include "novelImgTest.h" // Novel Image Testing module
@@ -20,7 +22,7 @@
 #define INTERFACE 0
 #define DICTIONARY_BUILD 1
 #define MODEL_BUILD 1
-#define NOVELIMG_TEST 1
+#define NOVELIMG_TEST 0
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -90,12 +92,13 @@ int main( int argc, char** argv ){
   // 10  128 x 72                       //
   ////////////////////////////////////////
 
-  int scale = 9;
+  int scale = 8;
 
   // Adjust the cropSize depending on chosen scale
   double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
+
   int cropsize = (400*cropScale[scale]); // Cropsize for 1280 x720
-  // int cropsize = 100;
+  // int cropsize = 80;
   int dictDur, modDur, novDur;
   int numClusters = 10;
   int DictSize = 10;
@@ -163,6 +166,44 @@ int main( int argc, char** argv ){
     auto t6 = std::chrono::high_resolution_clock::now();
     novDur = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
   #endif
+
+  vector<vector<Mat> > filterbank;
+  int n_sigmas, n_orientations;
+  createFilterbank(filterbank, n_sigmas, n_orientations);
+
+  Mat imgIn, imgOut;
+  int Flags = KMEANS_PP_CENTERS;
+  TermCriteria Tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+  BOWKMeansTrainer tstTrain(10, Tc, 5, Flags);
+  float blah[] = {0,255};
+  const float* histblah= {blah};
+  int histSize[] = {10};
+  int channels[] = {0};
+  Mat ou1;
+  vector<Mat> compareMe;
+  for(int j=0;j<1;j++){
+    for(int i=0;i<2;i++){
+      Mat img1 = imread("../../bread.png", CV_LOAD_IMAGE_GRAYSCALE);
+      filterHandle(img1, imgOut, filterbank, n_sigmas, n_orientations);
+      Mat imgFlat = reshapeCol(img1);
+      tstTrain.add(imgFlat);
+      Mat clusters = Mat::zeros(10,1, CV_32FC1);
+      clusters = tstTrain.cluster();
+
+     calcHist(&clusters, 1, channels, Mat(), ou1, 1, histSize, &histblah, true, false);
+      compareMe.push_back(ou1);
+     tstTrain.clear();
+      cout << "done one loop.. this is the size: " << compareMe.size() << endl;
+    //  cout << "This is the tstTrain.size(): "
+    }
+
+    double value =  compareHist(compareMe[0], compareMe[1], CV_COMP_CHISQR);
+    cout << "This is the value.." << value << endl;
+    compareMe.clear();
+  }
+  namedWindow("FilterTest", CV_WINDOW_NORMAL);
+  imshow("FilterTest", imgOut);
+  waitKey(0);
 
   int totalTime =0;
   cout << "\n";

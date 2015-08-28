@@ -144,7 +144,7 @@ void calcROCVals(map<string, vector<vector<double> > > in, map<string, vector<ve
       // Push back results
       out[curCls][j].push_back(TPR);
       out[curCls][j].push_back(PPV);
-      cout << "\naccuracy: " << ((TP+TN)/(TP+TN+FP+FN))*100 << "\n\n";
+      cout << "\naccuracy: " << ((TP)/(TP+FP+FN))*100 << "\n\n";
     }
   }
 }
@@ -232,9 +232,11 @@ void getDictionary(Mat &dictionary, vector<float> &m){
   fs.release();
 }
 
-void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
+double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
                   map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
   auto novelStart = std::chrono::high_resolution_clock::now();
+
+  double acc;// Accuracy
 
   int clsFlags = KMEANS_PP_CENTERS;
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
@@ -263,7 +265,7 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
   bool accumulate = false;
 
   // Store aggregated correct, incorrect and unknown results for segment prediction display
-  int Correct = 0, Incorrect =0, Unknown =0;
+  double Correct = 0, Incorrect =0, Unknown =0;
     // Loop through All Classes
     for(auto const ent : testImgs){
       // Loop through all images in Class
@@ -322,6 +324,7 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
            double high = DBL_MAX, secHigh = DBL_MAX;
            string match, secMatch;
            map<string, double> matchResults;
+
            for(auto const ent2 : savedClassHist){
              matchResults[ent2.first] = DBL_MAX;
 
@@ -332,9 +335,11 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
                }
                // Save best match value and name
                if(val < high||val==high){
-                 //Save high value as second high
-                 secHigh = high;
-                 secMatch = match;
+                 if(match.compare(ent2.first) != 0){
+                   //Save high value as second high
+                   secHigh = high;
+                   secMatch = match;
+                 }
                  // Replace high with new value
                  high = val;
                  match = ent2.first;
@@ -347,8 +352,8 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
              }
            }
            string prediction = "";
-  //           // If the match is above threshold or nearest other match is to similar, return unknown
-  //           cout << "high: " << high << " secHigh: " << secHigh << endl;
+            // If the match is above threshold or nearest other match is to similar, return unknown
+            cout << "high: " << high << " secHigh: " << secHigh << endl;
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
            if(high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX){
@@ -357,11 +362,11 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           else{
             prediction = match;
           }
-          // cout << "ACT: " << ent.first << " PD: " << prediction;
-          // for(auto const ag : matchResults){
-          //   cout << ", " << ag.first << ": " << ag.second;
-          //  }
-          // cout << "\n";
+          cout << "ACT: " << ent.first << " PD: " << prediction;
+          for(auto const ag : matchResults){
+            cout << ", " << ag.first << ": " << ag.second;
+           }
+          cout << "\n";
 
           //cout << "First Prediction: " << match << " Actual: " << ent.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
@@ -379,22 +384,23 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
 
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(ent.first, prediction, results);
-          //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
           discols +=cropsize;
         }
          rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
          imshow("correct", matchDisplay);
          imshow("novelImg", ent.second[h]);
          imshow("segmentPredictions", disVals);
+         cout << "Correct Was: " << Correct << " Incorrect was: " << Incorrect << " Unknown was: " << Unknown << endl;
          waitKey(30);
       }
-
+      acc = (Correct/(Incorrect+Unknown+Correct))*100;
       // END OF CLASS, CONTINUING TO NEXT CLASS //
     }
     int novelTime=0;
     auto novelEnd = std::chrono::high_resolution_clock::now();
     novelTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelEnd - novelStart).count();
     cout << "\n\n\nnovelTime: " << novelTime << endl;
+    return acc;
 }
 
 void printRAWResults(map<string, vector<double> > r){
@@ -459,21 +465,21 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, int scale){
 void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
-    map<string, vector<Mat> > testImages;
-    path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/UnevenLinearBlocks_4.mp4";
+    path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/UnevenLinearBricks_15.mp4";
 
-    string s;
-    cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
-    cin >> s;
-    boost::algorithm::to_lower(s);
-    if(s.compare("y")==0){
-      cout << "\nLoading Video.\n";
-      loadVideo(vPath, testImages, scale);
-
-    }else{
-      cout << "\nLoading images.\n";
-      loadClassImgs(testPath, testImages, scale);
-    }
+    // string s;
+    // cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
+    // cin >> s;
+    // boost::algorithm::to_lower(s);
+    // if(s.compare("y")==0){
+    //   cout << "\nLoading Video.\n";
+    //   loadVideo(vPath, testImages, scale);
+    //
+    // }else{
+    // map<string, vector<Mat> > testImages;
+    //   cout << "\nLoading images.\n";
+    //   loadClassImgs(testPath, testImages, scale);
+    // }
 
     map<string, vector<Mat> > savedClassHist;
     int serial;
@@ -529,14 +535,19 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   clsNames.push_back("UnDefined");
   getUniqueClassNme(clsPath, clsNames);
   printClasses(clsNames);
+  vector<double> acc;
   int counter =0;
+    map<string, vector<Mat> > testImages;
+    cout << "\nLoading images.\n";
+    loadClassImgs(testPath, testImages, scale);
   // For loop to get data while varying an input parameter stored as a for condition
-  // for(int numClusters=7;numClusters<8;numClusters++){
+  for(int numClusters=7;numClusters<8;numClusters++){
     initROCcnt(results, clsNames); // Initilse map
     int clsAttempts = 5;
-    testNovelImg(clsAttempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize);
-  counter++;
-  //  }
+    acc.push_back(testNovelImg(clsAttempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize));
+    cout << "this is the accuracy!! " << acc[counter] << endl;
+    counter++;
+   }
   printRAWResults(results[0]);
   saveTestData(results, serial);
 
@@ -579,6 +590,10 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     }
   }else{
     cout << "\n\nThere are not enough iterations to produce a ROC graph. Exiting." << endl;
+  }
+  cout << "\n\nThis is the accuracy.\n" << endl;
+  for(int k=0;k<acc.size();k++){
+    cout << "Iteration " << k << " Accuracy: " << acc[k] << "\%\n";
   }
   int novelHandleTime=0;
   auto novelHandleEnd = std::chrono::high_resolution_clock::now();

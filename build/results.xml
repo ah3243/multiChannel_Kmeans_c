@@ -1,40 +1,47 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<modelSerial>969490628</modelSerial>
+<modelSerial>1350772742</modelSerial>
 <Iteration0>
   <BlackTarmac>
-    <TP>0.</TP>
+    <TP>2.</TP>
     <FP>0.</FP>
-    <TN>471.</TN>
-    <FN>0.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>.Nan</TPR></BlackTarmac>
+    <TN>12.</TN>
+    <FN>1.</FN>
+    <PPV>1.</PPV>
+    <TPR>6.6666666666666663e-01</TPR></BlackTarmac>
   <Grass>
     <TP>0.</TP>
-    <FP>21.</FP>
-    <TN>450.</TN>
-    <FN>0.</FN>
-    <PPV>0.</PPV>
-    <TPR>.Nan</TPR></Grass>
-  <LightTarmac>
-    <TP>0.</TP>
-    <FP>244.</FP>
-    <TN>227.</TN>
-    <FN>0.</FN>
-    <PPV>0.</PPV>
-    <TPR>.Nan</TPR></LightTarmac>
+    <FP>0.</FP>
+    <TN>12.</TN>
+    <FN>3.</FN>
+    <PPV>.Nan</PPV>
+    <TPR>0.</TPR></Grass>
+  <LibraryCarpet>
+    <TP>1.</TP>
+    <FP>1.</FP>
+    <TN>11.</TN>
+    <FN>2.</FN>
+    <PPV>5.0000000000000000e-01</PPV>
+    <TPR>3.3333333333333331e-01</TPR></LibraryCarpet>
+  <LinearBlocksBAD>
+    <TP>1.</TP>
+    <FP>0.</FP>
+    <TN>12.</TN>
+    <FN>2.</FN>
+    <PPV>1.</PPV>
+    <TPR>3.3333333333333331e-01</TPR></LinearBlocksBAD>
   <UnDefined>
     <TP>0.</TP>
-    <FP>206.</FP>
-    <TN>265.</TN>
+    <FP>9.</FP>
+    <TN>6.</TN>
     <FN>0.</FN>
     <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
-  <UnevenLinearBlocks>
-    <TP>0.</TP>
+  <WoodenDoor>
+    <TP>1.</TP>
     <FP>0.</FP>
-    <TN>0.</TN>
-    <FN>471.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>0.</TPR></UnevenLinearBlocks></Iteration0>
+    <TN>12.</TN>
+    <FN>2.</FN>
+    <PPV>1.</PPV>
+    <TPR>3.3333333333333331e-01</TPR></WoodenDoor></Iteration0>
 </opencv_storage>

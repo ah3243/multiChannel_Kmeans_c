@@ -143,6 +143,8 @@ CMakeFiles/multiDimen.dir/modelBuild.cpp.o
  /usr/local/include/opencv2/video/video.hpp
 CMakeFiles/multiDimen.dir/multiDimen.cpp.o
  /home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.h
+ /home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.h
+ /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
  /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
  /home/james-tt/Desktop/MyFilterbankCode/multiDimen/multiDimen.cpp
  /home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.h
