@@ -213,7 +213,7 @@ int getClassHist(map<string, vector<Mat> >& savedClassHist){
     }
     fs3.release();
   }else{
-    ERR("Class file was not map. Exiting");
+    ERR("Class file was not map.");
     exit(-1);
   }
   return serial;
@@ -272,13 +272,14 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
         Mat hold = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1,Scalar(0));
         in = ent.second[h];
          if(in.empty()){
-          ERR("Novel image was not able to be imported. Exiting.");
+          ERR("Novel image was not able to be imported.");
           exit(-1);
         }
         cout << "Filtering image:  " << h << endl;
         // Send img to be filtered, and responses aggregated with addWeighted
         filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
         // Divide the image into segments specified in 'cropsize' and flatten for clustering
+        cout << "segmenting image: " << h << endl;
         vector<Mat> test;
         segmentImg(test, hold, cropsize);
 
@@ -288,6 +289,8 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
 
         // Counters for putting 'pixels' on display image
         int disrows = 0, discols = 0;
+        cout << "Looping through all segments: " << test.size() << endl;
+        cout << "each of which is this size: " << test[0].size() << endl;
         // Loop through and classify all image segments
         for(int x=0;x<test.size();x++){
           // handle segment prediction printing
@@ -377,11 +380,11 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           //          cout << "This was the high: " << high << " and second high: " << secHigh << "\n";
           discols +=cropsize;
         }
-        //  rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
-        //  imshow("correct", matchDisplay);
-        //  imshow("novelImg", ent.second[h]);
-        //  imshow("segmentPredictions", disVals);
-        //  waitKey(1);
+         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
+         imshow("correct", matchDisplay);
+         imshow("novelImg", ent.second[h]);
+         imshow("segmentPredictions", disVals);
+         waitKey(1000);
       }
 
       // END OF CLASS, CONTINUING TO NEXT CLASS //
@@ -421,9 +424,23 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
   VideoCapture stream;
   stream.open(path);
   if(!stream.isOpened()){
-    ERR("Video Stream unable to be opened. Exiting.");
+    ERR("Video Stream unable to be opened.");
     exit(1);
   }
+
+  // Validate video input size/ratio
+  int vH = stream.get(CV_PROP_FRAME_HEIGHT);
+  int vW = stream.get(CV_PROP_FRAME_WIDTH);
+
+  if((vW/vH)!= 1280/720){
+    ERR("The imported video does not have an aspect ratio of 16:9.");
+    exit(-1);
+  }
+  else if(vH<720|| vW<1280){
+    ERR("The imported video was below the minimum resolution of 1280X720.");
+    exit(-1);
+  }
+
   vector<string> name;
   extractClsNme(path);
 
@@ -434,25 +451,27 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
     testImages[path].push_back(tmp1);
   }
   cout << "Video Loaded, this is the frame count: " << stream.get(CV_CAP_PROP_FRAME_COUNT) << endl;
+  cout << "This is the width of each frame: " << stream.get(CV_CAP_PROP_FRAME_WIDTH) << " and height: " << stream.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
 };
 
 void novelImgHandle(path testPath, path clsPath, double scale, int cropsize, int numClusters, int DictSize){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     map<string, vector<Mat> > testImages;
-    path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/UnevenLinearBricks_4.mp4";
+    path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/UnevenLinearBlocks_4.mp4";
 
-    // string s;
-    // cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
-    // cin >> s;
-    // boost::algorithm::to_lower(s);
-    // if(s.compare("y")==0){
-    //   cout << "\nLoading Video.\n";
-    //   loadVideo(vPath, testImages, scale);
-    // }else{
+    string s;
+    cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
+    cin >> s;
+    boost::algorithm::to_lower(s);
+    if(s.compare("y")==0){
+      cout << "\nLoading Video.\n";
+      loadVideo(vPath, testImages, scale);
+
+    }else{
       cout << "\nLoading images.\n";
       loadClassImgs(testPath, testImages, scale);
-    // }
+    }
 
     map<string, vector<Mat> > savedClassHist;
     int serial;

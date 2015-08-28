@@ -50,7 +50,7 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize){
 
 void textonFind(Mat& clus, Mat dictionary){
   if(clus.empty() || dictionary.empty()){
-    ERR("Texton Find inputs were empty");
+    ERR("Texton Find inputs were empty.");
     exit(-1);
   }
   // Loop through input centers

@@ -73,6 +73,7 @@ int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
   double scale = 0.0625;
   int cropsize = (400*scale);
+  // int cropsize = 100;
   int dictDur, modDur, novDur;
   int numClusters = 10;
   int DictSize = 10;

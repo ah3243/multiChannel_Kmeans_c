@@ -1,40 +1,40 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<modelSerial>1362238248</modelSerial>
+<modelSerial>2135104716</modelSerial>
 <Iteration0>
   <BlackTarmac>
-    <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>30.</TN>
-    <FN>10.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>0.</TPR></BlackTarmac>
-  <Grass>
-    <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>30.</TN>
-    <FN>10.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>0.</TPR></Grass>
-  <LightTarmac>
-    <TP>0.</TP>
+    <TP>4.</TP>
     <FP>2.</FP>
     <TN>28.</TN>
-    <FN>10.</FN>
-    <PPV>0.</PPV>
-    <TPR>0.</TPR></LightTarmac>
+    <FN>6.</FN>
+    <PPV>6.6666666666666663e-01</PPV>
+    <TPR>4.0000000000000002e-01</TPR></BlackTarmac>
+  <Grass>
+    <TP>7.</TP>
+    <FP>3.</FP>
+    <TN>27.</TN>
+    <FN>3.</FN>
+    <PPV>6.9999999999999996e-01</PPV>
+    <TPR>6.9999999999999996e-01</TPR></Grass>
+  <LightTarmac>
+    <TP>2.</TP>
+    <FP>3.</FP>
+    <TN>27.</TN>
+    <FN>8.</FN>
+    <PPV>4.0000000000000002e-01</PPV>
+    <TPR>2.0000000000000001e-01</TPR></LightTarmac>
   <UnDefined>
     <TP>0.</TP>
-    <FP>30.</FP>
-    <TN>10.</TN>
+    <FP>11.</FP>
+    <TN>29.</TN>
     <FN>0.</FN>
     <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
   <UnevenLinearBlocks>
-    <TP>8.</TP>
-    <FP>0.</FP>
-    <TN>30.</TN>
-    <FN>2.</FN>
-    <PPV>1.</PPV>
-    <TPR>8.0000000000000004e-01</TPR></UnevenLinearBlocks></Iteration0>
+    <TP>3.</TP>
+    <FP>5.</FP>
+    <TN>25.</TN>
+    <FN>7.</FN>
+    <PPV>3.7500000000000000e-01</PPV>
+    <TPR>2.9999999999999999e-01</TPR></UnevenLinearBlocks></Iteration0>
 </opencv_storage>

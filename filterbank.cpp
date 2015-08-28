@@ -20,6 +20,8 @@ using namespace std;
 
 const float PI = 3.1415;
 
+#define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
+
 //response = np.exp(-x ** 2 / (2. * sigma ** 2))
 void func1(float *response, float *lengths, float sigma, int size) {
     for(int i = 0; i < size; i++)
@@ -191,10 +193,9 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
           Mat newMatUchar;
           newMat = cv::abs(newMat);
           newMat.convertTo(newMatUchar, CV_8UC1);
-          cout << "here we area..multi" << endl;
 //         #pragma omp ordered
           response[0].push_back(newMatUchar);
-          cout << "here we area.." << endl;
+          cout << "Applying Edge Filters.." << endl;
         }
 
         i = 0;
@@ -216,7 +217,7 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
 
 //         #pragma omp ordered
           response[1].push_back(newMatUchar);
-            cout << "here we area..2" << endl;
+            cout << "Applying Bar Filters.." << endl;
         }
 
         // Apply Gaussian and LoG Filters
@@ -233,7 +234,7 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
 
 //         #pragma omp ordered
           response[2].push_back(newMatUchar);
-            cout << "here we area..4" << endl;
+            cout << "Applying Gaussian Filters" << endl;
 
         }
 //     }
@@ -273,8 +274,8 @@ int filterHandle(Mat &in, Mat &out, vector<vector<Mat> > filterbank, int n_sigma
   cout << "before apply filterbank.." << endl;
   apply_filterbank(in, filterbank, response, n_sigmas, n_orientations);
   if(response.empty()){
-    cout << "\n\nERROR: filtered image response is empty.\nReturning.\n";
-     return 0;
+    ERR("Filtered image response is empty.");
+     exit(0);
   }
   // Aggrgate filter responses to single img
   int flag = 0;

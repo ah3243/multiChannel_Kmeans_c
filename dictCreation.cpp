@@ -98,6 +98,7 @@ void dictCreateHandler(int cropsize, double scale, int numClusters){
       // Segment the 200x200pixel image
       vector<Mat> test;
       segmentImg(test, hold, cropsize);
+      cout << "after segmenation: " << test.size() << endl;
       // Push each saved Mat to bowTrainer
       for(int k = 0; k < test.size(); k++){
         if(!test[k].empty()){

@@ -13,14 +13,8 @@ using namespace boost::filesystem;
 using namespace std;
 using namespace cv;
 
-void errorFuncImg(string input){
-  cerr << "\n\nERROR!: " << input << "\nExiting.\n\n";
-  exit(-1);
-}
-
-void warnFuncImg(string input){
-  cerr << "\nWARNING!: " << input << endl;
-};
+#define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
+#define WARN(msg) printf("\n\nWARNING: %s Line %d\n\n", msg, __LINE__);
 
 void menuPrint(){
   cout << "\n\n---------------------------------\n";
@@ -126,14 +120,16 @@ void getTexImgs(const char *inPath, vector<Mat>& textDict){
   pdir = opendir(inPath);
   // Check that dir was initialised correctly
   if(pdir == NULL){
-    errorFuncImg("Unable to open directory.");
+    ERR("Unable to open directory.")
+    exit(1);
   }
   struct dirent *pent = NULL;
 
   // Continue as long as there are still values in the dir list
   while (pent = readdir(pdir)){
     if(pdir==NULL){
-      errorFuncImg("Dir was not initialised correctly.");
+      ERR("Dir was not initialised correctly.")
+      exit(1);
     }
     stringstream ss;
     ss << inPath;
@@ -143,7 +139,7 @@ void getTexImgs(const char *inPath, vector<Mat>& textDict){
     if(tmp.data){
       textDict.push_back(tmp);
     }else{
-      warnFuncImg("Unable to read image.");
+      ERR("Unable to read image.");
     }
   }
   closedir(pdir);
@@ -297,6 +293,21 @@ void retnFileNmes(path p, string name, map<string, vector<string> >& matches){
     }
   }else{
     cout << "unable to locate File:\n" << p << "\nExiting\n\n";
+    exit(-1);
+  }
+}
+
+void confirmImgDims(Mat in){
+  // Validate video input size/ratio
+  int imgH = in.rows;
+  int imgW = in.cols;
+
+  if((imgW/imgH)!= 1280/720){
+    ERR("The imported image does not have an aspect ratio of 16:9.");
+    exit(-1);
+  }
+  else if(imgH<720|| imgW<1280){
+    ERR("The imported image was below the minimum input resolution of 1280X720.");
     exit(-1);
   }
 }
