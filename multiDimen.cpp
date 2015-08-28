@@ -71,8 +71,30 @@ using namespace std;
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;
-  double scale = 0.0625;
-  int cropsize = (400*scale);
+
+ // Available Scales
+  ////////////////////////////////////////
+  // These are the possible resolutions //
+  // assign scale to the corresponding  //
+  // number                             //
+  //                                    //
+  // 1   1280 x 720                     //
+  // 2   1152 x 648                     //
+  // 3   1024 x 576                     //
+  // 4   896 x 504                      //
+  // 5   768 x 432                      //
+  // 6   640 x 360                      //
+  // 7   512 x 288                      //
+  // 8   384 x 216                      //
+  // 9   256 x 144                      //
+  // 10  128 x 72                       //
+  ////////////////////////////////////////
+
+  int scale = 9;
+
+  // Adjust the cropSize depending on chosen scale
+  double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
+  int cropsize = (400*cropScale[scale]); // Cropsize for 1280 x720
   // int cropsize = 100;
   int dictDur, modDur, novDur;
   int numClusters = 10;

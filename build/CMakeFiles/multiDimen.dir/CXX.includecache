@@ -6,33 +6,45 @@
 
 #IncludeRegexTransform: 
 
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.h
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.h
 
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.cpp
-opencv2/highgui/highgui.hpp
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/highgui/highgui.hpp
-opencv2/imgproc/imgproc.hpp
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/imgproc/imgproc.hpp
-fstream
--
-iostream
--
-cstdio
--
-dirent.h
--
-boost/filesystem.hpp
--
-sstream
--
-boost/algorithm/string.hpp
--
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.h
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.h
 boost/filesystem.hpp
 -
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
+
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
+
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/multiDimen.cpp
+opencv2/highgui/highgui.hpp
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/highgui/highgui.hpp
+opencv2/opencv.hpp
+-
+opencv2/core/core.hpp
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/core/core.hpp
+iostream
+-
+stdio.h
+-
+string
+-
+boost/filesystem.hpp
+-
+assert.h
+-
+chrono
+-
+thread
+-
+dictCreation.h
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/dictCreation.h
+modelBuild.h
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
+novelImgTest.h
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.h
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.cpp
 opencv2/highgui/highgui.hpp
@@ -79,6 +91,8 @@ imgCollection.h
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.h
 imgFunctions.h
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
+
+/home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.h
 
 /usr/local/include/opencv2/calib3d/calib3d.hpp
 opencv2/core/core.hpp

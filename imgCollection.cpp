@@ -312,7 +312,39 @@ void confirmImgDims(Mat in){
   }
 }
 
-void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, double scale){
+// Available Scales
+ ////////////////////////////////////////
+ // These are the possible resolutions //
+ // assign scale to the corresponding  //
+ // number                             //
+ //                                    //
+ // 1   1280 x 720                     //
+ // 2   1152 x 648                     //
+ // 3   1024 x 576                     //
+ // 4   896 x 504                      //
+ // 5   768 x 432                      //
+ // 6   640 x 360                      //
+ // 7   512 x 288                      //
+ // 8   384 x 216                      //
+ // 9   256 x 144                      //
+ // 10  128 x 72                       //
+ ////////////////////////////////////////
+
+void scaleImg(Mat in, Mat &out, int scale){
+  cout << "inside rescaling function." << endl;
+  double endW[] = {1280, 1152, 1024, 896, 768, 640, 512, 384, 256, 128};
+  double endH[] = {720, 648, 576, 504, 432, 360, 288, 216, 144, 72};
+  double effScale;
+
+  effScale = (endW[scale]/in.cols);
+  if((endH[scale]/in.rows)!= effScale){
+    ERR("The scaling variables did not match.");
+    exit(-1);
+  }
+  resize(in, out, out.size(), effScale, effScale, INTER_AREA);
+}
+
+void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, int scale){
     if(!exists(p) || !is_directory(p)){
       cout << "\nClass loading path was not valid.\nExiting.\n";
       exit(-1);
@@ -324,7 +356,7 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, double scale){
       Mat img, imgsm;
       equalizeHist(in, img);
       extractClsNme(nme);
-      resize(img, imgsm, imgsm.size(), scale, scale, INTER_AREA);
+      scaleImg(img, imgsm, scale);
       cout << "Pushing back: " << nme << " img.size(): " << imgsm.size() << endl;
       classImgs[nme].push_back(imgsm);
     }

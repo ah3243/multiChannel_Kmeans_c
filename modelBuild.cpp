@@ -35,7 +35,7 @@ int modelSerialNum(){
   return serial;
 }
 
-void modelBuildHandle(int cropsize, double scale, int numClusters){
+void modelBuildHandle(int cropsize, int scale, int numClusters){
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;

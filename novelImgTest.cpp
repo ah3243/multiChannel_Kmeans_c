@@ -232,7 +232,8 @@ void getDictionary(Mat &dictionary, vector<float> &m){
   fs.release();
 }
 
-void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs, map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
+void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
+                  map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
   auto novelStart = std::chrono::high_resolution_clock::now();
 
   int clsFlags = KMEANS_PP_CENTERS;
@@ -275,6 +276,7 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
           ERR("Novel image was not able to be imported.");
           exit(-1);
         }
+        cout << "This is the image size: " << ent.second[h].size() << endl;
         cout << "Filtering image:  " << h << endl;
         // Send img to be filtered, and responses aggregated with addWeighted
         filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
@@ -345,8 +347,8 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
              }
            }
            string prediction = "";
-//           // If the match is above threshold or nearest other match is to similar, return unknown
-//           cout << "high: " << high << " secHigh: " << secHigh << endl;
+  //           // If the match is above threshold or nearest other match is to similar, return unknown
+  //           cout << "high: " << high << " secHigh: " << secHigh << endl;
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
            if(high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX){
@@ -384,7 +386,7 @@ void testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >
          imshow("correct", matchDisplay);
          imshow("novelImg", ent.second[h]);
          imshow("segmentPredictions", disVals);
-         waitKey(1000);
+         waitKey(30);
       }
 
       // END OF CLASS, CONTINUING TO NEXT CLASS //
@@ -418,7 +420,7 @@ void printRAWResults(map<string, vector<double> > r){
   cout << "\n\n";
 }
 
-void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
+void loadVideo(path p, map<string, vector<Mat> > &testImages, int scale){
   cout << "Loading test video" << endl;
   string path = p.string();
   VideoCapture stream;
@@ -429,8 +431,8 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
   }
 
   // Validate video input size/ratio
-  int vH = stream.get(CV_PROP_FRAME_HEIGHT);
-  int vW = stream.get(CV_PROP_FRAME_WIDTH);
+  int vH = stream.get(CV_CAP_PROP_FRAME_HEIGHT);
+  int vW = stream.get(CV_CAP_PROP_FRAME_WIDTH);
 
   if((vW/vH)!= 1280/720){
     ERR("The imported video does not have an aspect ratio of 16:9.");
@@ -447,14 +449,14 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, double scale){
   for(int i=0;i<stream.get(CV_CAP_PROP_FRAME_COUNT);i++){
     Mat tmp, tmp1;
     stream >> tmp;
-    resize(tmp, tmp1, tmp1.size(), scale, scale, INTER_AREA);
+    scaleImg(tmp, tmp1, scale);
     testImages[path].push_back(tmp1);
   }
   cout << "Video Loaded, this is the frame count: " << stream.get(CV_CAP_PROP_FRAME_COUNT) << endl;
   cout << "This is the width of each frame: " << stream.get(CV_CAP_PROP_FRAME_WIDTH) << " and height: " << stream.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
 };
 
-void novelImgHandle(path testPath, path clsPath, double scale, int cropsize, int numClusters, int DictSize){
+void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     map<string, vector<Mat> > testImages;

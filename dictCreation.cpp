@@ -65,7 +65,7 @@ vector<float> createBins(Mat texDic){
   return v;
 }
 
-void dictCreateHandler(int cropsize, double scale, int numClusters){
+void dictCreateHandler(int cropsize, int scale, int numClusters){
   int dictSize = numClusters;
   int attempts = 5;
   int flags = KMEANS_PP_CENTERS;
