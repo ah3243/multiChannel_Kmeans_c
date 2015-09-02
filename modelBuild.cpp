@@ -62,16 +62,19 @@ void modelBuildHandle(int cropsize, int scale, int numClusters){
 
     // Initilse Histogram parameters
     int histSize = m.size()-1;
-    const float* histRange = {bins};
+   const float* histRange = {bins};
+    // int histSize = 255;
+    // float testRange[] = {0,255};
+    // const float* histRange = {testRange};
     bool uniform = false;
     bool accumulate = false;
 
 
     int clsNumClusters = numClusters;
-    int clsAttempts = 5;
+    int clsAttempts = 20;
     int clsFlags = KMEANS_PP_CENTERS;
-    int kmeansIteration = 1000;
-    double kmeansEpsilon = 0.0001;
+    int kmeansIteration = 1000000;
+    double kmeansEpsilon = 0.0000001;
     TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
     BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
 
@@ -102,9 +105,10 @@ void modelBuildHandle(int cropsize, int scale, int numClusters){
           classTrainer.add(test[k]);
         }
       }
-      // Generate 10 clusters per Image and store in Mat
+      // Generate the given number of clusters per Image and store in Mat
       Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
       clus = classTrainer.cluster();
+
       // Replace Cluster Centers with the closest matching texton
       textonFind(clus, dictionary);
       Mat out;

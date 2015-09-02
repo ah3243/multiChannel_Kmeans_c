@@ -36,22 +36,22 @@ void dicDEBUG(string msg, double in){
   }
 }
 
-// Create bins for each textonDictionary Value
-void binLimits(vector<float>& tex){
-  dicDEBUG("inside binLimits", 0);
+        // Create bins for each textonDictionary Value
+        void binLimits(vector<float>& tex){
+          dicDEBUG("inside binLimits", 0);
 
-  vector<float> bins;
-  bins.push_back(0);
-  for(int i = 0;i <= tex.size()-1;i++){
-      bins.push_back(tex[i] + 0.00001);
-  }
-  bins.push_back(256);
+          vector<float> bins;
+          bins.push_back(0);
+          for(int i = 0;i <= tex.size()-1;i++){
+              bins.push_back(tex[i] + 0.00001);
+          }
+          bins.push_back(256);
 
-  for(int i=0;i<bins.size();i++)
-    cout << "texDict: " << i << ": "<< tex[i] << " becomes: " << bins[i+1] << endl;
-  tex.clear();
-  tex = bins;
-}
+          for(int i=0;i<bins.size();i++)
+            cout << "texDict: " << i << ": "<< tex[i] << " becomes: " << bins[i+1] << endl;
+          tex.clear();
+          tex = bins;
+        }
 
 // Assign vector to Set to remove duplicates
 void removeDups(vector<float>& v){
@@ -79,10 +79,10 @@ vector<float> createBins(Mat texDic){
 
 void dictCreateHandler(int cropsize, int scale, int numClusters){
   int dictSize = numClusters;
-  int attempts = 5;
+  int attempts = 20;
   int flags = KMEANS_PP_CENTERS;
-  int kmeansIteration = 1000;
-  double kmeansEpsilon = 0.0001;
+  int kmeansIteration = 1000000;
+  double kmeansEpsilon = 0.0000001;
   TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
   BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
 
@@ -119,7 +119,7 @@ void dictCreateHandler(int cropsize, int scale, int numClusters){
       }
     dicDEBUG("This is the bowTrainer.size(): ", bowTrainer.descripotorsCount());
     }
-    // Generate 10 clusters per class and store in Mat
+    // Generate specified num of clusters per class and store in Mat
     dictionary.push_back(bowTrainer.cluster());
     bowTrainer.clear();
   }

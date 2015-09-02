@@ -20,9 +20,9 @@
 #include "novelImgTest.h" // Novel Image Testing module
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 1
-#define MODEL_BUILD 1
-#define NOVELIMG_TEST 0
+#define DICTIONARY_BUILD 0
+#define MODEL_BUILD 0
+#define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -80,16 +80,16 @@ int main( int argc, char** argv ){
   // assign scale to the corresponding  //
   // number                             //
   //                                    //
-  // 1   1280 x 720                     //
-  // 2   1152 x 648                     //
-  // 3   1024 x 576                     //
-  // 4   896 x 504                      //
-  // 5   768 x 432                      //
-  // 6   640 x 360                      //
-  // 7   512 x 288                      //
-  // 8   384 x 216                      //
-  // 9   256 x 144                      //
-  // 10  128 x 72                       //
+  // 0   1280 x 720                     //
+  // 1   1152 x 648                     //
+  // 2   1024 x 576                     //
+  // 3   896 x 504                      //
+  // 4   768 x 432                      //
+  // 5   640 x 360                      //
+  // 6   512 x 288                      //
+  // 7   384 x 216                      //
+  // 8   256 x 144                      //
+  // 9   128 x 72                       //
   ////////////////////////////////////////
 
   int scale = 8;
@@ -97,8 +97,8 @@ int main( int argc, char** argv ){
   // Adjust the cropSize depending on chosen scale
   double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
 
-  int cropsize = (400*cropScale[scale]); // Cropsize for 1280 x720
-  // int cropsize = 80;
+// int cropsize = (335*cropScale[scale]); // Cropsize is 100Pixels at 384 x 216
+  int cropsize = 140;
   int dictDur, modDur, novDur;
   int numClusters = 10;
   int DictSize = 10;
@@ -167,43 +167,63 @@ int main( int argc, char** argv ){
     novDur = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
   #endif
 
-  vector<vector<Mat> > filterbank;
-  int n_sigmas, n_orientations;
-  createFilterbank(filterbank, n_sigmas, n_orientations);
 
-  Mat imgIn, imgOut;
-  int Flags = KMEANS_PP_CENTERS;
-  TermCriteria Tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-  BOWKMeansTrainer tstTrain(10, Tc, 5, Flags);
-  float blah[] = {0,255};
-  const float* histblah= {blah};
-  int histSize[] = {10};
-  int channels[] = {0};
-  Mat ou1;
-  vector<Mat> compareMe;
-  for(int j=0;j<1;j++){
-    for(int i=0;i<2;i++){
-      Mat img1 = imread("../../bread.png", CV_LOAD_IMAGE_GRAYSCALE);
-      filterHandle(img1, imgOut, filterbank, n_sigmas, n_orientations);
-      Mat imgFlat = reshapeCol(img1);
-      tstTrain.add(imgFlat);
-      Mat clusters = Mat::zeros(10,1, CV_32FC1);
-      clusters = tstTrain.cluster();
+// /////////////////////////////////// TEST ////////////////////////////////////////////////////////
+//
+//       vector<vector<Mat> > filterbank;
+//       int n_sigmas, n_orientations;
+//       createFilterbank(filterbank, n_sigmas, n_orientations);
+//
+//       Mat imgIn, imgOut;
+//       int Flags = KMEANS_PP_CENTERS;
+//       TermCriteria Tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
+//       BOWKMeansTrainer tstTrain(30, Tc, 5, Flags);
+//
+//
+//       float blah[] = {0,255};
+//       const float* histblah= {blah};
+//       int histSize[] = {10};
+//       int channels[] = {0};
+//       Mat ou1;
+//       namedWindow("testWin", CV_WINDOW_AUTOSIZE);
+//
+//       vector<Mat> compareMe;
+//       for(int j=0;j<1;j++){
+//         for(int i=0;i<2;i++){
+//           // if(i==0){
+//           //   img1 = imread("../../bread.png", CV_LOAD_IMAGE_GRAYSCALE);
+//           // }else{
+//           Mat img1 = imread("../../wool.png", CV_LOAD_IMAGE_GRAYSCALE);
+//           imshow("testWin", img1);
+//           // waitKey(1000);
+//           // }
+//
+// //         filterHandle(img1, imgOut, filterbank, n_sigmas, n_orientations);
+//           cout << "This is the size.." << img1.rows << " cols: " << img1.cols << endl;
+//           Mat imgFlat = reshapeCol(img1);
+//           cout << "This is the size.." << imgFlat.rows << " cols: " << imgFlat.cols << endl;
+//
+//           tstTrain.add(imgFlat);
+//           Mat clusters = Mat::zeros(10,1, CV_32FC1);
+//           clusters = tstTrain.cluster();
+//
+//          calcHist(&clusters, 1, channels, Mat(), ou1, 1, histSize, &histblah, true, false);
+//          cout << "after the calc hist" << endl;
+//           compareMe.push_back(ou1);
+//          tstTrain.clear();
+//         //   cout << "done one loop.. this is the size: " << compareMe.size() << endl;
+//         // cout << "This is the cluster1 : " << compareMe[i] << endl;
+//         //  cout << "This is the tstTrain.size(): " << tstTrain.descripotorsCount() << endl;
+//         }
+//
+//         double value =  compareHist(compareMe[0], compareMe[1], CV_COMP_CHISQR);
+//         cout << "This is the Chisqr comparison.." << value << endl;
+//         compareMe.clear();
+//       }
 
-     calcHist(&clusters, 1, channels, Mat(), ou1, 1, histSize, &histblah, true, false);
-      compareMe.push_back(ou1);
-     tstTrain.clear();
-      cout << "done one loop.. this is the size: " << compareMe.size() << endl;
-    //  cout << "This is the tstTrain.size(): "
-    }
+/////////////////////////////////// TEST ////////////////////////////////////////////////////////
 
-    double value =  compareHist(compareMe[0], compareMe[1], CV_COMP_CHISQR);
-    cout << "This is the value.." << value << endl;
-    compareMe.clear();
-  }
-  namedWindow("FilterTest", CV_WINDOW_NORMAL);
-  imshow("FilterTest", imgOut);
-  waitKey(0);
+
 
   int totalTime =0;
   cout << "\n";

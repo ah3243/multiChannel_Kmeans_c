@@ -31,6 +31,7 @@ using namespace std;
 #define CHISQU_MAX_threshold 6
 #define CHISQU_DIS_threshold 1
 
+#define a1 map<string, int>
 
 ////////////////////////
 // Key:               //
@@ -165,13 +166,13 @@ void saveTestData(vector<map<string, vector<double> > > r, int serial){
     stringstream ss;
     ss << "Iteration" << i;
     fs << ss.str() << "{";
-    for(const auto ent : r[i]){
-      fs << ent.first << "{";
+    for(const auto entS : r[i]){
+      fs << entS.first << "{";
         double TP, FP, TN, FN, PPV, TPR;
-        TP = ent.second[0];
-        FP = ent.second[1];
-        TN = ent.second[2];
-        FN = ent.second[3];
+        TP = entS.second[0];
+        FP = entS.second[1];
+        TN = entS.second[2];
+        FN = entS.second[3];
         PPV = (TP/(TP+FP));
         TPR = (TP/(TP+FN));
 
@@ -232,20 +233,46 @@ void getDictionary(Mat &dictionary, vector<float> &m){
   fs.release();
 }
 
+void printConfMat(std::map<std::string, std::map<std::string, int> > in){
+  cout << "\nprinting confusion matrix:\n\n";
+  for(auto const entP : in){
+    cout << "class :" << entP.first << " : Number of hits ";
+    for(auto const entP1 : entP.second){
+      cout << " : " << entP1.first << " : " << entP1.second;
+    }
+    cout << "\n\n";
+  }
+  cout << "\n";
+}
+
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
                   map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
   auto novelStart = std::chrono::high_resolution_clock::now();
+  double fpsTotal = 0, frameCount = 0, fpsAvg=0;
 
   double acc;// Accuracy
 
+  vector<string> Clsnmes;
+  for(auto const la : savedClassHist){
+    Clsnmes.push_back(la.first);
+  }
+
+  map<string, a1 > confMat;
+
   int clsFlags = KMEANS_PP_CENTERS;
-  TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-  BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
+  TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000000, 0.0000001);
 
   // Window for segment prediction display
   namedWindow("segmentPredictions", CV_WINDOW_AUTOSIZE);
   namedWindow("novelImg", CV_WINDOW_AUTOSIZE);
   namedWindow("correct", CV_WINDOW_AUTOSIZE);
+  namedWindow("frameCounter", CV_WINDOW_AUTOSIZE);
+
+  // Roughly place windows
+  moveWindow("segmentPredictions", 100,400);
+  moveWindow("novelImg", 400,400);
+  moveWindow("correct", 300,250);
+  moveWindow("frameCounter", 350,100);
 
   // Import Texton Dictionary
   Mat dictionary;
@@ -254,51 +281,63 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   float bins[m.size()];
   vecToArr(m, bins);
 
-  vector<vector<Mat> > filterbank;
-  int n_sigmas, n_orientations;
-  createFilterbank(filterbank, n_sigmas, n_orientations);
-
   // Initilse Histogram parameters
-  int histSize = m.size()-1;
-  const float* histRange = {bins};
   bool uniform = false;
   bool accumulate = false;
 
   // Store aggregated correct, incorrect and unknown results for segment prediction display
   double Correct = 0, Incorrect =0, Unknown =0;
     // Loop through All Classes
-    for(auto const ent : testImgs){
+    for(auto const entx : testImgs){
+      confMat[entx.first];
+
+      for(int q =0;q<Clsnmes.size();q++){
+        confMat[entx.first][Clsnmes[q]]=0;
+      } confMat[entx.first]["UnDefined"] = 0;
+
       // Loop through all images in Class
-      cout << "\n\nEntering Class: " << ent.first << endl;
-      for(int h=0;h<ent.second.size();h++){
-        Mat in = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1, Scalar(0));
-        Mat hold = Mat(ent.second[h].cols, ent.second[h].rows,CV_32FC1,Scalar(0));
-        in = ent.second[h];
+      cout << "\n\nEntering Class: " << entx.first << endl;
+      for(int h=0;h < entx.second.size();h++){
+        BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
+        // Display current Frame/Image Count
+        stringstream ss;
+        ss << "Frame: " << h;
+        Size textsize = getTextSize(ss.str(), FONT_HERSHEY_SCRIPT_SIMPLEX, 2, 1, 0);
+        double frameW_H = textsize.height+20;
+        double frameW_W = textsize.width+30;
+        Mat frame = Mat(frameW_H, frameW_W, CV_8UC3, Scalar(255,255,255));
+        Point org(((frameW_W -textsize.width)), (frameW_H - textsize.height)+20);
+        putText(frame, ss.str(), org, CV_FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 0), 2, 8 );
+        imshow("frameCounter", frame);
+
+        auto fpsStart = std::chrono::high_resolution_clock::now();
+        Mat in = Mat(entx.second[h].cols, entx.second[h].rows,CV_32FC1, Scalar(0));
+        Mat hold = Mat(entx.second[h].cols, entx.second[h].rows,CV_32FC1,Scalar(0));
+        in = entx.second[h].clone();
          if(in.empty()){
           ERR("Novel image was not able to be imported.");
           exit(-1);
         }
-        cout << "This is the image size: " << ent.second[h].size() << endl;
-        cout << "Filtering image:  " << h << endl;
+
+        vector<vector<Mat> > filterbank;
+        int n_sigmas, n_orientations;
+        createFilterbank(filterbank, n_sigmas, n_orientations);
         // Send img to be filtered, and responses aggregated with addWeighted
         filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
         // Divide the image into segments specified in 'cropsize' and flatten for clustering
-        cout << "segmenting image: " << h << endl;
         vector<Mat> test;
         segmentImg(test, hold, cropsize);
 
-        int imgSize = ent.second[h].rows;
-        Mat disVals = Mat(ent.second[h].cols, ent.second[h].rows,CV_8UC3, Scalar(0,0,0));
+        int imgSize = hold.cols;
+        Mat disVals = Mat(hold.rows, hold.cols,CV_8UC3, Scalar(0,0,0));
         Mat matchDisplay = Mat(50,50,CV_8UC3, Scalar(0,0,0));
 
         // Counters for putting 'pixels' on display image
         int disrows = 0, discols = 0;
-        cout << "Looping through all segments: " << test.size() << endl;
-        cout << "each of which is this size: " << test[0].size() << endl;
         // Loop through and classify all image segments
         for(int x=0;x<test.size();x++){
           // handle segment prediction printing
-          if(discols>imgSize){
+          if(discols>imgSize-cropsize){
             discols=0;
           }
           if(discols==0&& x>0){
@@ -317,89 +356,94 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
            textonFind(clus, dictionary);
 
           // Calculate the histogram
-           Mat out1;
-           calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, uniform, accumulate);
+           Mat out1, out2, lone, lone2;
+           lone = clus.clone();
+           int histSize = m.size()-1;
+           const float* histRange = {bins};
+           calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
            novelTrainer.clear();
 
-           double high = DBL_MAX, secHigh = DBL_MAX;
+           double high = DBL_MAX, secHigh = DBL_MAX, clsHigh = DBL_MAX;
            string match, secMatch;
            map<string, double> matchResults;
 
+           // Compare all saved histograms against novelimg
            for(auto const ent2 : savedClassHist){
              matchResults[ent2.first] = DBL_MAX;
 
              for(int j=0;j < ent2.second.size();j++){
-               double val = compareHist(out1,ent2.second[j],CV_COMP_CHISQR);
+               Mat tmpHist = ent2.second[j].clone();
+               double val = compareHist(out1,tmpHist,CV_COMP_CHISQR);
                if(val < matchResults[ent2.first]){
                  matchResults[ent2.first] = val;
-               }
-               // Save best match value and name
-               if(val < high||val==high){
-                 if(match.compare(ent2.first) != 0){
-                   //Save high value as second high
-                   secHigh = high;
-                   secMatch = match;
-                 }
-                 // Replace high with new value
-                 high = val;
-                 match = ent2.first;
-               }
-               // save second best match in case only one activation of high if()
-               if(val < secHigh && val > high && match.compare(ent2.first) != 0){
-                 secHigh = val;
-                 secMatch = ent2.first;
                }
              }
            }
            string prediction = "";
             // If the match is above threshold or nearest other match is to similar, return unknown
-            cout << "high: " << high << " secHigh: " << secHigh << endl;
+          for(auto const m : matchResults){
+            if(high >= m.second){
+              secHigh = high;
+              secMatch = match;
+              high = m.second;
+              match = m.first;
+            }else if(secHigh >= m.second){
+              secHigh = m.second;
+              secMatch = m.first;
+            }
+          }
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
-           if(high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX){
+           if((high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX) && high>0){
              prediction = "UnDefined";
            }
           else{
             prediction = match;
           }
-          cout << "ACT: " << ent.first << " PD: " << prediction;
+          confMat[entx.first][prediction]+=1;
+          cout << "ACT: " << entx.first << " PD: " << prediction;
           for(auto const ag : matchResults){
             cout << ", " << ag.first << ": " << ag.second;
            }
           cout << "\n";
 
-          //cout << "First Prediction: " << match << " Actual: " << ent.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
-          rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+          //cout << "First Prediction: " << match << " Actual: " << entx.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
+         rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
-           if(prediction.compare(ent.first)==0){
+           if(prediction.compare(entx.first)==0){
              Correct += 1;
-            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
+            // rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
            }else if(prediction.compare("UnDefined")==0){
              Unknown +=1;
-            rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+            // rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
            }else{
              Incorrect += 1;
-           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
+          //  rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
            }
 
           // Save ROC data to results, clsAttempts starts at 0 so is -1
-          cacheTestdata(ent.first, prediction, results);
+          cacheTestdata(entx.first, prediction, results);
           discols +=cropsize;
         }
-         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[ent.first], -1, 8, 0);
+         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
          imshow("correct", matchDisplay);
-         imshow("novelImg", ent.second[h]);
+         imshow("novelImg", entx.second[h]);
          imshow("segmentPredictions", disVals);
-         cout << "Correct Was: " << Correct << " Incorrect was: " << Incorrect << " Unknown was: " << Unknown << endl;
          waitKey(30);
+         auto fpsEnd = std::chrono::high_resolution_clock::now();
+         fpsTotal+= std::chrono::duration_cast<std::chrono::milliseconds>(fpsEnd - fpsStart).count();
+         frameCount++;
       }
+       cout << "Correct Was: " << Correct << " Incorrect was: " << Incorrect << " Unknown was: " << Unknown << endl;
       acc = (Correct/(Incorrect+Unknown+Correct))*100;
       // END OF CLASS, CONTINUING TO NEXT CLASS //
     }
     int novelTime=0;
     auto novelEnd = std::chrono::high_resolution_clock::now();
     novelTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelEnd - novelStart).count();
+    cout << "\nTotal Frames: " << frameCount << " total Time: " << fpsTotal << " Averaged frames per second: " << frameCount/(fpsTotal/1000) << "\n";
     cout << "\n\n\nnovelTime: " << novelTime << endl;
+    printConfMat(confMat);
     return acc;
 }
 
@@ -426,11 +470,10 @@ void printRAWResults(map<string, vector<double> > r){
   cout << "\n\n";
 }
 
-void loadVideo(path p, map<string, vector<Mat> > &testImages, int scale){
+void loadVideo(string p, map<string, vector<Mat> > &testImages, int scale){
   cout << "Loading test video" << endl;
-  string path = p.string();
   VideoCapture stream;
-  stream.open(path);
+  stream.open(p);
   if(!stream.isOpened()){
     ERR("Video Stream unable to be opened.");
     exit(1);
@@ -450,36 +493,72 @@ void loadVideo(path p, map<string, vector<Mat> > &testImages, int scale){
   }
 
   vector<string> name;
-  extractClsNme(path);
+  extractClsNme(p);
 
   for(int i=0;i<stream.get(CV_CAP_PROP_FRAME_COUNT);i++){
-    Mat tmp, tmp1;
-    stream >> tmp;
-    scaleImg(tmp, tmp1, scale);
-    testImages[path].push_back(tmp1);
+    Mat in = Mat::zeros(vW, vH, CV_8UC3);
+    Mat gray, tmp1, tmp2;
+    stream >> in;
+    cvtColor(in, gray, CV_BGR2GRAY);
+    equalizeHist(gray, tmp1);
+    scaleImg(tmp1, tmp2, scale);
+    testImages[p].push_back(tmp2);
   }
   cout << "Video Loaded, this is the frame count: " << stream.get(CV_CAP_PROP_FRAME_COUNT) << endl;
   cout << "This is the width of each frame: " << stream.get(CV_CAP_PROP_FRAME_WIDTH) << " and height: " << stream.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
 };
 
+void printFiles(map<string, vector<string> > s, vector<string> &fileNmes, path p){
+  cout << "These are the current video files in the directory.\n";
+  int count=0;
+  for(auto const ent1 : s){
+    for(int i=0;i<ent1.second.size();i++){
+      stringstream ss;
+      cout << count << " " << ent1.second[i] << "\n";
+      ss << p.string() << ent1.second[i] << ".mp4";
+      fileNmes.push_back(ss.str());
+      count++;
+    }
+  }
+}
+
+string getfileNme(vector<string> s){
+  cout << "\nPlease enter the number next to the video you want to load.\n";
+  int num;
+  char b[256];
+  cin >> b;
+  num = atoi(b);
+  cout << "here.." << num << endl;
+  if(num>s.size()){
+    cout << "That number was out of range please try again.\n";
+  }else{
+    cout << "This is the name: " << s[num] << endl;
+    return s[num];
+  }
+}
+
 void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
-    path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/UnevenLinearBricks_15.mp4";
+    path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
+    map<string, vector<Mat> > testImages;
 
-    // string s;
-    // cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
-    // cin >> s;
-    // boost::algorithm::to_lower(s);
-    // if(s.compare("y")==0){
-    //   cout << "\nLoading Video.\n";
-    //   loadVideo(vPath, testImages, scale);
-    //
-    // }else{
-    // map<string, vector<Mat> > testImages;
-    //   cout << "\nLoading images.\n";
-    //   loadClassImgs(testPath, testImages, scale);
-    // }
+    string s;
+    cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
+    cin >> s;
+    boost::algorithm::to_lower(s);
+    if(s.compare("y")==0){
+      map<string, vector<string> > s1;
+      vector<string> fileNmes;
+      retnFileNmes(vPath,"", s1);
+      printFiles(s1, fileNmes, vPath);
+      string path = getfileNme(fileNmes);
+      cout << "\nLoading Video.\n";
+      loadVideo(path, testImages, scale);
+    }else{
+      cout << "\nLoading images.\n";
+      loadClassImgs(testPath, testImages, scale);
+    }
 
     map<string, vector<Mat> > savedClassHist;
     int serial;
@@ -489,12 +568,14 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     map<string, Scalar> Colors;
       vector<Scalar> clsColor;
         clsColor.push_back(Scalar(255,0,0)); // Blue
-        clsColor.push_back(Scalar(255,128,0)); // Orange
-        clsColor.push_back(Scalar(255,255,0)); // Yellow
-        clsColor.push_back(Scalar(0,255,255)); // Turquoise
-        clsColor.push_back(Scalar(127,0,255)); // DarkPurple
+        clsColor.push_back(Scalar(0,128,255)); // Orange
+        clsColor.push_back(Scalar(0,255,255)); // Yellow
+        clsColor.push_back(Scalar(255,255,0)); // Turquoise
+        clsColor.push_back(Scalar(127,20,255)); // Pink/Red
+        clsColor.push_back(Scalar(255,0,127)); // DarkPurple
         clsColor.push_back(Scalar(255,0,255)); // Purple
-        clsColor.push_back(Scalar(255,0,127)); // Pink/Red
+        clsColor.push_back(Scalar(0,102,0)); // Dark Green
+        clsColor.push_back(Scalar(102,0,102)); // Dark Purple
 
       Colors["Correct"] = Scalar(0,255,0); // Green
       Colors["Incorrect"] = Scalar(0,0,255); // Red
@@ -502,10 +583,10 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
 
       int count =0;
       double txtWidth =0, txtHeight =0;
-      for(auto const ent : savedClassHist){
-        Colors[ent.first] = clsColor[count];
+      for(auto const cols : savedClassHist){
+        Colors[cols.first] = clsColor[count];
         int bseline;
-        Size s = getTextSize(ent.first, CV_FONT_HERSHEY_SIMPLEX, 0.5, 1, &bseline);
+        Size s = getTextSize(cols.first, CV_FONT_HERSHEY_SIMPLEX, 0.5, 1, &bseline);
         // Get txtLength
         if(s.width > txtWidth){
           txtWidth = s.width;
@@ -519,7 +600,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     vector<map<string, vector<double> > > results;
 
     // Create Img Legend
-    Mat Key = Mat::zeros(txtHeight+120,txtWidth+80,CV_8UC3);
+    Mat Key = Mat::zeros(txtHeight+180,txtWidth+80,CV_8UC3);
       int cnt=0;
       for(auto const ent1 : Colors){
         putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
@@ -537,17 +618,15 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   printClasses(clsNames);
   vector<double> acc;
   int counter =0;
-    map<string, vector<Mat> > testImages;
-    cout << "\nLoading images.\n";
-    loadClassImgs(testPath, testImages, scale);
   // For loop to get data while varying an input parameter stored as a for condition
-  for(int numClusters=7;numClusters<8;numClusters++){
+  // for(int numClusters=7;numClusters<8;numClusters++){
     initROCcnt(results, clsNames); // Initilse map
-    int clsAttempts = 5;
+    int clsAttempts = 20;
+    cout << "number of test images.." << testImages.size() << endl;
     acc.push_back(testNovelImg(clsAttempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize));
-    cout << "this is the accuracy!! " << acc[counter] << endl;
+    cout << "this is the accuracy: " << acc[counter] << endl;
     counter++;
-   }
+  //  }
   printRAWResults(results[0]);
   saveTestData(results, serial);
 
@@ -571,18 +650,18 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     // putText(rocCurve, "TPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
 
     // Cycle through all classes
-    for(auto const ent : ROCVals){
-      cout << "Class: " << ent.first << endl;
+    for(auto const entCls : ROCVals){
+      cout << "Class: " << entCls.first << endl;
       // Cycle through all iterations to produce graph
-      for(int i=0;i<ent.second.size()-1;i++){
+      for(int i=0;i<entCls.second.size()-1;i++){
         if(i==0){
-          line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
-          Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
+          line(rocCurve, Point(((wW-buffer)*entCls.second[i][1]+50),((wW-buffer)*entCls.second[i][0]+50)),
+          Point(((wW-buffer)*entCls.second[i+1][1]+50),((wW-buffer)*entCls.second[i+1][0])+50),
           Scalar(255,255,255), 1, 8, 0);
         }else{
-          line(rocCurve, Point(((wW-buffer)*ent.second[i][1]+50),((wW-buffer)*ent.second[i][0]+50)),
-          Point(((wW-buffer)*ent.second[i+1][1]+50),((wW-buffer)*ent.second[i+1][0])+50),
-          Colors[ent.first], 1, 8, 0);
+          line(rocCurve, Point(((wW-buffer)*entCls.second[i][1]+50),((wW-buffer)*entCls.second[i][0]+50)),
+          Point(((wW-buffer)*entCls.second[i+1][1]+50),((wW-buffer)*entCls.second[i+1][0])+50),
+          Colors[entCls.first], 1, 8, 0);
         }
         waitKey(500);
         imshow("ROC_Curve", rocCurve);
