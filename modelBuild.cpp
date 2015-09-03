@@ -112,7 +112,9 @@ void modelBuildHandle(int cropsize, int scale, int numClusters){
       // Replace Cluster Centers with the closest matching texton
       textonFind(clus, dictionary);
       Mat out;
+      cout << "\n\nhistRange before : " << histRange << endl;
       calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
+      cout << "histRange after  : " << histRange << endl;
       classHist[ent1.first].push_back(out);
       classTrainer.clear();
     }

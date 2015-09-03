@@ -31,6 +31,13 @@ using namespace std;
 #define CHISQU_MAX_threshold 6
 #define CHISQU_DIS_threshold 1
 
+// Results Display Flags
+#define PRINT_HISTRESULTS 1
+#define SHOW_PREDICTIONS 0
+#define PRINT_RAWRESULTS 0
+#define PRINT_CONFUSIONMATRIX 0
+#define PRINT_TPRPPV 0
+
 #define a1 map<string, int>
 
 ////////////////////////
@@ -122,7 +129,8 @@ void calcROCVals(map<string, vector<vector<double> > > in, map<string, vector<ve
   // Go through each Class
   for(int i=0;i<clssNmes.size();i++){
     string curCls = clssNmes[i];
-    cout << "Class: " << curCls << "\n\n";
+    if(PRINT_TPRPPV)
+      cout << "Class: " << curCls << "\n\n";
 
     // Go through each test iteration
     for(int j=0;j<in[curCls][0].size();j++){
@@ -134,18 +142,21 @@ void calcROCVals(map<string, vector<vector<double> > > in, map<string, vector<ve
 
       // Calculate TPR
       TPR = (TP/(TP+FN));
-      cout << " " << j << ":-  TP: " << TP << " FN: " << FN << " TPR: " << TPR;
+      if(PRINT_TPRPPV)
+        cout << " " << j << ":-  TP: " << TP << " FN: " << FN << " TPR: " << TPR;
 
       // Calculate FPR
       PPV = (TP/(TP+FP));
-      cout << " TP: " << TP << " FP: " << FP << " PPV: " << PPV;
+      if(PRINT_TPRPPV)
+        cout << " TP: " << TP << " FP: " << FP << " PPV: " << PPV;
 
       // Pushback vector for each test
       out[curCls].push_back(a);
       // Push back results
       out[curCls][j].push_back(TPR);
       out[curCls][j].push_back(PPV);
-      cout << "\naccuracy: " << ((TP)/(TP+FP+FN))*100 << "\n\n";
+      if(PRINT_TPRPPV)
+        cout << "\naccuracy: " << ((TP)/(TP+FP+FN))*100 << "\n\n";
     }
   }
 }
@@ -262,17 +273,19 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   int clsFlags = KMEANS_PP_CENTERS;
   TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000000, 0.0000001);
 
-  // Window for segment prediction display
-  namedWindow("segmentPredictions", CV_WINDOW_AUTOSIZE);
-  namedWindow("novelImg", CV_WINDOW_AUTOSIZE);
-  namedWindow("correct", CV_WINDOW_AUTOSIZE);
-  namedWindow("frameCounter", CV_WINDOW_AUTOSIZE);
+  if(SHOW_PREDICTIONS){
+    // Window for segment prediction display
+    namedWindow("segmentPredictions", CV_WINDOW_AUTOSIZE);
+    namedWindow("novelImg", CV_WINDOW_AUTOSIZE);
+    namedWindow("correct", CV_WINDOW_AUTOSIZE);
+    namedWindow("frameCounter", CV_WINDOW_AUTOSIZE);
 
-  // Roughly place windows
-  moveWindow("segmentPredictions", 100,400);
-  moveWindow("novelImg", 400,400);
-  moveWindow("correct", 300,250);
-  moveWindow("frameCounter", 350,100);
+    // Roughly place windows
+    moveWindow("segmentPredictions", 100,400);
+    moveWindow("novelImg", 400,400);
+    moveWindow("correct", 300,250);
+    moveWindow("frameCounter", 350,100);
+  }
 
   // Import Texton Dictionary
   Mat dictionary;
@@ -360,9 +373,8 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
            lone = clus.clone();
            int histSize = m.size()-1;
            const float* histRange = {bins};
-           calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
+           calcHist(&lone, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
            novelTrainer.clear();
-
            double high = DBL_MAX, secHigh = DBL_MAX, clsHigh = DBL_MAX;
            string match, secMatch;
            map<string, double> matchResults;
@@ -370,9 +382,19 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
            // Compare all saved histograms against novelimg
            for(auto const ent2 : savedClassHist){
              matchResults[ent2.first] = DBL_MAX;
-
              for(int j=0;j < ent2.second.size();j++){
                Mat tmpHist = ent2.second[j].clone();
+
+              // DEBUGGING Loop
+              //  if(ent2.first.compare("UnevenBrickWall")==0 && j ==0){
+              //    cout << "this is hist Number: " << j << " and size: " << tmpHist.size() <<  endl;
+              //     for(int ww=0;ww<tmpHist.rows;ww++){
+              //       cout << "number: " << ww << ": " << tmpHist.at<float>(1, ww) << endl;
+              //     }
+              //     cout << "done\n";
+              //     exit(1);
+              //  }
+
                double val = compareHist(out1,tmpHist,CV_COMP_CHISQR);
                if(val < matchResults[ent2.first]){
                  matchResults[ent2.first] = val;
@@ -401,12 +423,13 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             prediction = match;
           }
           confMat[entx.first][prediction]+=1;
-          cout << "ACT: " << entx.first << " PD: " << prediction;
-          for(auto const ag : matchResults){
-            cout << ", " << ag.first << ": " << ag.second;
-           }
-          cout << "\n";
-
+          if(PRINT_HISTRESULTS){
+            cout << "ACT: " << entx.first << " PD: " << prediction;
+            for(auto const ag : matchResults){
+              cout << ", " << ag.first << ": " << ag.second;
+             }
+            cout << "\n";
+          }
           //cout << "First Prediction: " << match << " Actual: " << entx.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
          rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
@@ -425,11 +448,13 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           cacheTestdata(entx.first, prediction, results);
           discols +=cropsize;
         }
+        if(SHOW_PREDICTIONS){
          rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
          imshow("correct", matchDisplay);
          imshow("novelImg", entx.second[h]);
          imshow("segmentPredictions", disVals);
          waitKey(30);
+       }
          auto fpsEnd = std::chrono::high_resolution_clock::now();
          fpsTotal+= std::chrono::duration_cast<std::chrono::milliseconds>(fpsEnd - fpsStart).count();
          frameCount++;
@@ -443,7 +468,9 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
     novelTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelEnd - novelStart).count();
     cout << "\nTotal Frames: " << frameCount << " total Time: " << fpsTotal << " Averaged frames per second: " << frameCount/(fpsTotal/1000) << "\n";
     cout << "\n\n\nnovelTime: " << novelTime << endl;
-    printConfMat(confMat);
+    if(PRINT_CONFUSIONMATRIX){
+      printConfMat(confMat);
+    }
     return acc;
 }
 
@@ -564,58 +591,61 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     int serial;
     serial = getClassHist(savedClassHist);
 
-    // Stock Scalar Colors
     map<string, Scalar> Colors;
-      vector<Scalar> clsColor;
-        clsColor.push_back(Scalar(255,0,0)); // Blue
-        clsColor.push_back(Scalar(0,128,255)); // Orange
-        clsColor.push_back(Scalar(0,255,255)); // Yellow
-        clsColor.push_back(Scalar(255,255,0)); // Turquoise
-        clsColor.push_back(Scalar(127,20,255)); // Pink/Red
-        clsColor.push_back(Scalar(255,0,127)); // DarkPurple
-        clsColor.push_back(Scalar(255,0,255)); // Purple
-        clsColor.push_back(Scalar(0,102,0)); // Dark Green
-        clsColor.push_back(Scalar(102,0,102)); // Dark Purple
+    vector<Scalar> clsColor;
+    if(SHOW_PREDICTIONS){
+      // Stock Scalar Colors
+          clsColor.push_back(Scalar(255,0,0)); // Blue
+          clsColor.push_back(Scalar(0,128,255)); // Orange
+          clsColor.push_back(Scalar(0,255,255)); // Yellow
+          clsColor.push_back(Scalar(255,255,0)); // Turquoise
+          clsColor.push_back(Scalar(127,20,255)); // Pink/Red
+          clsColor.push_back(Scalar(255,0,127)); // DarkPurple
+          clsColor.push_back(Scalar(255,0,255)); // Purple
+          clsColor.push_back(Scalar(0,102,0)); // Dark Green
+          clsColor.push_back(Scalar(102,0,102)); // Dark Purple
 
-      Colors["Correct"] = Scalar(0,255,0); // Green
-      Colors["Incorrect"] = Scalar(0,0,255); // Red
-      Colors["Unknown"] = Scalar(100,100,100); // Gray
+        Colors["Correct"] = Scalar(0,255,0); // Green
+        Colors["Incorrect"] = Scalar(0,0,255); // Red
+        Colors["Unknown"] = Scalar(100,100,100); // Gray
 
-      int count =0;
-      double txtWidth =0, txtHeight =0;
-      for(auto const cols : savedClassHist){
-        Colors[cols.first] = clsColor[count];
-        int bseline;
-        Size s = getTextSize(cols.first, CV_FONT_HERSHEY_SIMPLEX, 0.5, 1, &bseline);
-        // Get txtLength
-        if(s.width > txtWidth){
-          txtWidth = s.width;
+        int count =0;
+        double txtWidth =0, txtHeight =0;
+        for(auto const cols : savedClassHist){
+          Colors[cols.first] = clsColor[count];
+          int bseline;
+          Size s = getTextSize(cols.first, CV_FONT_HERSHEY_SIMPLEX, 0.5, 1, &bseline);
+          // Get txtLength
+          if(s.width > txtWidth){
+            txtWidth = s.width;
+          }
+          // Get txtHeight
+          txtHeight += s.height;
+          count++;
         }
-        // Get txtHeight
-        txtHeight += s.height;
-        count++;
-      }
 
-    // Holds Class names, each holding a count for TP, FP, FN, FP Values
-    vector<map<string, vector<double> > > results;
 
-    // Create Img Legend
-    Mat Key = Mat::zeros(txtHeight+180,txtWidth+80,CV_8UC3);
-      int cnt=0;
-      for(auto const ent1 : Colors){
-        putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-        rectangle(Key, Rect(txtWidth+50, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
-        cnt++;
-      }
+      // Create Img Legend
+      Mat Key = Mat::zeros(txtHeight+180,txtWidth+80,CV_8UC3);
+        int cnt=0;
+        for(auto const ent1 : Colors){
+          putText(Key, ent1.first, Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
+          rectangle(Key, Rect(txtWidth+50, 10 + cnt*20, 10,10), ent1.second, -1, 8, 0 );
+          cnt++;
+        }
 
-    // Window for Legend display
-    namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
-    imshow("legendWin", Key);
+      // Window for Legend display
+      namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
+      imshow("legendWin", Key);
+    }
+  // Holds Class names, each holding a count for TP, FP, FN, FP Values
+  vector<map<string, vector<double> > > results;
 
   vector<string> clsNames;
   clsNames.push_back("UnDefined");
   getUniqueClassNme(clsPath, clsNames);
   printClasses(clsNames);
+
   vector<double> acc;
   int counter =0;
   // For loop to get data while varying an input parameter stored as a for condition
@@ -627,7 +657,9 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     cout << "this is the accuracy: " << acc[counter] << endl;
     counter++;
   //  }
-  printRAWResults(results[0]);
+  if(PRINT_RAWRESULTS){
+    printRAWResults(results[0]);
+  }
   saveTestData(results, serial);
 
   map<string, vector<vector<double> > > resByCls;

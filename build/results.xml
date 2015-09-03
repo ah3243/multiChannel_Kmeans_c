@@ -1,61 +1,61 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<modelSerial>1939615662</modelSerial>
+<modelSerial>73515727</modelSerial>
 <Iteration0>
   <AluBuilding>
     <TP>4.</TP>
     <FP>0.</FP>
-    <TN>24.</TN>
+    <TN>25.</TN>
     <FN>0.</FN>
     <PPV>1.</PPV>
     <TPR>1.</TPR></AluBuilding>
   <BlueWood>
-    <TP>5.</TP>
+    <TP>2.</TP>
     <FP>1.</FP>
     <TN>21.</TN>
-    <FN>1.</FN>
-    <PPV>8.3333333333333337e-01</PPV>
-    <TPR>8.3333333333333337e-01</TPR></BlueWood>
+    <FN>5.</FN>
+    <PPV>6.6666666666666663e-01</PPV>
+    <TPR>2.8571428571428570e-01</TPR></BlueWood>
   <Grass>
     <TP>3.</TP>
     <FP>0.</FP>
-    <TN>24.</TN>
+    <TN>25.</TN>
     <FN>1.</FN>
     <PPV>1.</PPV>
     <TPR>7.5000000000000000e-01</TPR></Grass>
   <SquareUnevenBlocks>
     <TP>3.</TP>
-    <FP>0.</FP>
+    <FP>1.</FP>
     <TN>25.</TN>
     <FN>0.</FN>
-    <PPV>1.</PPV>
+    <PPV>7.5000000000000000e-01</PPV>
     <TPR>1.</TPR></SquareUnevenBlocks>
   <Tarmac>
-    <TP>2.</TP>
+    <TP>1.</TP>
     <FP>0.</FP>
-    <TN>26.</TN>
-    <FN>0.</FN>
+    <TN>27.</TN>
+    <FN>1.</FN>
     <PPV>1.</PPV>
-    <TPR>1.</TPR></Tarmac>
+    <TPR>5.0000000000000000e-01</TPR></Tarmac>
   <UnDefined>
     <TP>0.</TP>
-    <FP>3.</FP>
-    <TN>25.</TN>
+    <FP>6.</FP>
+    <TN>23.</TN>
     <FN>0.</FN>
     <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
   <UnevenBrickWall>
     <TP>4.</TP>
-    <FP>0.</FP>
+    <FP>1.</FP>
     <TN>24.</TN>
     <FN>0.</FN>
-    <PPV>1.</PPV>
+    <PPV>8.0000000000000004e-01</PPV>
     <TPR>1.</TPR></UnevenBrickWall>
   <UpLibCarpet>
-    <TP>2.</TP>
-    <FP>1.</FP>
-    <TN>22.</TN>
-    <FN>3.</FN>
-    <PPV>6.6666666666666663e-01</PPV>
-    <TPR>4.0000000000000002e-01</TPR></UpLibCarpet></Iteration0>
+    <TP>3.</TP>
+    <FP>0.</FP>
+    <TN>24.</TN>
+    <FN>2.</FN>
+    <PPV>1.</PPV>
+    <TPR>5.9999999999999998e-01</TPR></UpLibCarpet></Iteration0>
 </opencv_storage>

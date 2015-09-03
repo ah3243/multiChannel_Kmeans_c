@@ -20,8 +20,8 @@
 #include "novelImgTest.h" // Novel Image Testing module
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 0
-#define MODEL_BUILD 0
+#define DICTIONARY_BUILD 1
+#define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -101,7 +101,7 @@ int main( int argc, char** argv ){
   int cropsize = 140;
   int dictDur, modDur, novDur;
   int numClusters = 10;
-  int DictSize = 10;
+  int DictSize = 20;
 
   path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
   path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
