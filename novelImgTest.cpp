@@ -402,14 +402,15 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
              }
            }
            string prediction = "";
-            // If the match is above threshold or nearest other match is to similar, return unknown
+
+            // Save the high and second highest matches and class names
           for(auto const m : matchResults){
             if(high >= m.second){
               secHigh = high;
               secMatch = match;
               high = m.second;
               match = m.first;
-            }else if(secHigh >= m.second){
+            }else if(secHigh >= m.second && m.first.compare(match)!=0){
               secHigh = m.second;
               secMatch = m.first;
             }
