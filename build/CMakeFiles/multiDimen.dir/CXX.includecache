@@ -10,10 +10,6 @@
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.h
 
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.h
-boost/filesystem.hpp
--
-
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
@@ -49,52 +45,6 @@ modelBuild.h
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/modelBuild.h
 novelImgTest.h
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.h
-
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.cpp
-opencv2/highgui/highgui.hpp
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/highgui/highgui.hpp
-opencv2/imgproc/imgproc.hpp
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/imgproc/imgproc.hpp
-opencv2/opencv.hpp
--
-opencv2/core/core.hpp
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/opencv2/core/core.hpp
-opencv2/nonfree/features2d.hpp
--
-opencv2/legacy/legacy.hpp
--
-iostream
--
-stdio.h
--
-stdlib.h
--
-fstream
--
-string
--
-unistd.h
--
-sys/stat.h
--
-sys/types.h
--
-boost/algorithm/string.hpp
--
-boost/filesystem.hpp
--
-assert.h
--
-chrono
--
-thread
--
-filterbank.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/filterbank.h
-imgCollection.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgCollection.h
-imgFunctions.h
-/home/james-tt/Desktop/MyFilterbankCode/multiDimen/imgFunctions.h
 
 /home/james-tt/Desktop/MyFilterbankCode/multiDimen/novelImgTest.h
 
@@ -268,22 +218,6 @@ opencv2/imgproc/types_c.h
 opencv2/core/core_c.h
 /usr/local/include/opencv2/imgproc/opencv2/core/core_c.h
 
-/usr/local/include/opencv2/legacy/legacy.hpp
-opencv2/imgproc/imgproc.hpp
-/usr/local/include/opencv2/legacy/opencv2/imgproc/imgproc.hpp
-opencv2/imgproc/imgproc_c.h
-/usr/local/include/opencv2/legacy/opencv2/imgproc/imgproc_c.h
-opencv2/features2d/features2d.hpp
-/usr/local/include/opencv2/legacy/opencv2/features2d/features2d.hpp
-opencv2/calib3d/calib3d.hpp
-/usr/local/include/opencv2/legacy/opencv2/calib3d/calib3d.hpp
-opencv2/ml/ml.hpp
-/usr/local/include/opencv2/legacy/opencv2/ml/ml.hpp
-iosfwd
--
-limits
--
-
 /usr/local/include/opencv2/ml/ml.hpp
 opencv2/core/core.hpp
 /usr/local/include/opencv2/ml/opencv2/core/core.hpp
@@ -295,10 +229,6 @@ string
 -
 iostream
 -
-
-/usr/local/include/opencv2/nonfree/features2d.hpp
-opencv2/features2d/features2d.hpp
-/usr/local/include/opencv2/nonfree/opencv2/features2d/features2d.hpp
 
 /usr/local/include/opencv2/objdetect/objdetect.hpp
 opencv2/core/core.hpp

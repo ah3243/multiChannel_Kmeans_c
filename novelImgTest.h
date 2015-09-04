@@ -13,7 +13,9 @@ void saveTestData(std::vector<std::map<std::string, std::vector<double> > > r, i
 int getClassHist(std::map<std::string, std::vector<cv::Mat> >& savedClassHist);
 void getDictionary(cv::Mat &dictionary, std::vector<float> &m);
 void printConfMat(std::map<std::string, std::map<std::string, int> > in);
-double testNovelImg(int clsAttempts, int numClusters, std::map<std::string, std::vector<double> >& results, std::map<std::string, std::vector<cv::Mat> > classImgs, std::map<std::string, std::vector<cv::Mat> > savedClassHist, std::map<std::string, cv::Scalar> Colors, int cropsize);
+double testNovelImg(int clsAttempts, int numClusters, std::map<std::string, std::vector<double> >& results,
+std::map<std::string, std::vector<cv::Mat> > classImgs, std::map<std::string, std::vector<cv::Mat> > savedClassHist,
+std::map<std::string, cv::Scalar> Colors, int cropsize, std::map<std::string, std::vector<std::map<std::string, std::vector<double> > > >& fullSegResults);
 void printRAWResults(std::map<std::string, std::vector<double> > r);
 void loadVideo(std::string p, std::map<std::string, std::vector<cv::Mat> > &classImages, int scale);
 void printFiles(std::map<std::string, std::vector<std::string> > s, std::vector<std::string> &fileNmes, boost::filesystem::path p);

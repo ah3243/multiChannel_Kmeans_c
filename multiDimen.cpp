@@ -20,8 +20,8 @@
 #include "novelImgTest.h" // Novel Image Testing module
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 1
-#define MODEL_BUILD 1
+#define DICTIONARY_BUILD 0
+#define MODEL_BUILD 0
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -29,47 +29,6 @@
 using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
-
-
-// int main(int argc, char** argv){
-//     if(argc<3){
-//       cout << "not enough inputs entered, exiting." << endl;
-//       exit(1);
-//     }
-//     Mat img1 = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
-//     Mat img2 = imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE);
-//     if(img1.empty() || img2.empty())
-//     {
-//         printf("Can't read one of the images\n");
-//         return -1;
-//     }system
-//
-//     // detecting keypoints
-//     SurfFeatureDetector detector(400);
-//     vector<KeyPoint> keypoints1, keypoints2;
-//     detector.detect(img1, keypoints1);
-//     detector.detect(img2, keypoints2);
-//
-//     // computing descriptors
-//     SurfDescriptorExtractor extractor;
-//     Mat descriptors1, descriptors2;
-//     extractor.compute(img1, keypoints1, descriptors1);
-//     extractor.compute(img2, keypoints2, descriptors2);
-//
-//     // matching descriptors
-//     BruteForceMatcher<L2<float> > matcher;
-//     vector<DMatch> matches;
-//     matcher.match(descriptors1, descriptors2, matches);
-//     //drawing the results
-//     for(int i=0;i<matches.size();i++)
-//       cout << "This is the level of match..: " << matches[i].distance << " This is size: " << matches.size() << endl;
-//   //  namedWindow("matches", 1);
-//   //  Mat img_matches;
-//   //  drawMatches(img1, keypoints1, img2, keypoints2, matches, img_matches);
-//   //  imshow("matches", img_matches);
-//    waitKey(0);
-//   }
-
 
 int main( int argc, char** argv ){
   cout << "\n\n.......Starting Program...... \n\n" ;

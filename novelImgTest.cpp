@@ -33,12 +33,14 @@ using namespace std;
 
 // Results Display Flags
 #define PRINT_HISTRESULTS 1
-#define SHOW_PREDICTIONS 0
-#define PRINT_RAWRESULTS 0
-#define PRINT_CONFUSIONMATRIX 0
+#define SHOW_PREDICTIONS 1
+#define PRINT_RAWRESULTS 1
+#define PRINT_CONFUSIONMATRIX 1
 #define PRINT_TPRPPV 0
+#define PRINT_AVG 1
 
 #define a1 map<string, int>
+#define a2 map<string, vector<double> >
 
 ////////////////////////
 // Key:               //
@@ -246,18 +248,73 @@ void getDictionary(Mat &dictionary, vector<float> &m){
 
 void printConfMat(std::map<std::string, std::map<std::string, int> > in){
   cout << "\nprinting confusion matrix:\n\n";
+  cout << "0:0 ";
+  for(auto const ent1:in){
+    for(auto const ent2 : ent1.second){
+      cout << " : " << ent2.first;
+    }
+    cout << "\n";
+    break;
+  }
+
   for(auto const entP : in){
-    cout << "class :" << entP.first << " : Number of hits ";
+    cout << "class :" << entP.first;
     for(auto const entP1 : entP.second){
-      cout << " : " << entP1.first << " : " << entP1.second;
+      cout << " : " << entP1.second;
     }
     cout << "\n\n";
   }
   cout << "\n";
 }
 
+void calcNearestClasses(map<string, vector<map<string, vector<double> > > > results){
+  cout << "This is the results size: " << results.size() << endl;
+  cout << "these are the average scores for all classes across all segments:\n";
+
+  map<string, map<string, vector<double> > >  avgs;
+
+  vector<string> clsnames;
+
+  for(auto const nmes : results){
+    clsnames.push_back(nmes.first);
+  }
+  cout << "These are the names: " << endl;
+  for(int i=0;i<clsnames.size();i++){
+    cout << clsnames[i] << endl;
+  }
+
+
+  // Go through each classes segments
+  for(auto const a:results){
+    // Go through all segments from that class
+    for(int i=0;i<a.second.size();i++){
+      // Go through all classes which recorded distances from the image
+      for(auto const b : a.second[i]){
+        for(int j=0;j<b.second.size();j++)
+          avgs[a.first][b.first].push_back(b.second[j]);
+      }
+    }
+    cout << "\n";
+  }
+
+  for(auto const ae:avgs){
+    cout << "Class: " << ae.first << " :: ";
+    for(auto const b1:ae.second){
+      int vecsize = b1.second.size();
+      double q = 0.0;
+      for(int i=0;i<vecsize;i++){
+        q+= b1.second[i];
+      }
+ //     b1.second.clear();
+      cout << b1.first << " : " << q/vecsize << ": ";
+    }
+    cout << "\n\n";
+  }
+  cout << "\n\nleaving calcNearestClasses" << endl;
+}
+
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
-                  map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize){
+                  map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string, vector<double> > > >& fullSegResults){
   auto novelStart = std::chrono::high_resolution_clock::now();
   double fpsTotal = 0, frameCount = 0, fpsAvg=0;
 
@@ -304,6 +361,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
     for(auto const entx : testImgs){
       confMat[entx.first];
 
+      // Initilse confusion matrix with all classes and 'Unknown'
       for(int q =0;q<Clsnmes.size();q++){
         confMat[entx.first][Clsnmes[q]]=0;
       } confMat[entx.first]["UnDefined"] = 0;
@@ -379,12 +437,14 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
            string match, secMatch;
            map<string, double> matchResults;
 
+           a2 tmpVals;
            // Compare all saved histograms against novelimg
            for(auto const ent2 : savedClassHist){
              matchResults[ent2.first] = DBL_MAX;
+             // Compare saved histgrams from each class
+             vector<double> tmpVec;
              for(int j=0;j < ent2.second.size();j++){
                Mat tmpHist = ent2.second[j].clone();
-
               // DEBUGGING Loop
               //  if(ent2.first.compare("UnevenBrickWall")==0 && j ==0){
               //    cout << "this is hist Number: " << j << " and size: " << tmpHist.size() <<  endl;
@@ -396,33 +456,36 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
               //  }
 
                double val = compareHist(out1,tmpHist,CV_COMP_CHISQR);
-               if(val < matchResults[ent2.first]){
-                 matchResults[ent2.first] = val;
-               }
+               tmpVec.push_back(val);
              }
+            sort(tmpVec.begin(), tmpVec.end());
+            tmpVals[ent2.first] = tmpVec;
            }
+          double avgDepth =3;
+          double avg = DBL_MAX;
+          for(auto const ent9:tmpVals){
+            double avgTot=0.0, tmpavg=0.0;
+            for(int w=0;w<avgDepth;w++){
+              avgTot += ent9.second[w];
+            }
+            tmpavg  = avgTot/avgDepth;
+            if(tmpavg < avg){
+              avg=tmpavg;
+              match = ent9.first;
+            }
+            matchResults[ent9.first]=tmpavg;
+          }
+
+          fullSegResults[entx.first].push_back(tmpVals);
            string prediction = "";
 
-            // Save the high and second highest matches and class names
-          for(auto const m : matchResults){
-            if(high >= m.second){
-              secHigh = high;
-              secMatch = match;
-              high = m.second;
-              match = m.first;
-            }else if(secHigh >= m.second && m.first.compare(match)!=0){
-              secHigh = m.second;
-              secMatch = m.first;
-            }
-          }
-
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
-           if((high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX) && high>0){
-             prediction = "UnDefined";
-           }
-          else{
+          //  if((high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX) && high>0){
+          //    prediction = "UnDefined";
+          //  }
+          // else{
             prediction = match;
-          }
+          // }
           confMat[entx.first][prediction]+=1;
           if(PRINT_HISTRESULTS){
             cout << "ACT: " << entx.first << " PD: " << prediction;
@@ -454,7 +517,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
          imshow("correct", matchDisplay);
          imshow("novelImg", entx.second[h]);
          imshow("segmentPredictions", disVals);
-         waitKey(30);
+         waitKey(50);
        }
          auto fpsEnd = std::chrono::high_resolution_clock::now();
          fpsTotal+= std::chrono::duration_cast<std::chrono::milliseconds>(fpsEnd - fpsStart).count();
@@ -570,6 +633,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     // Load Images to be tested
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
     map<string, vector<Mat> > testImages;
+    map<string, vector<map<string, vector<double> > > > fullSegResults;
 
     string s;
     cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
@@ -654,7 +718,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     initROCcnt(results, clsNames); // Initilse map
     int clsAttempts = 20;
     cout << "number of test images.." << testImages.size() << endl;
-    acc.push_back(testNovelImg(clsAttempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize));
+    acc.push_back(testNovelImg(clsAttempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize, fullSegResults));
     cout << "this is the accuracy: " << acc[counter] << endl;
     counter++;
   //  }
@@ -668,6 +732,10 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   vector<string> clsNmes;
   getClsNames(results[0], clsNmes); // Get class Names
   organiseResultByClass(results, resByCls, clsNmes);
+
+  if(PRINT_AVG){
+    calcNearestClasses(fullSegResults);
+  }
 
   calcROCVals(resByCls, ROCVals, clsNmes);
 
