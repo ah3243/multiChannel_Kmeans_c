@@ -313,6 +313,10 @@ void calcNearestClasses(map<string, vector<map<string, vector<double> > > > resu
   cout << "\n\nleaving calcNearestClasses" << endl;
 }
 
+bool pairCompare(const pair<string, double>& firstElem, const pair<string, double>& secondElem) {
+  return firstElem.second < secondElem.second;
+}
+
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
                   map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string, vector<double> > > >& fullSegResults){
   auto novelStart = std::chrono::high_resolution_clock::now();
@@ -324,6 +328,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   for(auto const la : savedClassHist){
     Clsnmes.push_back(la.first);
   }
+
 
   map<string, a1 > confMat;
 
@@ -445,47 +450,41 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
              vector<double> tmpVec;
              for(int j=0;j < ent2.second.size();j++){
                Mat tmpHist = ent2.second[j].clone();
-              // DEBUGGING Loop
-              //  if(ent2.first.compare("UnevenBrickWall")==0 && j ==0){
-              //    cout << "this is hist Number: " << j << " and size: " << tmpHist.size() <<  endl;
-              //     for(int ww=0;ww<tmpHist.rows;ww++){
-              //       cout << "number: " << ww << ": " << tmpHist.at<float>(1, ww) << endl;
-              //     }
-              //     cout << "done\n";
-              //     exit(1);
-              //  }
-
                double val = compareHist(out1,tmpHist,CV_COMP_CHISQR);
                tmpVec.push_back(val);
              }
             sort(tmpVec.begin(), tmpVec.end());
             tmpVals[ent2.first] = tmpVec;
            }
+
           double avgDepth =3;
-          double avg = DBL_MAX;
+          vector<pair<string, double>> avg;
+          // Get the average of the top n values for each class store in sorted vector
           for(auto const ent9:tmpVals){
-            double avgTot=0.0, tmpavg=0.0;
+            double avgTot=0.0;
             for(int w=0;w<avgDepth;w++){
               avgTot += ent9.second[w];
             }
-            tmpavg  = avgTot/avgDepth;
-            if(tmpavg < avg){
-              avg=tmpavg;
-              match = ent9.first;
-            }
-            matchResults[ent9.first]=tmpavg;
+            pair<string, double> tmp(ent9.first,avgTot/avgDepth);
+            avg.push_back(tmp);
+            matchResults[ent9.first]=tmp.second;
           }
-
+          // Sort averaged values
+          sort(avg.begin(), avg.end(), pairCompare);
+          cout << "\n\nThis is the averages: ";
+          for(int z=0;z<avg.size();z++){
+            cout << avg[z].first << " : " << avg[z].second << endl;
+          }
           fullSegResults[entx.first].push_back(tmpVals);
            string prediction = "";
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
-          //  if((high>CHISQU_MAX_threshold || (secHigh - high)<CHISQU_DIS_threshold || secHigh==DBL_MAX) && high>0){
-          //    prediction = "UnDefined";
-          //  }
-          // else{
-            prediction = match;
-          // }
+           if((avg[0].second>CHISQU_MAX_threshold || (avg[1].second - avg[0].second)<CHISQU_DIS_threshold || avg[1].second==DBL_MAX) && avg[0].second>0){
+             prediction = "UnDefined";
+           }
+          else{
+            prediction = avg[0].first;
+          }
           confMat[entx.first][prediction]+=1;
           if(PRINT_HISTRESULTS){
             cout << "ACT: " << entx.first << " PD: " << prediction;

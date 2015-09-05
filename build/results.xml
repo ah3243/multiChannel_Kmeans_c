@@ -17,12 +17,12 @@
     <PPV>.Nan</PPV>
     <TPR>.Nan</TPR></BlueWood>
   <Grass>
-    <TP>8.</TP>
+    <TP>4.</TP>
     <FP>0.</FP>
     <TN>0.</TN>
-    <FN>2.</FN>
+    <FN>6.</FN>
     <PPV>1.</PPV>
-    <TPR>8.0000000000000004e-01</TPR></Grass>
+    <TPR>4.0000000000000002e-01</TPR></Grass>
   <SquareUnevenBlocks>
     <TP>0.</TP>
     <FP>0.</FP>
@@ -32,17 +32,17 @@
     <TPR>.Nan</TPR></SquareUnevenBlocks>
   <Tarmac>
     <TP>0.</TP>
-    <FP>1.</FP>
-    <TN>9.</TN>
-    <FN>0.</FN>
-    <PPV>0.</PPV>
-    <TPR>.Nan</TPR></Tarmac>
-  <UnDefined>
-    <TP>0.</TP>
     <FP>0.</FP>
     <TN>10.</TN>
     <FN>0.</FN>
     <PPV>.Nan</PPV>
+    <TPR>.Nan</TPR></Tarmac>
+  <UnDefined>
+    <TP>0.</TP>
+    <FP>6.</FP>
+    <TN>4.</TN>
+    <FN>0.</FN>
+    <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
   <UnevenBrickWall>
     <TP>0.</TP>
@@ -53,10 +53,10 @@
     <TPR>.Nan</TPR></UnevenBrickWall>
   <UpLibCarpet>
     <TP>0.</TP>
-    <FP>1.</FP>
-    <TN>9.</TN>
+    <FP>0.</FP>
+    <TN>10.</TN>
     <FN>0.</FN>
-    <PPV>0.</PPV>
+    <PPV>.Nan</PPV>
     <TPR>.Nan</TPR></UpLibCarpet>
   <WoodFloor>
     <TP>0.</TP>
