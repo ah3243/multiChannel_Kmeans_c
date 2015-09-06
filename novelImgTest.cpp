@@ -33,11 +33,11 @@ using namespace std;
 
 // Results Display Flags
 #define PRINT_HISTRESULTS 1
-#define SHOW_PREDICTIONS 1
+#define SHOW_PREDICTIONS 0
 #define PRINT_RAWRESULTS 1
-#define PRINT_CONFUSIONMATRIX 1
+#define PRINT_CONFUSIONMATRIX 0
 #define PRINT_TPRPPV 0
-#define PRINT_AVG 1
+#define PRINT_AVG 0
 
 #define a1 map<string, int>
 #define a2 map<string, vector<double> >
@@ -328,8 +328,6 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   for(auto const la : savedClassHist){
     Clsnmes.push_back(la.first);
   }
-
-
   map<string, a1 > confMat;
 
   int clsFlags = KMEANS_PP_CENTERS;
@@ -457,7 +455,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             tmpVals[ent2.first] = tmpVec;
            }
 
-          double avgDepth =3;
+          double avgDepth =1;
           vector<pair<string, double>> avg;
           // Get the average of the top n values for each class store in sorted vector
           for(auto const ent9:tmpVals){
@@ -493,7 +491,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
              }
             cout << "\n";
           }
-          //cout << "First Prediction: " << match << " Actual: " << entx.first << " First Distance: " << high << " Second Class: " << secMatch << " Distance: " << secHigh << endl;
+
          rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
            if(prediction.compare(entx.first)==0){
@@ -511,7 +509,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           cacheTestdata(entx.first, prediction, results);
           discols +=cropsize;
         }
-        if(SHOW_PREDICTIONS){
+         if(SHOW_PREDICTIONS){
          rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
          imshow("correct", matchDisplay);
          imshow("novelImg", entx.second[h]);
