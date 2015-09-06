@@ -3,8 +3,8 @@
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
-#include <opencv2/nonfree/features2d.hpp>
-#include <opencv2/legacy/legacy.hpp>
+// #include <opencv2/nonfree/features2d.hpp>
+// #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h>
@@ -16,6 +16,7 @@
 #include <algorithm> // Maybe fix DescriptorExtractor doesn't have a member 'create'
 #include <boost/filesystem.hpp>
 #include <assert.h>
+#include <map>
 
 #include "filterbank.h"
 #include "imgCollection.h"

@@ -2,8 +2,8 @@
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
-#include <opencv2/nonfree/features2d.hpp>
-#include <opencv2/legacy/legacy.hpp>
+// #include <opencv2/nonfree/features2d.hpp>
+// #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h>
@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <chrono>  // time measurement
 #include <thread>  // time measurement
+#include <map>
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Handling Functions
@@ -492,7 +493,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             cout << "\n";
           }
 
-         rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+//         rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
            if(prediction.compare(entx.first)==0){
              Correct += 1;
@@ -510,7 +511,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           discols +=cropsize;
         }
          if(SHOW_PREDICTIONS){
-         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
+//         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
          imshow("correct", matchDisplay);
          imshow("novelImg", entx.second[h]);
          imshow("segmentPredictions", disVals);

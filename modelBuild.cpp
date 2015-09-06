@@ -2,8 +2,8 @@
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
-#include <opencv2/nonfree/features2d.hpp>
-#include <opencv2/legacy/legacy.hpp>
+// #include <opencv2/nonfree/features2d.hpp>
+// #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h> // rand
@@ -16,6 +16,7 @@
 #include <boost/filesystem.hpp>
 #include <assert.h>
 #include <time.h> // randTimeSeed
+#include <map>
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Import Functions

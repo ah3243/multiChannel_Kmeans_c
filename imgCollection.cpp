@@ -1,5 +1,6 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <map>
 #include <fstream> // For videoStream
 #include <iostream>
 #include <cstdio> // for printf()
