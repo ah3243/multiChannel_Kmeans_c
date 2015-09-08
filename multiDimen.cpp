@@ -20,8 +20,8 @@
 #include "novelImgTest.h" // Novel Image Testing module
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 0
-#define MODEL_BUILD 0
+#define DICTIONARY_BUILD 1
+#define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -60,7 +60,13 @@ int main( int argc, char** argv ){
   int cropsize = 140;
   int dictDur, modDur, novDur;
   int numClusters = 10;
-  int DictSize = 20;
+  int DictSize = 50;
+
+  int attempts = 25;
+  int flags = KMEANS_PP_CENTERS;
+  int kmeansIteration = 100000;
+  double kmeansEpsilon = 0.000001;
+
 
   path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
   path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
@@ -87,7 +93,7 @@ int main( int argc, char** argv ){
     // Measure start time
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    dictCreateHandler(cropsize, scale, DictSize);
+    dictCreateHandler(cropsize, scale, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon);
 
     // Measure time efficiency
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -103,7 +109,7 @@ int main( int argc, char** argv ){
     // Measure start time
     auto t3 = std::chrono::high_resolution_clock::now();
 
-    modelBuildHandle(cropsize, scale, numClusters);
+    modelBuildHandle(cropsize, scale, numClusters, flags, attempts, kmeansIteration, kmeansEpsilon);
 
     // Measure time efficiency
     auto t4 = std::chrono::high_resolution_clock::now();
@@ -119,7 +125,7 @@ int main( int argc, char** argv ){
     // Measure time efficiency
     auto t5 = std::chrono::high_resolution_clock::now();
 
-    novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize);
+    novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon);
 
     // Measure time efficiency
     auto t6 = std::chrono::high_resolution_clock::now();

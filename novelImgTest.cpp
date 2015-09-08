@@ -2,8 +2,6 @@
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
-// #include <opencv2/nonfree/features2d.hpp>
-// #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h>
@@ -36,9 +34,9 @@ using namespace std;
 #define PRINT_HISTRESULTS 1
 #define SHOW_PREDICTIONS 0
 #define PRINT_RAWRESULTS 1
-#define PRINT_CONFUSIONMATRIX 0
+#define PRINT_CONFUSIONMATRIX 1
 #define PRINT_TPRPPV 0
-#define PRINT_AVG 0
+#define PRINT_AVG 1
 
 #define a1 map<string, int>
 #define a2 map<string, vector<double> >
@@ -319,10 +317,12 @@ bool pairCompare(const pair<string, double>& firstElem, const pair<string, doubl
 }
 
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
-                  map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string, vector<double> > > >& fullSegResults){
+                  map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string,
+                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon){
+
   auto novelStart = std::chrono::high_resolution_clock::now();
   double fpsTotal = 0, frameCount = 0, fpsAvg=0;
-
+  vector<double> grass;
   double acc;// Accuracy
 
   vector<string> Clsnmes;
@@ -331,8 +331,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   }
   map<string, a1 > confMat;
 
-  int clsFlags = KMEANS_PP_CENTERS;
-  TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000000, 0.0000001);
+  TermCriteria clsTc(TermCriteria::MAX_ITER, kmeansIteration, kmeansEpsilon);
 
   if(SHOW_PREDICTIONS){
     // Window for segment prediction display
@@ -373,7 +372,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
       // Loop through all images in Class
       cout << "\n\nEntering Class: " << entx.first << endl;
       for(int h=0;h < entx.second.size();h++){
-        BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, clsFlags);
+        BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, flags);
         // Display current Frame/Image Count
         stringstream ss;
         ss << "Frame: " << h;
@@ -488,12 +487,15 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           if(PRINT_HISTRESULTS){
             cout << "ACT: " << entx.first << " PD: " << prediction;
             for(auto const ag : matchResults){
+              if(ag.first.compare("Grass")==0){
+                grass.push_back(ag.second);
+              }
               cout << ", " << ag.first << ": " << ag.second;
              }
             cout << "\n";
           }
 
-//         rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
+          //         rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
           // Populate Window with predictions
            if(prediction.compare(entx.first)==0){
              Correct += 1;
@@ -511,7 +513,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           discols +=cropsize;
         }
          if(SHOW_PREDICTIONS){
-//         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
+           //         rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
          imshow("correct", matchDisplay);
          imshow("novelImg", entx.second[h]);
          imshow("segmentPredictions", disVals);
@@ -533,6 +535,12 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
     if(PRINT_CONFUSIONMATRIX){
       printConfMat(confMat);
     }
+    cout << "\n";
+    for(int i=0;i<grass.size();i++){
+      cout << grass[i] << ",";
+    }
+    cout << "\n";
+
     return acc;
 }
 
@@ -626,18 +634,27 @@ string getfileNme(vector<string> s){
   }
 }
 
-void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize){
+// // Calculate the average per bin per class
+// void textonDictMetric(map<string, vector<Mat> > models){
+//   cout << "\n\nBelow are the average per bin per class models: \n";
+//   for(auto const ent0 : models){
+//     cout << ent0.first << " "
+//   }
+// }
+
+void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
     map<string, vector<Mat> > testImages;
     map<string, vector<map<string, vector<double> > > > fullSegResults;
 
-    string s;
-    cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
-    cin >> s;
-    boost::algorithm::to_lower(s);
-    if(s.compare("y")==0){
+    // string s;
+    // cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
+    // cin >> s;
+    // boost::algorithm::to_lower(s);
+    // if(s.compare("y")==0){
+    if(false){
       map<string, vector<string> > s1;
       vector<string> fileNmes;
       retnFileNmes(vPath,"", s1);
@@ -714,9 +731,8 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   // For loop to get data while varying an input parameter stored as a for condition
   // for(int numClusters=7;numClusters<8;numClusters++){
     initROCcnt(results, clsNames); // Initilse map
-    int clsAttempts = 20;
     cout << "number of test images.." << testImages.size() << endl;
-    acc.push_back(testNovelImg(clsAttempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize, fullSegResults));
+    acc.push_back(testNovelImg(attempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize, fullSegResults, flags, kmeansIteration, kmeansEpsilon));
     cout << "this is the accuracy: " << acc[counter] << endl;
     counter++;
   //  }

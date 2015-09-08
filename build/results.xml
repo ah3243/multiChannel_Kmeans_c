@@ -1,68 +1,68 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<modelSerial>1960098940</modelSerial>
+<modelSerial>666402054</modelSerial>
 <Iteration0>
-  <AluBuilding>
+  <CagedStones>
     <TP>0.</TP>
     <FP>0.</FP>
-    <TN>4.</TN>
-    <FN>0.</FN>
+    <TN>39.</TN>
+    <FN>4.</FN>
     <PPV>.Nan</PPV>
-    <TPR>.Nan</TPR></AluBuilding>
-  <BlueWood>
-    <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>4.</TN>
-    <FN>0.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>.Nan</TPR></BlueWood>
+    <TPR>0.</TPR></CagedStones>
   <Grass>
-    <TP>3.</TP>
-    <FP>0.</FP>
-    <TN>0.</TN>
-    <FN>1.</FN>
-    <PPV>1.</PPV>
-    <TPR>7.5000000000000000e-01</TPR></Grass>
-  <SquareUnevenBlocks>
-    <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>4.</TN>
-    <FN>0.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>.Nan</TPR></SquareUnevenBlocks>
-  <Tarmac>
-    <TP>0.</TP>
+    <TP>1.</TP>
+    <FP>4.</FP>
+    <TN>33.</TN>
+    <FN>5.</FN>
+    <PPV>2.0000000000000001e-01</PPV>
+    <TPR>1.6666666666666666e-01</TPR></Grass>
+  <SquareCarpet>
+    <TP>1.</TP>
     <FP>1.</FP>
-    <TN>3.</TN>
-    <FN>0.</FN>
+    <TN>36.</TN>
+    <FN>5.</FN>
+    <PPV>5.0000000000000000e-01</PPV>
+    <TPR>1.6666666666666666e-01</TPR></SquareCarpet>
+  <SquarePaving>
+    <TP>0.</TP>
+    <FP>0.</FP>
+    <TN>39.</TN>
+    <FN>4.</FN>
+    <PPV>.Nan</PPV>
+    <TPR>0.</TPR></SquarePaving>
+  <StoneWall>
+    <TP>0.</TP>
+    <FP>2.</FP>
+    <TN>35.</TN>
+    <FN>6.</FN>
     <PPV>0.</PPV>
-    <TPR>.Nan</TPR></Tarmac>
+    <TPR>0.</TPR></StoneWall>
+  <Tarmac>
+    <TP>6.</TP>
+    <FP>3.</FP>
+    <TN>34.</TN>
+    <FN>0.</FN>
+    <PPV>6.6666666666666663e-01</PPV>
+    <TPR>1.</TPR></Tarmac>
   <UnDefined>
     <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>4.</TN>
+    <FP>20.</FP>
+    <TN>23.</TN>
     <FN>0.</FN>
-    <PPV>.Nan</PPV>
+    <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
-  <UnevenBrickWall>
-    <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>4.</TN>
-    <FN>0.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>.Nan</TPR></UnevenBrickWall>
-  <UpLibCarpet>
-    <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>4.</TN>
-    <FN>0.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>.Nan</TPR></UpLibCarpet>
   <WoodFloor>
     <TP>0.</TP>
-    <FP>0.</FP>
-    <TN>4.</TN>
-    <FN>0.</FN>
-    <PPV>.Nan</PPV>
-    <TPR>.Nan</TPR></WoodFloor></Iteration0>
+    <FP>2.</FP>
+    <TN>35.</TN>
+    <FN>6.</FN>
+    <PPV>0.</PPV>
+    <TPR>0.</TPR></WoodFloor>
+  <WoodGarage>
+    <TP>2.</TP>
+    <FP>1.</FP>
+    <TN>37.</TN>
+    <FN>3.</FN>
+    <PPV>6.6666666666666663e-01</PPV>
+    <TPR>4.0000000000000002e-01</TPR></WoodGarage></Iteration0>
 </opencv_storage>

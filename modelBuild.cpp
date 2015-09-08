@@ -2,8 +2,6 @@
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
-// #include <opencv2/nonfree/features2d.hpp>
-// #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h> // rand
@@ -36,7 +34,7 @@ int modelSerialNum(){
   return serial;
 }
 
-void modelBuildHandle(int cropsize, int scale, int numClusters){
+void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon){
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;
@@ -70,14 +68,8 @@ void modelBuildHandle(int cropsize, int scale, int numClusters){
     bool uniform = false;
     bool accumulate = false;
 
-
-    int clsNumClusters = numClusters;
-    int clsAttempts = 20;
-    int clsFlags = KMEANS_PP_CENTERS;
-    int kmeansIteration = 1000000;
-    double kmeansEpsilon = 0.0000001;
-    TermCriteria clsTc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
-    BOWKMeansTrainer classTrainer(clsNumClusters, clsTc, clsAttempts, clsFlags);
+    TermCriteria clsTc(TermCriteria::MAX_ITER, kmeansIteration, kmeansEpsilon);
+    BOWKMeansTrainer classTrainer(numClusters, clsTc, attempts, flags);
 
     cout << "\n\n.......Generating Models...... \n" ;
 
@@ -107,7 +99,7 @@ void modelBuildHandle(int cropsize, int scale, int numClusters){
         }
       }
       // Generate the given number of clusters per Image and store in Mat
-      Mat clus = Mat::zeros(clsNumClusters,1, CV_32FC1);
+      Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
       clus = classTrainer.cluster();
 
       // Replace Cluster Centers with the closest matching texton
@@ -132,9 +124,9 @@ void modelBuildHandle(int cropsize, int scale, int numClusters){
   fs2 << "modelsInfo" << "{";
     fs2 << "Num_Models" << clsHist;
     fs2 << "cropSize" << cropsize;
-    fs2 << "modelsNumOfClusters" << clsNumClusters;
-    fs2 << "modelsFlagType" << clsFlags;
-    fs2 << "modelsAttempts" << clsAttempts;
+    fs2 << "modelsNumOfClusters" << numClusters;
+    fs2 << "modelsFlagType" << flags;
+    fs2 << "modelsAttempts" << attempts;
     fs2 << "Kmeans" << "{";
       fs2 << "Iterations" << kmeansIteration;
       fs2 << "Epsilon" << kmeansEpsilon;

@@ -3,8 +3,6 @@
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
-// #include <opencv2/nonfree/features2d.hpp>
-// #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h>
@@ -77,14 +75,10 @@ vector<float> createBins(Mat texDic){
   return v;
 }
 
-void dictCreateHandler(int cropsize, int scale, int numClusters){
-  int dictSize = numClusters;
-  int attempts = 20;
-  int flags = KMEANS_PP_CENTERS;
-  int kmeansIteration = 1000000;
-  double kmeansEpsilon = 0.0000001;
-  TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
-  BOWKMeansTrainer bowTrainer(dictSize, tc, attempts, flags);
+void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon){
+  // TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
+  TermCriteria tc(TermCriteria::MAX_ITER, kmeansIteration, kmeansEpsilon);
+  BOWKMeansTrainer bowTrainer(numClusters, tc, attempts, flags);
 
   map<string, vector<Mat> > textonImgs;
   path p = "../../../TEST_IMAGES/CapturedImgs/textons";
@@ -132,7 +126,7 @@ void dictCreateHandler(int cropsize, int scale, int numClusters){
   dicDEBUG("Saving Dictionary..", 0);
   FileStorage fs("dictionary.xml",FileStorage::WRITE);
   fs << "cropSize" << cropsize;
-  fs << "clustersPerClass" << dictSize;
+  fs << "clustersPerClass" << numClusters;
   fs << "totalDictSize" << dictionary.size();
   fs << "flagType" << flags;
   fs << "attempts" << attempts;

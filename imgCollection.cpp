@@ -357,7 +357,7 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, int scale){
       equalizeHist(in, img);
       extractClsNme(nme);
       scaleImg(img, imgsm, scale);
-      cout << "Pushing back: " << nme << " img.size(): " << imgsm.size() << endl;
+      //cout << "Pushing back: " << nme << " img.size(): " << imgsm.size() << endl;
       classImgs[nme].push_back(imgsm);
     }
     cout << "This is the total for each class: " << endl;
