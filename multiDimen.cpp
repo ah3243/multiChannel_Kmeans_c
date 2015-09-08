@@ -51,16 +51,16 @@ int main( int argc, char** argv ){
   // 9   128 x 72                       //
   ////////////////////////////////////////
 
-  int scale = 8;
+  int scale = 1;
 
   // Adjust the cropSize depending on chosen scale
   double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
 
-// int cropsize = (335*cropScale[scale]); // Cropsize is 100Pixels at 384 x 216
-  int cropsize = 140;
+  int cropsize = (719*cropScale[scale]); // Cropsize is 100Pixels at 384 x 216
+  //int cropsize = 140;
   int dictDur, modDur, novDur;
   int numClusters = 10;
-  int DictSize = 50;
+  int DictSize = 15;
 
   int attempts = 25;
   int flags = KMEANS_PP_CENTERS;

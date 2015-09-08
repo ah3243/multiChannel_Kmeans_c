@@ -16,6 +16,7 @@
 #include <chrono>  // time measurement
 #include <thread>  // time measurement
 #include <map>
+#include <numeric> // For getting average texton distance
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Handling Functions
@@ -35,7 +36,7 @@ using namespace std;
 #define SHOW_PREDICTIONS 0
 #define PRINT_RAWRESULTS 1
 #define PRINT_CONFUSIONMATRIX 1
-#define PRINT_TPRPPV 0
+#define PRINT_TPRPPV 1
 #define PRINT_AVG 1
 
 #define a1 map<string, int>
@@ -372,6 +373,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
       // Loop through all images in Class
       cout << "\n\nEntering Class: " << entx.first << endl;
       for(int h=0;h < entx.second.size();h++){
+        vector<double> texDistance;
         BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, flags);
         // Display current Frame/Image Count
         stringstream ss;
@@ -427,7 +429,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
            clus = novelTrainer.cluster();
 
            // Replace Cluster Centers with the closest matching texton
-           textonFind(clus, dictionary);
+           textonFind(clus, dictionary, texDistance);
 
           // Calculate the histogram
            Mat out1, out2, lone, lone2;

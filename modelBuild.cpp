@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <time.h> // randTimeSeed
 #include <map>
+#include <numeric> // For getting average texton distance
 
 #include "filterbank.h" // Filterbank Handling Functions
 #include "imgCollection.h" // Img Import Functions
@@ -24,6 +25,7 @@ using namespace boost::filesystem;
 using namespace cv;
 using namespace std;
 
+#define MdlDEBUG 0
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
 int modelSerialNum(){
@@ -74,14 +76,19 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
     cout << "\n\n.......Generating Models...... \n" ;
 
     map<string, vector<Mat> > classHist;
+    map<string, double> avgDistance;
 
   // Cycle through Classes
   for(auto const ent1 : classImgs){
+    vector<double> distances; // for holding textondict to model distances
+
     // Cycle through each classes images
-    cout << "\nClass: " << ent1.first << endl;
+    if(MdlDEBUG){
+      cout << "\nClass: " << ent1.first << endl;}
     for(int j=0;j < ent1.second.size();j++){
       Mat in, hold;
-      cout << "Cycle ent1.second.size(): " << ent1.second[j].size() << " J: " << j << endl;
+      if(MdlDEBUG){
+        cout << "Cycle ent1.second.size(): " << ent1.second[j].size() << " J: " << j << endl;}
 
       // Send img to be filtered, and responses aggregated with addWeighted
       in = ent1.second[j];
@@ -103,14 +110,27 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
       clus = classTrainer.cluster();
 
       // Replace Cluster Centers with the closest matching texton
-      textonFind(clus, dictionary);
+      textonFind(clus, dictionary, distances);
       Mat out;
-      cout << "\n\nhistRange before : " << histRange << endl;
+      if(MdlDEBUG){
+        cout << "\n\nhistRange before : " << histRange << endl;}
       calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-      cout << "histRange after  : " << histRange << endl;
+      if(MdlDEBUG){
+        cout << "histRange after  : " << histRange << endl;}
       classHist[ent1.first].push_back(out);
       classTrainer.clear();
     }
+    // Calculate and store the average distance from texton dictionary centers to model centers
+    double tmpdist;
+    // tmpdist = std::accumulate(distances.begin(), distances.end(),0.0)/distances.size();
+    // avgDistance[ent1.first]=tmpdist;
+    // cout << "this is the distance: " << ent1.first;
+    // for(int i=0;i<distances.size();i++){
+    //   cout << ":" << distances[i];
+    // }
+    // cout << "\n";
+
+    // cout << "This is the distance: " << ent1.first << ": " << tmpdist << "\n";
   }
   int serial = modelSerialNum();
   stringstream fileName;

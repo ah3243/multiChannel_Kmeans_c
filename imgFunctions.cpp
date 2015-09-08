@@ -68,29 +68,30 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize){
   imgFDEBUG(ss.str(), 0);
 }
 
-        void textonFind(Mat& clus, Mat dictionary){
-          if(clus.empty() || dictionary.empty()){
-            ERR("Texton Find inputs were empty.");
-            exit(-1);
-          }
-          // Loop through input centers
-          for(int h=0;h<clus.rows;h++){
-            float distance = 0.0, nearest = 0.0;
+void textonFind(Mat& clus, Mat dictionary, vector<double>& disVec){
+  if(clus.empty() || dictionary.empty()){
+    ERR("Texton Find inputs were empty.");
+    exit(-1);
+  }
+  // Loop through input centers
+  for(int h=0;h<clus.rows;h++){
+    float distance = 0.0, nearest = 0.0;
 
-            distance = abs(dictionary.at<float>(0,0) - clus.at<float>(h,0));
-            nearest = dictionary.at<float>(0,0);
+    distance = abs(dictionary.at<float>(0,0) - clus.at<float>(h,0));
+    nearest = dictionary.at<float>(0,0);
 
-            // Compare current centre with all values in texton dictionary
-            for(int k = 0; k < dictionary.rows; k++){
-              if(abs(dictionary.at<float>(k,0) - clus.at<float>(h,0)) < distance){
-                nearest = dictionary.at<float>(k,0);
-                distance = abs(dictionary.at<float>(k,0) - clus.at<float>(h,0));
-              }
-            }
-            // Replace input Center with closest Texton Center
-            clus.at<float>(h,0) = nearest;
-          }
-        }
+    // Compare current centre with all values in texton dictionary
+    for(int k = 0; k < dictionary.rows; k++){
+      if(abs(dictionary.at<float>(k,0) - clus.at<float>(h,0)) < distance){
+        nearest = dictionary.at<float>(k,0);
+        distance = abs(dictionary.at<float>(k,0) - clus.at<float>(h,0));
+      }
+    }
+    // Replace input Center with closest Texton Center
+    clus.at<float>(h,0) = nearest;
+    disVec.push_back(distance);
+  }
+}
 
 void vecToArr(vector<float> v, float* m){
   int size = v.size();
