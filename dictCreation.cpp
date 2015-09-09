@@ -75,7 +75,7 @@ vector<float> createBins(Mat texDic){
   return v;
 }
 
-void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon){
+void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap){
   // TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
   TermCriteria tc(TermCriteria::MAX_ITER, kmeansIteration, kmeansEpsilon);
   BOWKMeansTrainer bowTrainer(numClusters, tc, attempts, flags);
@@ -103,7 +103,7 @@ void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int 
       dicDEBUG("outside of filterbank handle texton dict..\n", 0);
       // Segment the 200x200pixel image
       vector<Mat> test;
-      segmentImg(test, hold, cropsize);
+      segmentImg(test, hold, cropsize, overlap);
       dicDEBUG("after segmenation: ", test.size());
       // Push each saved Mat to bowTrainer
       for(int k = 0; k < test.size(); k++){

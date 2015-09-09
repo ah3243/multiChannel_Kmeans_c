@@ -24,7 +24,6 @@ using namespace cv;
 
 void imgFDEBUG(string msg, double in){
   if(imgFuncDEBUG){
-
     cout << msg;
   if(in!=0){
     cout << in;
@@ -47,13 +46,13 @@ Mat reshapeCol(Mat in){
   return points;
 }
 
-void segmentImg(vector<Mat>& out, Mat in, int cropsize){
+void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
   stringstream ss;
   ss << "entering segmentImg this is the img rows: ";
   ss << in.rows << " cols: " << in.cols;
   imgFDEBUG(ss.str(), 0);
 
-  for(int i=0;i<(in.cols-cropsize);i+=cropsize){
+  for(int i=0;i<(in.cols-cropsize);i+=(cropsize-overlap)){
     for(int j=0;j<(in.rows-cropsize);j+=cropsize){
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
       tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));

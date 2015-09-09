@@ -51,18 +51,22 @@ int main( int argc, char** argv ){
   // 9   128 x 72                       //
   ////////////////////////////////////////
 
-  int scale = 1;
+  int scale = 5;
 
   // Adjust the cropSize depending on chosen scale
   double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
 
-  int cropsize = (719*cropScale[scale]); // Cropsize is 100Pixels at 384 x 216
-  //int cropsize = 140;
+  int cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
+  // int cropsize = 140;
+  // cout << "This is the cropsize: " << cropsize << endl;
+  // exit(1);
+  int modelOverlap = 0; // Percentage of crop which will overlap horizontally
+  int testimgOverlap =0;
+
   int dictDur, modDur, novDur;
   int numClusters = 10;
-  int DictSize = 15;
-
-  int attempts = 25;
+  int DictSize = 10;
+  int attempts = 20;
   int flags = KMEANS_PP_CENTERS;
   int kmeansIteration = 100000;
   double kmeansEpsilon = 0.000001;
@@ -93,7 +97,7 @@ int main( int argc, char** argv ){
     // Measure start time
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    dictCreateHandler(cropsize, scale, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon);
+    dictCreateHandler(cropsize, scale, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap);
 
     // Measure time efficiency
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -109,7 +113,7 @@ int main( int argc, char** argv ){
     // Measure start time
     auto t3 = std::chrono::high_resolution_clock::now();
 
-    modelBuildHandle(cropsize, scale, numClusters, flags, attempts, kmeansIteration, kmeansEpsilon);
+    modelBuildHandle(cropsize, scale, numClusters, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap);
 
     // Measure time efficiency
     auto t4 = std::chrono::high_resolution_clock::now();
@@ -125,7 +129,7 @@ int main( int argc, char** argv ){
     // Measure time efficiency
     auto t5 = std::chrono::high_resolution_clock::now();
 
-    novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon);
+    novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon, testimgOverlap);
 
     // Measure time efficiency
     auto t6 = std::chrono::high_resolution_clock::now();

@@ -36,7 +36,7 @@ int modelSerialNum(){
   return serial;
 }
 
-void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon){
+void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap){
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;
@@ -97,7 +97,7 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
 
       // Segment and flatten the image then push each single column Mat onto a vector
       vector<Mat> test;
-      segmentImg(test, hold, cropsize);
+      segmentImg(test, hold, cropsize, overlap);
 
       // Push each saved Mat to classTrainer
       for(int k = 0; k < test.size(); k++){

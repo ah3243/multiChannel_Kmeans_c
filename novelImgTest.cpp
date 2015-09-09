@@ -262,7 +262,7 @@ void printConfMat(std::map<std::string, std::map<std::string, int> > in){
     for(auto const entP1 : entP.second){
       cout << " : " << entP1.second;
     }
-    cout << "\n\n";
+    cout << "\n";
   }
   cout << "\n";
 }
@@ -319,7 +319,7 @@ bool pairCompare(const pair<string, double>& firstElem, const pair<string, doubl
 
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
                   map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string,
-                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon){
+                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap){
 
   auto novelStart = std::chrono::high_resolution_clock::now();
   double fpsTotal = 0, frameCount = 0, fpsAvg=0;
@@ -402,7 +402,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
         // Divide the image into segments specified in 'cropsize' and flatten for clustering
         vector<Mat> test;
-        segmentImg(test, hold, cropsize);
+        segmentImg(test, hold, cropsize, overlap);
 
         int imgSize = hold.cols;
         Mat disVals = Mat(hold.rows, hold.cols,CV_8UC3, Scalar(0,0,0));
@@ -457,6 +457,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             tmpVals[ent2.first] = tmpVec;
            }
 
+          // The depth of averaging for values
           double avgDepth =1;
           vector<pair<string, double>> avg;
           // Get the average of the top n values for each class store in sorted vector
@@ -644,7 +645,7 @@ string getfileNme(vector<string> s){
 //   }
 // }
 
-void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon){
+void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
@@ -734,7 +735,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   // for(int numClusters=7;numClusters<8;numClusters++){
     initROCcnt(results, clsNames); // Initilse map
     cout << "number of test images.." << testImages.size() << endl;
-    acc.push_back(testNovelImg(attempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize, fullSegResults, flags, kmeansIteration, kmeansEpsilon));
+    acc.push_back(testNovelImg(attempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize, fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap));
     cout << "this is the accuracy: " << acc[counter] << endl;
     counter++;
   //  }
