@@ -2,8 +2,6 @@
 #include "opencv2/imgproc/imgproc.hpp" // Needed for HistCalc
 #include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
-// #include <opencv2/nonfree/features2d.hpp>
-// #include <opencv2/legacy/legacy.hpp>
 #include <iostream> // General io
 #include <stdio.h> // General io
 #include <stdlib.h>
@@ -18,6 +16,10 @@
 
 using namespace std;
 using namespace cv;
+
+// For offsetting segment, MUST === IMGFUNCTION VALUES!!
+#define COLSTART 0
+#define ROWSTART 0
 
 #define imgFuncDEBUG 0
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -47,13 +49,32 @@ Mat reshapeCol(Mat in){
 }
 
 void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
+//  int colstart =0, rowstart=0;
+
+  // find the number of possible segments, then calculate gap around these
+  int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
+  int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
+
+  if((cropsize+ROWSTART)>in.rows || (cropsize+COLSTART)>in.cols){
+    ERR("cropsize larger than input image. Exiting");
+    exit(1);
+  }
+
   stringstream ss;
   ss << "entering segmentImg this is the img rows: ";
   ss << in.rows << " cols: " << in.cols;
   imgFDEBUG(ss.str(), 0);
 
-  for(int i=0;i<(in.cols-cropsize);i+=(cropsize-overlap)){
-    for(int j=0;j<(in.rows-cropsize);j+=cropsize){
+  // // if no overlap and unable to make >1 segment, place segment in center of screen
+  // if(overlap==0&&colspace>0){
+  //   colstart= colspace;
+  // }
+  // if(overlap==0&&rowspace>0){
+  //   rowstart= rowspace;
+  // }
+
+  for(int i=COLSTART;i<(in.cols-cropsize);i+=(cropsize-overlap)){
+    for(int j=ROWSTART;j<(in.rows-cropsize);j+=cropsize){
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
       tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));
       out.push_back(tmp);
@@ -63,11 +84,11 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
   // out1 = reshapeCol(in);
   // out.push_back(out1);
   ss.str("");
-  ss << "This is the size: " << out.size() << " and the average cols: " << out[0].cols;
+  ss << "This is the number of segments: " << out.size() << " and the average cols: " << out[0].cols;
   imgFDEBUG(ss.str(), 0);
 }
 
-void textonFind(Mat& clus, Mat dictionary, vector<double>& disVec){
+double textonFind(Mat& clus, Mat dictionary, vector<double>& disVec){
   if(clus.empty() || dictionary.empty()){
     ERR("Texton Find inputs were empty.");
     exit(-1);

@@ -134,7 +134,7 @@ void toMat(float *edgeThis, Mat &edgeThisMat, int support) {
     }
 }
 
-void makeRFSfilters(vector<Mat>& edge, vector<Mat>& bar, vector<Mat>& rot, vector<float> &sigmas, int n_orientations=6, int radius=24) {
+void makeRFSfilters(vector<Mat>& edge, vector<Mat>& bar, vector<Mat>& rot, vector<float> &sigmas, int n_orientations, int radius=24) {
     int support = 2 * radius + 1;
     int size = support * support;
     Point2f orgpts[size];
@@ -198,13 +198,14 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
           {
               Mat dst;
               filter2D(img, dst,  -1, edges[i], Point( -1, -1 ), 0, BORDER_DEFAULT );
-              newMat = cv::max(dst, newMat);
+              newMat = cv::max(dst, newMat); // take maximum values
               i++;
           }
           Mat newMatUchar;
           newMat = cv::abs(newMat);
           newMat.convertTo(newMatUchar, CV_8UC1);
 //         #pragma omp ordered
+
           response[0].push_back(newMatUchar);
           filterDEBUG("Applying Edge Filters..", 0);
         }
@@ -242,7 +243,6 @@ void  apply_filterbank(Mat &img, vector<vector<Mat> >filterbank, vector<vector<M
           Mat newMatUchar;
           newMat = cv::abs(newMat);
           newMat.convertTo(newMatUchar, CV_8UC1);
-
 //         #pragma omp ordered
           response[2].push_back(newMatUchar);
           filterDEBUG("Applying Gaussian Filters..", 0);
@@ -280,9 +280,13 @@ void aggregateImg(int num, double alpha, Mat &aggImg, Mat input) {
 }
 
 int filterHandle(Mat &in, Mat &out, vector<vector<Mat> > filterbank, int n_sigmas, int n_orientations){
+
   vector<vector<Mat> > response;
   filterDEBUG("Before Applying Filterbank",0);
-  apply_filterbank(in, filterbank, response, n_sigmas, n_orientations);
+  Mat grey, tmp;
+  cvtColor(in, grey, CV_BGR2GRAY);
+  equalizeHist(grey,tmp);
+  apply_filterbank(tmp, filterbank, response, n_sigmas, n_orientations);
   if(response.empty()){
     ERR("Filtered image response is empty.");
      exit(0);

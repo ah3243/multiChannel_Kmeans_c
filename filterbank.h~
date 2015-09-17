@@ -16,7 +16,7 @@ void createPointsArray(cv::Point2f *pointsArray, int radius);
 void rotatePoints(float s, float c, cv::Point2f *pointsArray, cv::Point2f *rotatedPointsArray, int size);
 void computeLength(cv::Point2f *pointsArray, float *length, int size);
 void toMat(float *edgeThis, cv::Mat &edgeThisMat, int support);
-void makeRFSfilters(std::vector<cv::Mat>& edge, std::vector<cv::Mat>& bar, std::vector<cv::Mat>& rot, std::vector<float> &sigmas, int n_orientations, int radius=24);
+void makeRFSfilters(std::vector<cv::Mat>& edge, std::vector<cv::Mat>& bar, std::vector<cv::Mat>& rot, std::vector<float> &sigmas, int n_orientations=6, int radius=24);
 void apply_filterbank(cv::Mat &img, std::vector<std::vector<cv::Mat> >filterbank, std::vector<std::vector<cv::Mat> > &response, int n_sigmas, int n_orientations);
 void createFilterbank(std::vector<std::vector<cv::Mat> > &filterbank, int &n_sigmas, int &n_orientations);
 void aggregateImg(int num, double alpha, cv::Mat &aggImg, cv::Mat input);

@@ -9,7 +9,6 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp> // for to_lower function in main
 
-
 using namespace boost::filesystem;
 using namespace std;
 using namespace cv;
@@ -341,7 +340,10 @@ void scaleImg(Mat in, Mat &out, int scale){
     ERR("The scaling variables did not match.");
     exit(-1);
   }
+  // cout << "This is the in image size: " << in.size() << endl;
   resize(in, out, out.size(), effScale, effScale, INTER_AREA);
+  // cout << "This is the output image size: " << out.size() << endl;
+  // exit(1);
 }
 
 void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, int scale){
@@ -352,11 +354,10 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, int scale){
     directory_iterator itr_end;
     for(directory_iterator itr(p); itr != itr_end; ++itr){
       string nme = itr -> path().string();
-      Mat in = imread(nme, CV_LOAD_IMAGE_GRAYSCALE);
-      Mat img, imgsm;
-      equalizeHist(in, img);
+      Mat in = imread(nme);
+      Mat imgsm;
       extractClsNme(nme);
-      scaleImg(img, imgsm, scale);
+      scaleImg(in, imgsm, scale);
       //cout << "Pushing back: " << nme << " img.size(): " << imgsm.size() << endl;
       classImgs[nme].push_back(imgsm);
     }

@@ -1,4 +1,4 @@
-///////////////////////////////////////
+ ///////////////////////////////////////
 // Opencv BoW Texture classification //
 ///////////////////////////////////////
 
@@ -51,26 +51,33 @@ int main( int argc, char** argv ){
   // 9   128 x 72                       //
   ////////////////////////////////////////
 
-  int scale = 5;
+  int scale = 6;
 
   // Adjust the cropSize depending on chosen scale
   double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
 
-  int cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
-  // int cropsize = 140;
-  // cout << "This is the cropsize: " << cropsize << endl;
+ // int cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
+  int cropsize = 240;
+  cout << "This is the cropsize: " << cropsize << endl;
   // exit(1);
-  int modelOverlap = 0; // Percentage of crop which will overlap horizontally
-  int testimgOverlap =0;
+  cout << "This is the scalesize: " << scale << endl;
+  double modOverlap = 0; // Percentage of crop which will overlap horizontally
+  double modelOverlapDb = (modOverlap/100)*cropsize; // Calculate percentage of cropsize
+  int modelOverlap = modelOverlapDb; // To convert to int for transfer to function
+  // cout << "This is the modelOverlap: " << modelOverlap << " and modelOverlapDb: " << modelOverlapDb << endl;
+  // exit(1);
+
+  int testimgOverlap =modelOverlap; // Have the same test and model overlap
 
   int dictDur, modDur, novDur;
   int numClusters = 10;
   int DictSize = 10;
-  int attempts = 20;
+  int attempts = 35;
   int flags = KMEANS_PP_CENTERS;
   int kmeansIteration = 100000;
   double kmeansEpsilon = 0.000001;
-
+  cout << "Dictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
+  << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
 
   path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
   path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
@@ -216,5 +223,10 @@ int main( int argc, char** argv ){
   }
 //  cout << "The Total Time was: "
   cout<< totalTime << "\n\n";
+  cout << "This is the cropsize: " << cropsize << endl;
+  cout << "This is the scalesize: " << scale << endl;
+  cout << "Dictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
+  << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
+
   return 0;
 }

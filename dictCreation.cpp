@@ -44,9 +44,12 @@ void binLimits(vector<float>& tex){
       bins.push_back(tex[i] + 0.00001);
   }
   bins.push_back(256);
-
-  for(int i=0;i<bins.size();i++)
-    cout << "texDict: " << i << ": "<< tex[i] << " becomes: " << bins[i+1] << endl;
+  cout << "\n";
+  for(int i=0;i<bins.size();i++){
+     cout << bins[i+1] << endl;
+    // cout << "texDict: " << i << ": "<< tex[i] << " becomes: " << bins[i+1] << endl;
+  }
+  cout << "\n";
   tex.clear();
   tex = bins;
 }
@@ -93,7 +96,7 @@ void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int 
   for(auto const ent1 : textonImgs){
     // Cycle through all images in Class
     for(int j=0;j<ent1.second.size();j++){
-      Mat in = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);
+      Mat in = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32F);
       Mat hold = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);
       // Send img to be filtered, and responses aggregated with addWeighted
       in = ent1.second[j];

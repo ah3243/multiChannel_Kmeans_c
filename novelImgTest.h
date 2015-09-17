@@ -8,7 +8,8 @@ void initROCcnt(std::vector<std::map<std::string, std::vector<double> > >& r, st
 int getClsNames(std::map<std::string, std::vector<double> > &r, std::vector<std::string> &nme);
 void cacheTestdata(std::string correct, std::string prediction, std::map<std::string, std::vector<double> >& results);
 void organiseResultByClass(std::vector<std::map<std::string, std::vector<double> > >in, std::map<std::string, std::vector<std::vector<double> > > &out, std::vector<std::string> clsNmes);
-void calcROCVals(std::map<std::string, std::vector<std::vector<double> > > in, std::map<std::string, std::vector<std::vector<double> > >& out, std::vector<std::string> clssNmes);
+void calcROCVals(std::map<std::string, std::vector<std::vector<double> > > in, std::map<std::string, std::vector<std::vector<double> > >& out,
+  std::vector<std::string> clssNmes, std::vector<std::string> testClsNmes);
 void saveTestData(std::vector<std::map<std::string, std::vector<double> > > r, int serial);
 int getClassHist(std::map<std::string, std::vector<cv::Mat> >& savedClassHist);
 void getDictionary(cv::Mat &dictionary, std::vector<float> &m);
