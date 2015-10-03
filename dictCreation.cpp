@@ -21,6 +21,7 @@
 #include "imgFunctions.h"
 
 #define DicDEBUG 0
+#define printMdls 0
 
 using namespace cv;
 using namespace std;
@@ -36,7 +37,7 @@ void dicDEBUG(string msg, double in){
 }
 
 // Create bins for each textonDictionary Value
-void binLimits(vector<float>& tex){
+void binLimits(vector<float>& tex, int numClusters){
   dicDEBUG("inside binLimits", 0);
   vector<float> bins;
   bins.push_back(0);
@@ -46,8 +47,12 @@ void binLimits(vector<float>& tex){
   bins.push_back(256);
   cout << "\n";
   for(int i=0;i<bins.size();i++){
-     cout << bins[i+1] << endl;
-    // cout << "texDict: " << i << ": "<< tex[i] << " becomes: " << bins[i+1] << endl;
+     //cout << bins[i+1] << endl;
+     if(printMdls){
+       if(numClusters == 3 || numClusters == 10 || numClusters == 25 || numClusters == 50){
+         cout << bins[i+1] << endl;
+       }
+     }
   }
   cout << "\n";
   tex.clear();
@@ -70,10 +75,10 @@ vector<float> matToVec(Mat m){
   return v;
 }
 
-vector<float> createBins(Mat texDic){
+vector<float> createBins(Mat texDic, int numClusters){
   vector<float> v = matToVec(texDic);
   dicDEBUG("\n\nThis is the bin vector size BEFORE: ", v.size());
-  binLimits(v);
+  binLimits(v, numClusters);
   dicDEBUG("\n\nThis is the bin vector size AFTER: ", v.size());
   return v;
 }
@@ -84,7 +89,7 @@ void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int 
   BOWKMeansTrainer bowTrainer(numClusters, tc, attempts, flags);
 
   map<string, vector<Mat> > textonImgs;
-  path p = "../../../TEST_IMAGES/CapturedImgs/textons";
+  path p = "../../../TEST_IMAGES/CapturedImgs/classes";
   loadClassImgs(p, textonImgs, scale);
 
   vector<vector<Mat> > filterbank;
@@ -121,7 +126,7 @@ void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int 
     bowTrainer.clear();
   }
 
-  vector<float> bins = createBins(dictionary);
+  vector<float> bins = createBins(dictionary, numClusters);
 
   removeDups(bins);
 

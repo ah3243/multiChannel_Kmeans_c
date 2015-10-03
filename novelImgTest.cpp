@@ -36,10 +36,14 @@ using namespace std;
 #define ROWSTART 0
 
 // Results Display Flags
+#define VERBOSE 0
+#define SAVEIMGS 0
+#define SAVEPREDICTIONS 0
 #define PRINT_HISTRESULTS 0
 #define SHOW_PREDICTIONS 0
 #define PRINT_RAWRESULTS 1
 #define PRINT_CONFUSIONMATRIX 0
+#define PRINT_CONFMATAVG 0
 #define PRINT_TPRPPV 0
 #define PRINT_AVG 0
 #define PRINT_COLOR 0
@@ -306,19 +310,19 @@ void getDictionary(Mat &dictionary, vector<float> &m){
 
 void printConfMat(std::map<std::string, std::map<std::string, int> > in){
   cout << "\nprinting confusion matrix:\n\n";
-  cout << "0:0 "; // To help export to excel
 
   // Print out names for exporting to excel
+  cout << "classes ";
   for(auto const ent1:in){
     for(auto const ent2 : ent1.second){
-      cout << "classes" << " : " << ent2.first;
+      cout << " : " << ent2.first;
     }
     cout << "\n";
     break;
   }
   // Pring out number of hits per class
   for(auto const entP : in){
-    cout << entP.first << " Hits: ";
+    cout << entP.first << " Hits";
     for(auto const entP1 : entP.second){
       cout << " : " << entP1.second;
     }
@@ -356,16 +360,25 @@ void calcNearestClasses(map<string, vector<map<string, vector<double> > > > resu
     }
   }
 
+  cout << "0 :";
+  for(auto const ad:avgs){
+    cout << ad.first << ":";
+  }
+  cout << "\n";
+
+  // Print out each classes average against given class
   for(auto const ae:avgs){
-    cout << "Class: " << ae.first << " :: ";
+    cout << ae.first << " :";
     for(auto const b1:ae.second){
       int vecsize = b1.second.size();
       double q = 0.0;
+      // Go through and add up all responses
       for(int i=0;i<vecsize;i++){
         q+= b1.second[i];
       }
  //     b1.second.clear();
-      cout << b1.first << " : " << q/vecsize << ": ";
+      // Print out the mean of all responses for class
+      cout << q/vecsize << ": ";
     }
     cout << "\n";
   }
@@ -389,12 +402,13 @@ void qSegment(Mat in, vector<Mat> &out, int cropsize){
 
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
                   map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string,
-                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap){
+                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName){
 
   auto novelStart = std::chrono::high_resolution_clock::now();
   double fpsTotal = 0, frameCount = 0, fpsAvg=0;
   vector<double> grass;
   double acc;// Accuracy
+
 
   // Extract and store saved color data from model.xml
   map<string, vector<double> > saveColors;
@@ -447,7 +461,9 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
       } confMat[entx.first]["UnDefined"] = 0;
 
       // Loop through all images in Class
-      cout << "\n\nEntering Class: " << entx.first << endl;
+      if(VERBOSE)
+        cout << "\n\nEntering Class: " << entx.first << endl;
+
       for(int h=0;h < entx.second.size();h++){
         vector<double> texDistance;
         BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, flags);
@@ -486,8 +502,20 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
 
         segmentImg(test, hold, cropsize, overlap);
 
-        int imgSize = hold.cols;
-        Mat disVals = Mat(hold.rows, hold.cols,CV_8UC3, Scalar(0,0,0));
+        int vCrop, hCrop;
+        vCrop = ((hold.rows/cropsize)*cropsize);
+        hCrop = ((hold.cols/cropsize)*cropsize);
+        // SAVE IMAGES .....
+        if(SAVEIMGS){
+          stringstream ss12;
+          ss12 << folderName << "/Images/" << entx.first << "_" << h << ".png";
+          imwrite(ss12.str(), in(Rect(0,0,hCrop, vCrop)));
+        }
+        // END SAVE IMAGES .....
+
+
+        int imgSize = hCrop;
+        Mat disVals = Mat(vCrop, hCrop,CV_8UC3, Scalar(255,255,255));
         Mat matchDisplay = Mat(50,50,CV_8UC3, Scalar(0,0,0));
 
         // Counters for putting 'pixels' on display image
@@ -503,7 +531,6 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           if(discols==0&& x>0){
             disrows += cropsize;
           }
-
           if(!test[x].empty()){
              novelTrainer.add(test[x]);
            }
@@ -627,14 +654,21 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
            imshow("correct", matchDisplay);
            imshow("novelImg", entx.second[h]);
            imshow("segmentPredictions", disVals);
-           waitKey(50);
+
+           if(SAVEPREDICTIONS){
+             stringstream ss;
+             ss  << folderName << "/Predictions/" << entx.first << "_" << frameCount << ".png";
+             imwrite(ss.str(),disVals);
+           }else{
+           }
+  //           waitKey(0);
           }
          auto fpsEnd = std::chrono::high_resolution_clock::now();
          fpsTotal+= std::chrono::duration_cast<std::chrono::milliseconds>(fpsEnd - fpsStart).count();
          frameCount++;
       }
-       cout << "Correct Was: " << Correct << " Incorrect was: " << Incorrect << " Unknown was: " << Unknown << endl;
-       cout << "This is trueNegative: " << trueNegative <<" and total: " << (Incorrect+Correct+trueNegative+Unknown) << " average is: " << ((Correct+trueNegative)/(Incorrect+Correct+trueNegative+Unknown))*100 <<  endl;
+  //     cout << "Correct Was: " << Correct << " Incorrect was: " << Incorrect << " Unknown was: " << Unknown << endl;
+  //     cout << "This is trueNegative: " << trueNegative <<" and total: " << (Incorrect+Correct+trueNegative+Unknown) << " average is: " << ((Correct+trueNegative)/(Incorrect+Correct+trueNegative+Unknown))*100 <<  endl;
       // END OF CLASS, CONTINUING TO NEXT CLASS //
 
       // Aggregate texton distances and store with class name
@@ -762,7 +796,8 @@ string getfileNme(vector<string> s){
   //   }
   // }
 
-void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters, int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap){
+void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters,
+  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
@@ -857,8 +892,8 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   // for(int numClusters=7;numClusters<8;numClusters++){
     initROCcnt(results, clsNames); // Initilse map
     cout << "number of test images.." << testImages.size() << endl;
-    acc.push_back(testNovelImg(attempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize, fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap));
-    cout << "this is the accuracy: " << acc[counter] << endl;
+    acc.push_back(testNovelImg(attempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize,
+      fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap, folderName));
     counter++;
   //  }
   if(PRINT_RAWRESULTS){
@@ -872,7 +907,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   getClsNames(results[0], clsNmes); // Get class Names
   organiseResultByClass(results, resByCls, clsNmes);
 
-  if(PRINT_AVG){
+  if(PRINT_CONFMATAVG){
     calcNearestClasses(fullSegResults);
   }
 

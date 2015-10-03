@@ -13,6 +13,8 @@ using namespace boost::filesystem;
 using namespace std;
 using namespace cv;
 
+#define PRINTCLASSIMPORT 0
+
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 #define WARN(msg) printf("\n\nWARNING: %s Line %d\n\n", msg, __LINE__);
 
@@ -361,13 +363,16 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, int scale){
       //cout << "Pushing back: " << nme << " img.size(): " << imgsm.size() << endl;
       classImgs[nme].push_back(imgsm);
     }
-    cout << "This is the total for each class: " << endl;
-    for(auto const & ent1 : classImgs){
-      cout << "Class: " << ent1.first;
-      cout << " Number: " << ent1.second.size();
+    if(PRINTCLASSIMPORT){
+      cout << "This is the total for each class: " << endl;
+      for(auto const & ent1 : classImgs){
+
+        cout << "Class: " << ent1.first;
+        cout << " Number: " << ent1.second.size();
+        cout << "\n";
+      }
       cout << "\n";
     }
-    cout << "\n";
 }
 
 void printImgDis(map<string ,vector<string> > s){

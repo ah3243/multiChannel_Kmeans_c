@@ -26,7 +26,7 @@ using namespace cv;
 using namespace std;
 
 #define MdlDEBUG 0
-#define printModels 1
+#define printModels 0
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
 int modelSerialNum(){
@@ -97,10 +97,13 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;
-
+    int dictClusters;
     FileStorage fs("dictionary.xml",FileStorage::READ);
     fs["vocabulary"] >> dictionary;
     fs["bins"] >> m;
+    fs["clustersPerClass"] >> dictClusters;
+    cout << "\nThis is the number of dictionary clusters.." << dictClusters << endl;
+
     if(!fs.isOpened()){
       ERR("Unable to open Texton Dictionary.");
       exit(-1);
@@ -200,7 +203,8 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
       tmpdist += distances[mm];
     }
     avgDistance[ent1.first]=(tmpdist/distances.size());
-    cout << "This is the distance: " << ent1.first << ": " << avgDistance[ent1.first] << "\n";
+    //if(MdlDEBUG)
+      cout << "This is the distance: " << ent1.first << ": " << avgDistance[ent1.first] << "\n";
 
     // Aggregate the segment colors and store
     double b=0, g=0, r=0;
@@ -271,7 +275,9 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
   fs2 << "}";
   fs2.release();
   if(printModels==1){
-    printMdls(classSave);
+    if(dictClusters == 3 || dictClusters == 10 ||dictClusters==25 || dictClusters == 50){
+      printMdls(classSave);
+    }
   }
 //  saveModels(classSave);
 }
