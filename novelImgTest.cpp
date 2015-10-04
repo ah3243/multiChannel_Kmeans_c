@@ -116,6 +116,7 @@ void cacheTestdata(string correct, string prediction, map<string, vector<double>
   }
 }
 
+// Go through input vector from multiple tests and output concatenated results for each class
 void organiseResultByClass(vector<map<string, vector<double> > >in, map<string, vector<vector<double> > > &out, vector<string> clsNmes){
   int numTests = in.size();
 
@@ -125,7 +126,7 @@ void organiseResultByClass(vector<map<string, vector<double> > >in, map<string, 
   for(int i=0;i<clsNmes.size();i++){
     // Go through the 4 types of result for each class
     for(int j=0;j<4;j++){
-      // Go through each test
+      // Go through each test and push back results to relevant class
       for(int k=0;k<in.size();k++){
         out[clsNmes[i]].push_back(a); // Initilse with vector
         out[clsNmes[i]][j].push_back(in[k][clsNmes[i]][j]);
@@ -567,9 +568,9 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             sort(tmpVec.begin(), tmpVec.end());
             tmpVals[ent2.first] = tmpVec;
            }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+           ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
           // The depth of averaging for values
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+          ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
           double avgDepth =1;
 
           vector<pair<string, double>> avg;
@@ -698,27 +699,32 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
     return acc;
 }
 
-void printRAWResults(map<string, vector<double> > r){
+void printRAWResults(vector<map<string, vector<double> > > r){
   cout << "\n\n----------------------------------------------------------\n\n";
   cout << "                    These are the test results                  \n";
-  for(auto const ent6 : r){
-    double TP=0, TN=0, FP=0, FN=0, PPV = 0, TPR = 0;
-    TP = ent6.second[0];
-    FP = ent6.second[1];
-    TN = ent6.second[2];
-    FN = ent6.second[3];
-    PPV = (TP/(TP+FP));
-    TPR = (TP/(TP+FN));
-    cout << "0 : "<< ent6.first;
-    cout << "\n      TruePositive:  " << TP;
-    cout << "\n      FalsePositive: " << FP;
-    cout << "\n      TrueNegative:  " << TN;
-    cout << "\n      FalseNegative: " << FN;
-    cout << "\n      PPV:           " << PPV;
-    cout << "\n      TPR:           " << TPR;
-    cout << "\n";
+  cout << "Number of tests: " << r.size() << endl;
+
+  for(int numTests =0;numTests<r.size();numTests++){
+    cout << ".....Iteration Number.... " << numTests << endl;
+    for(auto const ent6 : r[numTests]){
+      double TP=0, TN=0, FP=0, FN=0, PPV = 0, TPR = 0;
+      TP = ent6.second[0];
+      FP = ent6.second[1];
+      TN = ent6.second[2];
+      FN = ent6.second[3];
+      PPV = (TP/(TP+FP));
+      TPR = (TP/(TP+FN));
+      cout << "0 : "<< ent6.first;
+      cout << "\n      TruePositive:  " << TP;
+      cout << "\n      FalsePositive: " << FP;
+      cout << "\n      TrueNegative:  " << TN;
+      cout << "\n      FalseNegative: " << FN;
+      cout << "\n      PPV:           " << PPV;
+      cout << "\n      TPR:           " << TPR;
+      cout << "\n";
+    }
+    cout << "\n\n";
   }
-  cout << "\n\n";
 }
 
 void loadVideo(string p, map<string, vector<Mat> > &testImages, int scale){
@@ -796,6 +802,47 @@ string getfileNme(vector<string> s){
   //   }
   // }
 
+void printStart(string filler, int iterations){
+  cout << "0 ";
+  for(int o=0;o<iterations;o++){
+    cout << ":" << filler;
+  }
+}
+void printVector(string filler, vector<double> hh){
+  cout << "\n" << filler;
+  for(int jq=0;jq<hh.size();jq++){
+    cout << ":" << hh[jq];
+  }
+}
+void printPPVTPR(string filler, vector<double> TP, vector<double> H){
+  cout << "\n" << filler << " ";
+  for(int jq=0;jq<H.size();jq++){
+    cout << ":" << (TP[jq]/(TP[jq]+H[jq]));
+  }
+}
+
+// Print out all test results
+void printResByClss(map<string, vector<vector<double> > > in){
+  // Loop through all classes results
+  for(auto iter:in){
+        vector<double> PPV, TPR ;
+        vector<double> TP(iter.second[0]);
+        vector<double> FP(iter.second[1]);
+        vector<double> TN(iter.second[2]);
+        vector<double> FN(iter.second[3]);
+        // PPV = (TP/(TP+FP));
+        // TPR = (TP/(TP+FN));
+        printStart(iter.first, iter.second[0].size());
+        printVector("TruePositive",TP);
+        printVector("FalsePositive",FP);
+        printVector("TrueNegative",TN);
+        printVector("FalseNegative",FN);
+        printPPVTPR("PPV",TP, FP);
+        printPPVTPR("TPR",TP, FN);
+        cout << "\n";
+  }
+  cout << "\n\n";
+}
 void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters,
   int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
@@ -887,17 +934,19 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   printClasses(clsNames);
 
   vector<double> acc;
-  int counter =0;
+  int numofRuns =3;
   // For loop to get data while varying an input parameter stored as a for condition
-  // for(int numClusters=7;numClusters<8;numClusters++){
+  for(int kk=0;kk<numofRuns;kk++){
+    cout << "This is iteration: " << kk << " out of: " << numofRuns << endl;
     initROCcnt(results, clsNames); // Initilse map
     cout << "number of test images.." << testImages.size() << endl;
-    acc.push_back(testNovelImg(attempts, numClusters, results[counter], testImages, savedClassHist, Colors, cropsize,
+    acc.push_back(testNovelImg(attempts, numClusters, results[kk], testImages, savedClassHist, Colors, cropsize,
       fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap, folderName));
-    counter++;
-  //  }
+
+   }
+
   if(PRINT_RAWRESULTS){
-    printRAWResults(results[0]);
+    printRAWResults(results);
   }
   saveTestData(results, serial);
 
@@ -910,41 +959,8 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   if(PRINT_CONFMATAVG){
     calcNearestClasses(fullSegResults);
   }
-
+  printResByClss(resByCls);
   calcROCVals(resByCls, ROCVals, clsNmes, testClsNmes);
-
-
-  if(results.size()>1){
-    int wW = 400, wH = 400, buffer =50, border = buffer-10;
-    namedWindow("ROC_Curve", CV_WINDOW_AUTOSIZE);
-    Mat rocCurve = Mat(wH,wW, CV_8UC3, Scalar(0,0,0));
-
-    line(rocCurve, Point(border,wH-border), Point(wW-border,wH-border), Scalar(255,255,255), 2, 8, 0); // X axis border
-    // putText(rocCurve, "FPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-    line(rocCurve, Point(border,border), Point(40,wH-border), Scalar(255,255,255), 2, 8, 0); // Y axis border
-    // putText(rocCurve, "TPR", Point(10, 20+ cnt*20), CV_FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255,0,100), 1, 8, false);
-
-    // Cycle through all classes
-    for(auto const entCls : ROCVals){
-      cout << "Class: " << entCls.first << endl;
-      // Cycle through all iterations to produce graph
-      for(int i=0;i<entCls.second.size()-1;i++){
-        if(i==0){
-          line(rocCurve, Point(((wW-buffer)*entCls.second[i][1]+50),((wW-buffer)*entCls.second[i][0]+50)),
-          Point(((wW-buffer)*entCls.second[i+1][1]+50),((wW-buffer)*entCls.second[i+1][0])+50),
-          Scalar(255,255,255), 1, 8, 0);
-        }else{
-          line(rocCurve, Point(((wW-buffer)*entCls.second[i][1]+50),((wW-buffer)*entCls.second[i][0]+50)),
-          Point(((wW-buffer)*entCls.second[i+1][1]+50),((wW-buffer)*entCls.second[i+1][0])+50),
-          Colors[entCls.first], 1, 8, 0);
-        }
-        waitKey(500);
-        imshow("ROC_Curve", rocCurve);
-        }
-    }
-  }else{
-    cout << "\n\nThere are not enough iterations to produce a ROC graph. Exiting." << endl;
-  }
 
   int novelHandleTime=0;
   auto novelHandleEnd = std::chrono::high_resolution_clock::now();

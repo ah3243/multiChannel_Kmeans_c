@@ -20,8 +20,8 @@
 #include "novelImgTest.h" // Novel Image Testing module
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 1
-#define MODEL_BUILD 1
+#define DICTIONARY_BUILD 0
+#define MODEL_BUILD 0
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);

@@ -18,7 +18,6 @@ double testNovelImg(int clsAttempts, int numClusters, std::map<std::string, std:
 std::map<std::string, std::vector<cv::Mat> > classImgs, std::map<std::string, std::vector<cv::Mat> > savedClassHist,
 std::map<std::string, cv::Scalar> Colors, int cropsize, std::map<std::string, std::vector<std::map<std::string,
 std::vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap, std::string folderName);
-void printRAWResults(std::map<std::string, std::vector<double> > r);
 void loadVideo(std::string p, std::map<std::string, std::vector<cv::Mat> > &classImages, int scale);
 void printFiles(std::map<std::string, std::vector<std::string> > s, std::vector<std::string> &fileNmes, boost::filesystem::path p);
 std::string getfileNme(std::vector<std::string> s);
