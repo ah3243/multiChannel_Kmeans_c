@@ -125,7 +125,7 @@ void cacheTestdata(string correct, string prediction, map<string, vector<double>
 void organiseResultByClass(vector<map<string, vector<double> > >in, map<string, vector<vector<double> > > &out, vector<string> clsNmes){
   int numTests = in.size();
   vector<double> a;
-  cout << "\nNumber of tests: " << in.size() << endl;
+  cout << "Number of tests: " << in.size() << endl;
   // Go through each class
   for(int i=0;i<clsNmes.size();i++){
     // Go through the 4 types of result for each class
@@ -250,7 +250,6 @@ int getClassHist(map<string, vector<Mat> >& savedClassHist){
   // Load in Class Histograms(Models)
   FileStorage fs3("models.xml", FileStorage::READ);
   fs3["Serial"] >> serial;
-  cout << "This is the serial: " << serial << endl;
   FileNode fn = fs3["classes"];
   if(fn.type() == FileNode::MAP){
 
@@ -691,7 +690,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
     auto novelEnd = std::chrono::high_resolution_clock::now();
     novelTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelEnd - novelStart).count();
     cout << "\nTotal Frames: " << frameCount << " total Time: " << fpsTotal << " Averaged frames per second: " << frameCount/(fpsTotal/1000) << "\n";
-    cout << "\n\n\nnovelTime: " << novelTime << endl;
+    cout << "novelTime: " << novelTime << endl;
     if(PRINT_CONFUSIONMATRIX){
       printConfMat(confMat);
       //acc = ((Correct+trueNegative)/(Correct+trueNegative+Unknown+));
@@ -830,8 +829,7 @@ void printPPVTPR(string filler, vector<double> TP, vector<double> H){
     cout << ":" << (TP[jq]/(TP[jq]+H[jq]));
   }
 }
-void printclssFScore(string filler, vector<double> TP, vector<double> FP, vector<double> FN, vector<double> &PPVvec, vector<double> &TPRvec){
-  cout << ":" << filler << " ";
+void getclssPPVTPR(string filler, vector<double> TP, vector<double> FP, vector<double> FN, vector<double> &PPVvec, vector<double> &TPRvec){
   assert(TP.size()==FP.size()&& TP.size()==FN.size());
   double aggTP, aggFP, aggFN;
 
@@ -843,11 +841,13 @@ void printclssFScore(string filler, vector<double> TP, vector<double> FP, vector
     double PPV, TPR;
     PPV = (aggTP/(aggTP+aggFP));
     TPR = (aggTP/(aggTP+aggFN));
-    cout << ":" << 2*((PPV*TPR)/(PPV+TPR));
 
     PPVvec.push_back(PPV);
     TPRvec.push_back(TPR);
 }
+// void printclssFScore(){
+//       cout << ":" << 2*((PPV*TPR)/(PPV+TPR));
+// }
 double printmicroFScore(double TP, double FP, double FN){
   double PPV, TPR, FScore;
   PPV = (TP/(TP+FP));
@@ -880,29 +880,33 @@ double printmacroFScore(vector<double> PPV, vector<double> TPR){
 void printResByClss(map<string, vector<vector<double> > > in){
   // For holding all class PPV and TPR's
   vector<double> avgPPV, avgTPR;
-  // Print out FScore
+  vector<string> clsNames;
+  // Calculate and store PPV and TPR values for each class, store corresponding class Name
   for(auto iter:in){
       if(iter.first.compare("UnDefined")!=0){
         vector<double> TP(iter.second[0]);
         vector<double> FP(iter.second[1]);
         vector<double> FN(iter.second[3]);
-        cout << iter.first;
-        printclssFScore("FScore",TP, FP, FN, avgPPV, avgTPR);
+        clsNames.push_back(iter.first);
+        getclssPPVTPR("FScore",TP, FP, FN, avgPPV, avgTPR);
         cout << "\n";
       }
   }
+  // assert the number of classes matches the number of PPV and TPR results
+  assert(clsNames.size() == avgPPV.size() && clsNames.size()==avgTPR.size());
+
+
   // The aggregated TP, FP and FN for micro FScore
   double microTP, microFP, microFN;
-  // Print out Agg microFScore
+  // Aggregate TP, FP and FN Values across all classes
   for(auto iter:in){
       if(iter.first.compare("UnDefined")!=0){
         microTP += vecAccumulator(iter.second[0]);
         microFP += vecAccumulator(iter.second[1]);
         microFN += vecAccumulator(iter.second[3]);
-        cout << iter.first;
       }
   }
-  cout << "\n\n";
+  cout << "\n";
   cout << "THis is the TP: " << microTP << "This is the FP: " << microFP << " This is hte FN: " << microFN << endl;
   cout << "microFScore: " << printmicroFScore(microTP, microFP, microFN);
   cout << "\n";
@@ -945,7 +949,11 @@ void printResByClss(map<string, vector<vector<double> > > in){
         cout << "\n";
       }
   }
-
+  // Print out FScore for each class
+  cout << "FScore:\n";
+  for(int f=0;f<clsNames.size();f++){
+    cout << clsNames[f] << ":" << 2*((avgPPV[f]*avgTPR[f])/(avgPPV[f]+avgTPR[f])) << "\n";
+  }
 }
 void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters,
   int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName){
@@ -1040,7 +1048,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   }
 
   vector<double> acc;
-  int numofRuns = 2;
+  int numofRuns = 1;
   // For loop to get data while varying an input parameter stored as a for condition
   for(int kk=0;kk<numofRuns;kk++){
     cout << "This is iteration: " << kk+1 << " out of: " << numofRuns << endl;

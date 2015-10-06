@@ -1,6 +1,5 @@
 #!/bin/bash
-
-echo Running Opencv Attempts Loop
+set -e
 
 cd build2/
 cmake ..
