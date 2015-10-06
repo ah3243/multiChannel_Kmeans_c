@@ -8,12 +8,18 @@ make
 echo made and built
 ~/Desktop/TEST_IMAGES/CapturedImgs/./ranImgs.sh
 
-i=0
+#Attempts=(5 10 15 20)
+Scale=(9)
 
-while [ $i -lt 1 ] 
-do
-	./multiDimen
-echo iteration $i
-	i = i+1
+#inputType="attempts"
+#inputType="texDict"
+inputType="scale"
+
+for i in ${Scale[@]}; do
+
+	#Note 1.inputValue  2.Input Type
+	./multiDimen ${i} $inputType
+	echo Test Type is: $inputType
+	echo iteration ${i}
 done
 echo Done

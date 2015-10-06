@@ -13,6 +13,7 @@ using namespace boost::filesystem;
 using namespace std;
 using namespace cv;
 
+#define VERBOSE 0
 #define PRINTCLASSIMPORT 0
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -521,7 +522,9 @@ void classHandler(){
       case '0':
         cout << "Listing Classes" << endl;
         getUniqueClassNme(clsPath, clssNmes);
-        printClasses(clssNmes);
+        if(VERBOSE){
+          printClasses(clssNmes);
+        }
         cout << "THis is the total number of class names: " << clssNmes.size() << endl;
         printClassMenu();
         break;

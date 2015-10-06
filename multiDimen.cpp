@@ -19,6 +19,8 @@
 #include "modelBuild.h" // Generate models from class images
 #include "novelImgTest.h" // Novel Image Testing module
 
+#define VERBOSE 0
+
 #define INTERFACE 0
 #define DICTIONARY_BUILD 0
 #define MODEL_BUILD 0
@@ -31,6 +33,12 @@ using namespace cv;
 using namespace std;
 
 int main( int argc, char** argv ){
+  if(argc!=3){
+    ERR("Incorrect number of inputs detected. Exiting.");
+    exit(1);
+  }
+  string testType(argv[2]);
+  int testInput = atoi(argv[1]);
 
   // // ATTEMPTS VARIABLES
   // vector<string> folderName = {"5", "10", "15", "20", "25", "30","35", "40", "45", "50"};
@@ -84,13 +92,13 @@ int main( int argc, char** argv ){
     vector<string> folderName = {"TEST"};
     vector<int> cropsizeVec = {70};
     vector<int> dictClustersVec = {10};
-    vector<int> scaleVec = {9};
+    vector<int> scaleVec = {8};
     vector<int> attemptVec = {35};
 
     int programLoop = 1; // Number of time the whole program will repeat
     int testLoop = 1; // Number of results sets which will be gathered
   for(int xx=0;xx<programLoop;xx++){
-    cout << "\n\n.......Starting Program...... \n\n" ;
+    cout << "\n.......Starting Program...... \n" ;
     cout << "This is iteration " << xx << endl;
    // Available Scales
     ////////////////////////////////////////
@@ -112,14 +120,28 @@ int main( int argc, char** argv ){
     int scale, attempts;
 
     if(scaleVec.size()==1){
-      cout << "USING FIXED SCALE..\n";
-      scale = scaleVec[0];
+      if(testType.compare("scale")==0){
+        scale = testInput;
+        cout << "Testing Scale: " << scale << endl;
+      }else{
+        scale = scaleVec[0];
+      }
+      if(VERBOSE){
+        cout << "USING FIXED SCALE..\n";
+      }
     }else{
       scale = scaleVec[xx];
     }
+
     if(attemptVec.size()==1){
-      cout << "USING FIXED ATTEMPTS\n";
-      attempts = attemptVec[0];
+      if(testType.compare("attempts")==0){
+        attempts = testInput;
+      }else{
+        attempts = attemptVec[0];
+      }
+      if(VERBOSE){
+        cout << "USING FIXED ATTEMPTS\n";
+      }
     }else{
       attempts = attemptVec[xx];
     }
@@ -130,7 +152,9 @@ int main( int argc, char** argv ){
     int cropsize;
   //  cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
     if(cropsizeVec.size()==1){
-      cout << "USING FIXED CROPSIZE\n";
+      if(VERBOSE){
+        cout << "USING FIXED CROPSIZE\n";
+      }
       cropsize = cropsizeVec[0];
     }else{
       cropsize = cropsizeVec[xx];
@@ -138,7 +162,9 @@ int main( int argc, char** argv ){
 
     int DictSize;
     if(dictClustersVec.size()==1){
-      cout << "USING FIXED TEXTON CLUSTER NUMBER\n";
+      if(VERBOSE){
+        cout << "USING FIXED TEXTON CLUSTER NUMBER\n";
+      }
       DictSize = dictClustersVec[0];
     }else{
       DictSize = dictClustersVec[xx];
@@ -219,7 +245,7 @@ int main( int argc, char** argv ){
 
       // Take however many sets of test results
       for(int r=0;r<testLoop;r++){
-      cout << "\n\n.......Testing Against Novel Images...... \n" ;
+      cout << "\n.......Testing Against Novel Images...... \n" ;
         // Measure time efficiency
         auto t5 = std::chrono::high_resolution_clock::now();
 

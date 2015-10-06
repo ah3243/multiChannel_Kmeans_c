@@ -3,194 +3,194 @@
 <modelSerial>1415575804</modelSerial>
 <Iteration0>
   <AluBuilding>
-    <TP>15.</TP>
-    <FP>1.</FP>
-    <TN>79.</TN>
-    <FN>5.</FN>
-    <PPV>9.3750000000000000e-01</PPV>
-    <TPR>7.5000000000000000e-01</TPR></AluBuilding>
-  <Grass>
-    <TP>4.</TP>
-    <FP>3.</FP>
-    <TN>88.</TN>
-    <FN>6.</FN>
-    <PPV>5.7142857142857140e-01</PPV>
-    <TPR>4.0000000000000002e-01</TPR></Grass>
-  <PaintedWood>
-    <TP>3.</TP>
-    <FP>9.</FP>
-    <TN>80.</TN>
-    <FN>14.</FN>
-    <PPV>2.5000000000000000e-01</PPV>
-    <TPR>1.7647058823529413e-01</TPR></PaintedWood>
-  <SquareCarpet>
-    <TP>3.</TP>
-    <FP>4.</FP>
-    <TN>81.</TN>
-    <FN>20.</FN>
-    <PPV>4.2857142857142855e-01</PPV>
-    <TPR>1.3043478260869565e-01</TPR></SquareCarpet>
-  <SquarePaving>
-    <TP>3.</TP>
-    <FP>13.</FP>
-    <TN>74.</TN>
-    <FN>11.</FN>
-    <PPV>1.8750000000000000e-01</PPV>
-    <TPR>2.1428571428571427e-01</TPR></SquarePaving>
-  <StoneWall>
-    <TP>12.</TP>
-    <FP>6.</FP>
-    <TN>72.</TN>
-    <FN>14.</FN>
-    <PPV>6.6666666666666663e-01</PPV>
-    <TPR>4.6153846153846156e-01</TPR></StoneWall>
-  <Tarmac>
-    <TP>8.</TP>
-    <FP>4.</FP>
-    <TN>84.</TN>
-    <FN>4.</FN>
-    <PPV>6.6666666666666663e-01</PPV>
-    <TPR>6.6666666666666663e-01</TPR></Tarmac>
-  <UnDefined>
-    <TP>0.</TP>
-    <FP>43.</FP>
-    <TN>0.</TN>
-    <FN>0.</FN>
-    <PPV>0.</PPV>
-    <TPR>.Nan</TPR></UnDefined>
-  <WoodFloor>
-    <TP>3.</TP>
-    <FP>7.</FP>
-    <TN>81.</TN>
-    <FN>16.</FN>
-    <PPV>2.9999999999999999e-01</PPV>
-    <TPR>1.5789473684210525e-01</TPR></WoodFloor></Iteration0>
-<Iteration1>
-  <AluBuilding>
-    <TP>13.</TP>
-    <FP>1.</FP>
-    <TN>77.</TN>
-    <FN>7.</FN>
-    <PPV>9.2857142857142860e-01</PPV>
-    <TPR>6.5000000000000002e-01</TPR></AluBuilding>
-  <Grass>
-    <TP>2.</TP>
-    <FP>2.</FP>
-    <TN>87.</TN>
-    <FN>8.</FN>
-    <PPV>5.0000000000000000e-01</PPV>
-    <TPR>2.0000000000000001e-01</TPR></Grass>
-  <PaintedWood>
-    <TP>2.</TP>
-    <FP>9.</FP>
-    <TN>75.</TN>
-    <FN>15.</FN>
-    <PPV>1.8181818181818182e-01</PPV>
-    <TPR>1.1764705882352941e-01</TPR></PaintedWood>
-  <SquareCarpet>
-    <TP>4.</TP>
-    <FP>8.</FP>
-    <TN>72.</TN>
-    <FN>19.</FN>
-    <PPV>3.3333333333333331e-01</PPV>
-    <TPR>1.7391304347826086e-01</TPR></SquareCarpet>
-  <SquarePaving>
-    <TP>0.</TP>
-    <FP>7.</FP>
-    <TN>81.</TN>
-    <FN>14.</FN>
-    <PPV>0.</PPV>
-    <TPR>0.</TPR></SquarePaving>
-  <StoneWall>
-    <TP>14.</TP>
-    <FP>8.</FP>
-    <TN>69.</TN>
-    <FN>12.</FN>
-    <PPV>6.3636363636363635e-01</PPV>
-    <TPR>5.3846153846153844e-01</TPR></StoneWall>
-  <Tarmac>
-    <TP>7.</TP>
-    <FP>6.</FP>
-    <TN>80.</TN>
-    <FN>5.</FN>
-    <PPV>5.3846153846153844e-01</PPV>
-    <TPR>5.8333333333333337e-01</TPR></Tarmac>
-  <UnDefined>
-    <TP>0.</TP>
-    <FP>46.</FP>
-    <TN>0.</TN>
-    <FN>0.</FN>
-    <PPV>0.</PPV>
-    <TPR>.Nan</TPR></UnDefined>
-  <WoodFloor>
-    <TP>6.</TP>
-    <FP>6.</FP>
-    <TN>77.</TN>
-    <FN>13.</FN>
-    <PPV>5.0000000000000000e-01</PPV>
-    <TPR>3.1578947368421051e-01</TPR></WoodFloor></Iteration1>
-<Iteration2>
-  <AluBuilding>
     <TP>16.</TP>
-    <FP>4.</FP>
-    <TN>81.</TN>
+    <FP>2.</FP>
+    <TN>69.</TN>
     <FN>4.</FN>
-    <PPV>8.0000000000000004e-01</PPV>
+    <PPV>8.8888888888888884e-01</PPV>
     <TPR>8.0000000000000004e-01</TPR></AluBuilding>
   <Grass>
     <TP>4.</TP>
-    <FP>3.</FP>
-    <TN>93.</TN>
+    <FP>1.</FP>
+    <TN>82.</TN>
     <FN>6.</FN>
-    <PPV>5.7142857142857140e-01</PPV>
+    <PPV>8.0000000000000004e-01</PPV>
     <TPR>4.0000000000000002e-01</TPR></Grass>
   <PaintedWood>
-    <TP>4.</TP>
-    <FP>5.</FP>
-    <TN>87.</TN>
-    <FN>13.</FN>
-    <PPV>4.4444444444444442e-01</PPV>
-    <TPR>2.3529411764705882e-01</TPR></PaintedWood>
+    <TP>3.</TP>
+    <FP>6.</FP>
+    <TN>74.</TN>
+    <FN>14.</FN>
+    <PPV>3.3333333333333331e-01</PPV>
+    <TPR>1.7647058823529413e-01</TPR></PaintedWood>
   <SquareCarpet>
     <TP>3.</TP>
-    <FP>7.</FP>
-    <TN>82.</TN>
+    <FP>3.</FP>
+    <TN>76.</TN>
     <FN>20.</FN>
-    <PPV>2.9999999999999999e-01</PPV>
+    <PPV>5.0000000000000000e-01</PPV>
     <TPR>1.3043478260869565e-01</TPR></SquareCarpet>
   <SquarePaving>
-    <TP>3.</TP>
-    <FP>5.</FP>
-    <TN>88.</TN>
-    <FN>11.</FN>
-    <PPV>3.7500000000000000e-01</PPV>
-    <TPR>2.1428571428571427e-01</TPR></SquarePaving>
+    <TP>4.</TP>
+    <FP>6.</FP>
+    <TN>73.</TN>
+    <FN>10.</FN>
+    <PPV>4.0000000000000002e-01</PPV>
+    <TPR>2.8571428571428570e-01</TPR></SquarePaving>
   <StoneWall>
     <TP>17.</TP>
     <FP>6.</FP>
-    <TN>78.</TN>
+    <TN>64.</TN>
     <FN>9.</FN>
     <PPV>7.3913043478260865e-01</PPV>
     <TPR>6.5384615384615385e-01</TPR></StoneWall>
   <Tarmac>
     <TP>7.</TP>
-    <FP>4.</FP>
-    <TN>90.</TN>
+    <FP>3.</FP>
+    <TN>77.</TN>
     <FN>5.</FN>
-    <PPV>6.3636363636363635e-01</PPV>
+    <PPV>6.9999999999999996e-01</PPV>
     <TPR>5.8333333333333337e-01</TPR></Tarmac>
   <UnDefined>
     <TP>0.</TP>
-    <FP>38.</FP>
+    <FP>52.</FP>
+    <TN>0.</TN>
+    <FN>0.</FN>
+    <PPV>0.</PPV>
+    <TPR>.Nan</TPR></UnDefined>
+  <WoodFloor>
+    <TP>2.</TP>
+    <FP>6.</FP>
+    <TN>75.</TN>
+    <FN>17.</FN>
+    <PPV>2.5000000000000000e-01</PPV>
+    <TPR>1.0526315789473684e-01</TPR></WoodFloor></Iteration0>
+<Iteration1>
+  <AluBuilding>
+    <TP>15.</TP>
+    <FP>4.</FP>
+    <TN>80.</TN>
+    <FN>5.</FN>
+    <PPV>7.8947368421052633e-01</PPV>
+    <TPR>7.5000000000000000e-01</TPR></AluBuilding>
+  <Grass>
+    <TP>1.</TP>
+    <FP>1.</FP>
+    <TN>93.</TN>
+    <FN>9.</FN>
+    <PPV>5.0000000000000000e-01</PPV>
+    <TPR>1.0000000000000001e-01</TPR></Grass>
+  <PaintedWood>
+    <TP>5.</TP>
+    <FP>6.</FP>
+    <TN>85.</TN>
+    <FN>12.</FN>
+    <PPV>4.5454545454545453e-01</PPV>
+    <TPR>2.9411764705882354e-01</TPR></PaintedWood>
+  <SquareCarpet>
+    <TP>5.</TP>
+    <FP>6.</FP>
+    <TN>81.</TN>
+    <FN>18.</FN>
+    <PPV>4.5454545454545453e-01</PPV>
+    <TPR>2.1739130434782608e-01</TPR></SquareCarpet>
+  <SquarePaving>
+    <TP>3.</TP>
+    <FP>9.</FP>
+    <TN>83.</TN>
+    <FN>11.</FN>
+    <PPV>2.5000000000000000e-01</PPV>
+    <TPR>2.1428571428571427e-01</TPR></SquarePaving>
+  <StoneWall>
+    <TP>14.</TP>
+    <FP>5.</FP>
+    <TN>77.</TN>
+    <FN>12.</FN>
+    <PPV>7.3684210526315785e-01</PPV>
+    <TPR>5.3846153846153844e-01</TPR></StoneWall>
+  <Tarmac>
+    <TP>8.</TP>
+    <FP>3.</FP>
+    <TN>88.</TN>
+    <FN>4.</FN>
+    <PPV>7.2727272727272729e-01</PPV>
+    <TPR>6.6666666666666663e-01</TPR></Tarmac>
+  <UnDefined>
+    <TP>0.</TP>
+    <FP>40.</FP>
     <TN>0.</TN>
     <FN>0.</FN>
     <PPV>0.</PPV>
     <TPR>.Nan</TPR></UnDefined>
   <WoodFloor>
     <TP>9.</TP>
+    <FP>7.</FP>
+    <TN>79.</TN>
+    <FN>10.</FN>
+    <PPV>5.6250000000000000e-01</PPV>
+    <TPR>4.7368421052631576e-01</TPR></WoodFloor></Iteration1>
+<Iteration2>
+  <AluBuilding>
+    <TP>17.</TP>
+    <FP>1.</FP>
+    <TN>81.</TN>
+    <FN>3.</FN>
+    <PPV>9.4444444444444442e-01</PPV>
+    <TPR>8.4999999999999998e-01</TPR></AluBuilding>
+  <Grass>
+    <TP>1.</TP>
+    <FP>3.</FP>
+    <TN>91.</TN>
+    <FN>9.</FN>
+    <PPV>2.5000000000000000e-01</PPV>
+    <TPR>1.0000000000000001e-01</TPR></Grass>
+  <PaintedWood>
+    <TP>5.</TP>
+    <FP>4.</FP>
+    <TN>81.</TN>
+    <FN>12.</FN>
+    <PPV>5.5555555555555558e-01</PPV>
+    <TPR>2.9411764705882354e-01</TPR></PaintedWood>
+  <SquareCarpet>
+    <TP>3.</TP>
+    <FP>5.</FP>
+    <TN>81.</TN>
+    <FN>20.</FN>
+    <PPV>3.7500000000000000e-01</PPV>
+    <TPR>1.3043478260869565e-01</TPR></SquareCarpet>
+  <SquarePaving>
+    <TP>3.</TP>
+    <FP>5.</FP>
+    <TN>85.</TN>
+    <FN>11.</FN>
+    <PPV>3.7500000000000000e-01</PPV>
+    <TPR>2.1428571428571427e-01</TPR></SquarePaving>
+  <StoneWall>
+    <TP>16.</TP>
+    <FP>9.</FP>
+    <TN>70.</TN>
+    <FN>10.</FN>
+    <PPV>6.4000000000000001e-01</PPV>
+    <TPR>6.1538461538461542e-01</TPR></StoneWall>
+  <Tarmac>
+    <TP>8.</TP>
+    <FP>5.</FP>
+    <TN>84.</TN>
+    <FN>4.</FN>
+    <PPV>6.1538461538461542e-01</PPV>
+    <TPR>6.6666666666666663e-01</TPR></Tarmac>
+  <UnDefined>
+    <TP>0.</TP>
+    <FP>42.</FP>
+    <TN>0.</TN>
+    <FN>0.</FN>
+    <PPV>0.</PPV>
+    <TPR>.Nan</TPR></UnDefined>
+  <WoodFloor>
+    <TP>8.</TP>
     <FP>6.</FP>
     <TN>82.</TN>
-    <FN>10.</FN>
-    <PPV>5.9999999999999998e-01</PPV>
-    <TPR>4.7368421052631576e-01</TPR></WoodFloor></Iteration2>
+    <FN>11.</FN>
+    <PPV>5.7142857142857140e-01</PPV>
+    <TPR>4.2105263157894735e-01</TPR></WoodFloor></Iteration2>
 </opencv_storage>
