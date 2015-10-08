@@ -1,0 +1,45 @@
+#!/bin/bash
+set -e
+
+cd build2/
+cmake ..
+make
+echo made and built
+~/Desktop/TEST_IMAGES/CapturedImgs/./ranImgs.sh
+echo images randomised and allocated
+
+#Attempts=(5 10 15 20)
+Scale=(9 9)
+
+#inputType="attempts"
+#inputType="texDict"
+inputType="scale"
+#inputType="cropping"
+
+firstGo=0
+counter=0
+for i in ${Scale[@]}; do
+	echo $counter this is the counter
+	echo firstgo $firstGo
+
+	if [ $counter -eq 0 && $firstGo -eq 0]
+
+	then
+	  echo first iteration
+	  let firstGo=1
+
+	elif [ $counter  ]
+
+	  echo not first iteration
+	  let firstGo=1
+	  echo after firstGo $firstGo
+	fi
+
+	echo starting program
+	#Note 1.inputValue  2.Input Type
+	./multiDimen ${i} $inputType $firstGo
+	echo Test Type is: $inputType
+	echo iteration $counter
+	let counter=counter+1
+done
+echo Done

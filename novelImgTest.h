@@ -22,7 +22,7 @@ void loadVideo(std::string p, std::map<std::string, std::vector<cv::Mat> > &clas
 void printFiles(std::map<std::string, std::vector<std::string> > s, std::vector<std::string> &fileNmes, boost::filesystem::path p);
 std::string getfileNme(std::vector<std::string> s);
 void novelImgHandle(boost::filesystem::path testPath,boost::filesystem::path clsPath, int scale, int cropsize, int numClusters,
-  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, std::string folderName);
+  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, std::string folderName, bool firstGo);
 
 
 #endif

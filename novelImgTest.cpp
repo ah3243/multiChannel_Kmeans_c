@@ -811,22 +811,34 @@ string getfileNme(vector<string> s){
     }
     return out;
   }
-void printStart(string filler, int iterations){
-  cout << "0 ";
+void printStart(string filler, int iterations, bool flag){
+  if(flag){
+    cout << "0 :";
+  }
   for(int o=0;o<iterations;o++){
+    cout << filler;
+    if(o<iterations-1){
+      cout << ":";
+    }
+  }
+}
+void printVector(vector<double> hh, bool flag){
+  for(int jq=0;jq<hh.size();jq++){
+    if(flag){
+      cout << ":";
+    }
+    cout << hh[jq];
+  }
+}
+void printPPVTPR(string filler, vector<double> TP, vector<double> H, bool flag){
+  if(flag){
     cout << ":" << filler;
   }
-}
-void printVector(string filler, vector<double> hh){
-  cout << "\n" << filler;
-  for(int jq=0;jq<hh.size();jq++){
-    cout << ":" << hh[jq];
-  }
-}
-void printPPVTPR(string filler, vector<double> TP, vector<double> H){
-  cout << ":" << filler << " ";
   for(int jq=0;jq<H.size();jq++){
-    cout << ":" << (TP[jq]/(TP[jq]+H[jq]));
+    if(flag){
+        cout << ":";
+    }
+    cout << (TP[jq]/(TP[jq]+H[jq]));
   }
 }
 void getclssPPVTPR(string filler, vector<double> TP, vector<double> FP, vector<double> FN, vector<double> &PPVvec, vector<double> &TPRvec){
@@ -845,9 +857,6 @@ void getclssPPVTPR(string filler, vector<double> TP, vector<double> FP, vector<d
     PPVvec.push_back(PPV);
     TPRvec.push_back(TPR);
 }
-// void printclssFScore(){
-//       cout << ":" << 2*((PPV*TPR)/(PPV+TPR));
-// }
 double printmicroFScore(double TP, double FP, double FN){
   double PPV, TPR, FScore;
   PPV = (TP/(TP+FP));
@@ -872,12 +881,12 @@ double printmacroFScore(vector<double> PPV, vector<double> TPR){
   avgTPR = (totTPR/TPRSize);
   FScore=(2*((avgPPV*avgTPR)/(avgPPV+avgTPR)));
 
-  cout << "This is the average PPV: " << avgPPV << " and TPR: " << avgTPR << endl;
+  // cout << "This is the average PPV: " << avgPPV << " and TPR: " << avgTPR << endl;
   return FScore;
 }
 
 // Print out all test results
-void printResByClss(map<string, vector<vector<double> > > in){
+void printResByClss(map<string, vector<vector<double> > > in, bool firstGo){
   // For holding all class PPV and TPR's
   vector<double> avgPPV, avgTPR;
   vector<string> clsNames;
@@ -889,12 +898,10 @@ void printResByClss(map<string, vector<vector<double> > > in){
         vector<double> FN(iter.second[3]);
         clsNames.push_back(iter.first);
         getclssPPVTPR("FScore",TP, FP, FN, avgPPV, avgTPR);
-        cout << "\n";
       }
   }
   // assert the number of classes matches the number of PPV and TPR results
   assert(clsNames.size() == avgPPV.size() && clsNames.size()==avgTPR.size());
-
 
   // The aggregated TP, FP and FN for micro FScore
   double microTP, microFP, microFN;
@@ -906,13 +913,19 @@ void printResByClss(map<string, vector<vector<double> > > in){
         microFN += vecAccumulator(iter.second[3]);
       }
   }
-  cout << "\n";
-  cout << "THis is the TP: " << microTP << "This is the FP: " << microFP << " This is hte FN: " << microFN << endl;
-  cout << "microFScore: " << printmicroFScore(microTP, microFP, microFN);
+  // If first overall iteration print labels, else not
+  if(firstGo){
+    cout << "micro FScore: ";
+  }
+  cout << printmicroFScore(microTP, microFP, microFN);
   cout << "\n";
 
   // Print out Agg macroFScore
-  cout << "Macro FScore: " << printmacroFScore(avgPPV, avgTPR);
+  // If first overall iteration print labels, else not
+  if(firstGo){
+    cout << "Macro FScore: ";
+  }
+  cout << printmacroFScore(avgPPV, avgTPR);
   cout << "\n\n";
 
   // Loop through all classes results
@@ -921,11 +934,28 @@ void printResByClss(map<string, vector<vector<double> > > in){
         vector<double> FP(iter.second[1]);
         vector<double> TN(iter.second[2]);
         vector<double> FN(iter.second[3]);
-        printStart(iter.first, iter.second[0].size());
-        printVector("TruePositive",TP);
-        printVector("FalsePositive",FP);
-        printVector("TrueNegative",TN);
-        printVector("FalseNegative",FN);
+        printStart(iter.first, iter.second[0].size(), firstGo);
+        // Print out if first loop if not dont
+        cout << "\n";
+        if(firstGo){
+          cout << "TruePositive";
+        }
+        printVector(TP, firstGo);
+        cout << "\n";
+        if(firstGo){
+          cout << "FalsePositive";
+        }
+        printVector(FP, firstGo);
+        cout << "\n";
+        if(firstGo){
+          cout << "TrueNegative";
+        }
+        printVector(TN, firstGo);
+        cout << "\n";
+        if(firstGo){
+          cout << "FalseNegative";
+        }
+        printVector(FN, firstGo);
         cout << "\n";
   }
   cout << "\n";
@@ -934,8 +964,10 @@ void printResByClss(map<string, vector<vector<double> > > in){
       if(iter.first.compare("UnDefined")!=0){
         vector<double> TP(iter.second[0]);
         vector<double> FP(iter.second[1]);
-        cout << iter.first;
-        printPPVTPR("PPV",TP, FP);
+        if(firstGo){
+          cout << iter.first;
+        }
+        printPPVTPR("PPV",TP, FP, firstGo);
         cout << "\n";
       }
   }
@@ -944,19 +976,27 @@ void printResByClss(map<string, vector<vector<double> > > in){
       if(iter.first.compare("UnDefined")!=0){
         vector<double> TP(iter.second[0]);
         vector<double> FN(iter.second[3]);
-        cout << iter.first;
-        printPPVTPR("TPR",TP, FN);
+        if(firstGo){
+          cout << iter.first;
+        }
+        printPPVTPR("TPR",TP, FN, firstGo);
         cout << "\n";
       }
   }
   // Print out FScore for each class
-  cout << "FScore:\n";
+  if(firstGo){
+    cout << "FScore:";
+  }
+  cout << "\n";
   for(int f=0;f<clsNames.size();f++){
-    cout << clsNames[f] << ":" << 2*((avgPPV[f]*avgTPR[f])/(avgPPV[f]+avgTPR[f])) << "\n";
+    if(firstGo){
+      cout << clsNames[f] << ":";
+    }
+    cout << 2*((avgPPV[f]*avgTPR[f])/(avgPPV[f]+avgTPR[f])) << "\n";
   }
 }
 void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters,
-  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName){
+  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName, bool firstGo){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
@@ -1075,7 +1115,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   }
 
   // Print out all iterations results by class
-  printResByClss(resByCls);
+  printResByClss(resByCls, firstGo);
 //  calcROCVals(resByCls, ROCVals, clsNmes, testClsNmes);
 
   int novelHandleTime=0;

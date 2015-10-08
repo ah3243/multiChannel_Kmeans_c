@@ -22,8 +22,8 @@
 #define VERBOSE 0
 
 #define INTERFACE 0
-#define DICTIONARY_BUILD 0
-#define MODEL_BUILD 0
+#define DICTIONARY_BUILD 1
+#define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
@@ -33,10 +33,18 @@ using namespace cv;
 using namespace std;
 
 int main( int argc, char** argv ){
-  if(argc!=3){
+  if(argc<3){
     ERR("Incorrect number of inputs detected. Exiting.");
     exit(1);
+  }else if(argc<4){
+    ERR("The four input, (to print or not), has not been entered. Exiting.");
+    exit(1);
   }
+
+  int tmp = atoi(argv[3]);
+  assert(tmp==1|| tmp==0);
+  bool firstGo =(bool)tmp;
+
   string testType(argv[2]);
   int testInput = atoi(argv[1]);
 
@@ -119,6 +127,7 @@ int main( int argc, char** argv ){
     ////////////////////////////////////////
     int scale, attempts;
 
+// SCALE
     if(scaleVec.size()==1){
       if(testType.compare("scale")==0){
         scale = testInput;
@@ -133,6 +142,7 @@ int main( int argc, char** argv ){
       scale = scaleVec[xx];
     }
 
+// ATTEMPTS
     if(attemptVec.size()==1){
       if(testType.compare("attempts")==0){
         attempts = testInput;
@@ -150,15 +160,14 @@ int main( int argc, char** argv ){
     double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
 
     int cropsize;
-  //  cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
-    if(cropsizeVec.size()==1){
+  if(testType.compare("cropping")==0){
       if(VERBOSE){
         cout << "USING FIXED CROPSIZE\n";
       }
-      cropsize = cropsizeVec[0];
-    }else{
-      cropsize = cropsizeVec[xx];
-    }
+      cropsize = testInput;
+  }else{
+    cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
+  }
 
     int DictSize;
     if(dictClustersVec.size()==1){
@@ -250,7 +259,7 @@ int main( int argc, char** argv ){
         auto t5 = std::chrono::high_resolution_clock::now();
 
         novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags,
-          attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName[xx]);
+          attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName[xx], firstGo);
 
         // Measure time efficiency
         auto t6 = std::chrono::high_resolution_clock::now();
