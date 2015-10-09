@@ -45,7 +45,7 @@ using namespace std;
 #define PRINT_CONFUSIONMATRIX 0
 #define PRINT_CONFMATAVG 0
 #define PRINT_TPRPPV 0
-#define PRINT_AVG 0
+#define PRINT_AVG 1
 #define PRINT_COLOR 0
 
 #define a1 map<string, int>
@@ -413,6 +413,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   double fpsTotal = 0, frameCount = 0, fpsAvg=0;
   vector<double> grass;
   double acc;// Accuracy
+  map<string, vector<double> > avgResults;// Used to collate histogram distance results for easy printing/exporting
 
 
   // Extract and store saved color data from model.xml
@@ -518,7 +519,6 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         }
         // END SAVE IMAGES .....
 
-
         int imgSize = hCrop;
         Mat disVals = Mat(vCrop, hCrop,CV_8UC3, Scalar(255,255,255));
         Mat matchDisplay = Mat(50,50,CV_8UC3, Scalar(0,0,0));
@@ -527,51 +527,58 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         int disrows = 0, discols = 0;
         // Loop through and classify all image segments
         for(int x=0;x<test.size();x++){
-          assert(test.size() == colorTest.size());
+          map<string, double> matchResults;
+          a2 tmpVals; // For holding all the results from each class for a single segment
+          map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
+          // Re cluster image segment this number of times averaging the best results
+          for(int tstAVG=0;tstAVG<10;tstAVG++){
+            assert(test.size() == colorTest.size());
 
-          // handle segment prediction printing
-          if(discols>imgSize-cropsize){
-            discols=0;
-          }
-          if(discols==0&& x>0){
-            disrows += cropsize;
-          }
-          if(!test[x].empty()){
-             novelTrainer.add(test[x]);
-           }
+            // handle segment prediction printing
+            if(discols>imgSize-cropsize){
+              discols=0;
+            }
+            if(discols==0&& x>0){
+              disrows += cropsize;
+            }
+            if(!test[x].empty()){
+               novelTrainer.add(test[x]);
+            }
 
-           // Generate specified number of clusters per segment and store in Mat
-           Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
-           clus = novelTrainer.cluster();
+             // Generate specified number of clusters per segment and store in Mat
+             Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
+             clus = novelTrainer.cluster();
 
-           // Replace Cluster Centers with the closest matching texton
-           textonDistance.push_back(textonFind(clus, dictionary, texDistance));
+             // Replace Cluster Centers with the closest matching texton
+             textonDistance.push_back(textonFind(clus, dictionary, texDistance));
 
-          // Calculate the histogram
-           Mat out1, out2, lone, lone2;
-           lone = clus.clone();
-           int histSize = m.size()-1;
-           const float* histRange = {bins};
-           calcHist(&lone, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
-           novelTrainer.clear();
-           double high = DBL_MAX, secHigh = DBL_MAX, clsHigh = DBL_MAX;
-           string match, secMatch;
-           map<string, double> matchResults;
+            // Calculate the histogram
+             Mat out1, out2, lone, lone2;
+             lone = clus.clone();
+             int histSize = m.size()-1;
+             const float* histRange = {bins};
+             calcHist(&lone, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
+             novelTrainer.clear();
+             double high = DBL_MAX, secHigh = DBL_MAX, clsHigh = DBL_MAX;
+             string match, secMatch;
 
-           a2 tmpVals;
-           // Compare all saved histograms against novelimg
-           for(auto const ent2 : savedClassHist){
-             matchResults[ent2.first] = DBL_MAX;
-             // Compare saved histgrams from each class
-             vector<double> tmpVec;
-             for(int j=0;j < ent2.second.size();j++){
-               Mat tmpHist = ent2.second[j].clone();
-               double val = compareHist(out1,tmpHist,CV_COMP_CHISQR);
-               tmpVec.push_back(val);
+             // Compare all saved histograms against novelimg
+             for(auto const ent2 : savedClassHist){
+               matchResults[ent2.first] = DBL_MAX;
+               vector<double> tmpVec;
+               // Compare saved histgrams from each class
+               for(int j=0;j < ent2.second.size();j++){
+                 Mat tmpHist = ent2.second[j].clone();
+                 double val = compareHist(out1,tmpHist,CV_COMP_CHISQR);
+                 tmpVec.push_back(val);
+               }
+              sort(tmpVec.begin(), tmpVec.end());
+              tmpVals[ent2.first] = tmpVec;
+              testAvgs[ent2.first].push_back(tmpVec[0]); // Push back the top match for each class
              }
-            sort(tmpVec.begin(), tmpVec.end());
-            tmpVals[ent2.first] = tmpVec;
-           }
+           } // End of test image reclustering
+
+
            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
           // The depth of averaging for values
           ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -589,10 +596,11 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             matchResults[ent9.first]=tmp.second;
           }
           // Sort averaged values
-          sort(avg.begin(), avg.end(), pairCompare);
+//          sort(avg.begin(), avg.end(), pairCompare);
           if(PRINT_AVG){
             cout << entx.first << " averages: ";
             for(int z=0;z<avg.size();z++){
+              avgResults[avg[z].first].push_back(avg[z].second);  // save all results by class for easy printing later and exporting
               cout << avg[z].first << " : " << avg[z].second << endl;
             }
           }
@@ -664,9 +672,8 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
              stringstream ss;
              ss  << folderName << "/Predictions/" << entx.first << "_" << frameCount << ".png";
              imwrite(ss.str(),disVals);
-           }else{
            }
-  //           waitKey(0);
+             waitKey(30);
           }
          auto fpsEnd = std::chrono::high_resolution_clock::now();
          fpsTotal+= std::chrono::duration_cast<std::chrono::milliseconds>(fpsEnd - fpsStart).count();
@@ -700,6 +707,24 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
       cout << grass[i] << ",";
     }
     cout << "\n";
+
+    // Print out collated Histogram distances
+    if(PRINT_AVG){
+      // Go through all classes
+      for(auto const avgRes : avgResults){
+        cout << avgRes.first << ":"; // Print current class
+        // Go through all class results
+        for(int avgResVec=0;avgResVec<avgRes.second.size();avgResVec++){
+          cout << avgRes.second[avgResVec];
+          // If there will be another result add semi colon for easy exporting
+          if(avgResVec<avgRes.second.size()-1){
+            cout << ":";
+          }
+        }
+        cout << "\n";
+      }
+    }
+
     return acc;
 }
 

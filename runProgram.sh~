@@ -19,11 +19,11 @@ if [ $# -eq 0 ]
      echo this was your answer: $useImgs
      if [ "$useImgs" == "Y" ]
      then
-       echo "you entered Y. Generating New Training Images."
+       echo "you entered Y"
        break
      elif [ "$useImgs" == "N" ]
      then
-       echo "you entered N. Continuing with current Images."
+       echo "you entered N continuing"
        break
      else
        echo "your input was not recognised."
@@ -68,7 +68,7 @@ do
   fi
 
 	#Attempts=(5 10 15 20)
-	Scale=(9)
+	Scale=(7)
 
 	#inputType="attempts"
 	#inputType="texDict"
