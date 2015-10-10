@@ -366,7 +366,6 @@ void calcNearestClasses(map<string, vector<map<string, vector<double> > > > resu
 
 //  cout << "0 :";
   for(auto const ad:avgs){
-    cout << "balh";
     cout << ad.first << ":";
   }
 //  cout << "\n";
@@ -596,7 +595,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             matchResults[ent9.first]=tmp.second;
           }
           // Sort averaged values
-//          sort(avg.begin(), avg.end(), pairCompare);
+          sort(avg.begin(), avg.end(), pairCompare);
           if(PRINT_AVG){
             cout << entx.first << " averages: ";
             for(int z=0;z<avg.size();z++){
