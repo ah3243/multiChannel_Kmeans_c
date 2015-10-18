@@ -66,14 +66,22 @@ do
 	~/Desktop/TEST_IMAGES/CapturedImgs/./ranImgs.sh
 	echo images randomised and allocated
   fi
-
+	
+	## SECOND VARIABLE VALS
 	#Attempts=(5 10 15 20)
-	Scale=(9)
-
+	Scale=(9 8 7 6 5 4 3 2 1 0)
+#	Cropping=(10 20 40 60 80 100 120 140) ## Scale 8
+	
+	## FIRST VARIABLE TYPES
 	#inputType="attempts"
 	#inputType="texDict"
 	inputType="scale"
-	#inputType="cropping"
+#	inputType="cropping"
+	
+	secondVal=(0 1) ## For blank secondVal
+#	secondVal=(0 0.25 0.5 0.75 1 1.5 2) ##Thresold
+	
+	## SECOND VARIABLE TYPES
 
 	firstGo=1
 	counter=0
@@ -88,7 +96,10 @@ do
 		echo starting program
 		#Note 1.inputValue  2.Input Type 3.firstLineFlag
 		echo this is the bool value $firstGo
-		./multiDimen ${i} $inputType $firstGo
+		for sevVal in ${secondVal[@]}; do
+
+			./multiDimen ${i} $inputType $firstGo $secVal $secType
+		done
 		echo Test Type is: $inputType
 		echo iteration $counter
 		echo

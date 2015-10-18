@@ -279,6 +279,30 @@ novelImgTest.cpp.s:
 	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/novelImgTest.cpp.s
 .PHONY : novelImgTest.cpp.s
 
+singleImgEval.o: singleImgEval.cpp.o
+.PHONY : singleImgEval.o
+
+# target to build an object file
+singleImgEval.cpp.o:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/singleImgEval.cpp.o
+.PHONY : singleImgEval.cpp.o
+
+singleImgEval.i: singleImgEval.cpp.i
+.PHONY : singleImgEval.i
+
+# target to preprocess a source file
+singleImgEval.cpp.i:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/singleImgEval.cpp.i
+.PHONY : singleImgEval.cpp.i
+
+singleImgEval.s: singleImgEval.cpp.s
+.PHONY : singleImgEval.s
+
+# target to generate assembly for a file
+singleImgEval.cpp.s:
+	$(MAKE) -f CMakeFiles/multiDimen.dir/build.make CMakeFiles/multiDimen.dir/singleImgEval.cpp.s
+.PHONY : singleImgEval.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -309,6 +333,9 @@ help:
 	@echo "... novelImgTest.o"
 	@echo "... novelImgTest.i"
 	@echo "... novelImgTest.s"
+	@echo "... singleImgEval.o"
+	@echo "... singleImgEval.i"
+	@echo "... singleImgEval.s"
 .PHONY : help
 
 

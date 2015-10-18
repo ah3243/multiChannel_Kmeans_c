@@ -359,8 +359,10 @@ void loadClassImgs(path p, map<string, vector<Mat> > &classImgs, int scale){
       string nme = itr -> path().string();
       Mat in = imread(nme);
       Mat imgsm;
+//      cout << "inSize: " << in.size();
       extractClsNme(nme);
       scaleImg(in, imgsm, scale);
+//      cout << " outSize: " << imgsm.size() << endl;
       //cout << "Pushing back: " << nme << " img.size(): " << imgsm.size() << endl;
       classImgs[nme].push_back(imgsm);
     }

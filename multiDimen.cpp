@@ -13,6 +13,7 @@
 #include <chrono>  // time measurement
 #include <thread>  // time measurement
 
+#include "singleImgEval.h"
 #include "imgFunctions.h"
 #include "filterbank.h"
 #include "dictCreation.h" // Generate and store Texton Dictionary
@@ -33,75 +34,52 @@ using namespace cv;
 using namespace std;
 
 int main( int argc, char** argv ){
-  if(argc<3){
+  cout << "number of inputs: " << argc << " 0: " << argv[0] << " 1: " << argv[1] << endl;
+  if(argc==3){
+    string testingFlag = argv[1];
+    if(testingFlag.compare("testing")==0){
+      Mat inImage = imread(argv[2],1);
+      int navOut = directionHandle(inImage);
+      cout << "\n\nTesting.." << navOut << endl;
+      exit(1);
+    }else{
+      ERR("Incorrect number of inputs detected. Exiting.");
+      exit(1);
+    }
+    cout << "not passing ..\n\n";
+    exit(1);
+  }else if(argc<3){
     ERR("Incorrect number of inputs detected. Exiting.");
     exit(1);
   }else if(argc<4){
-    ERR("The four input, (to print or not), has not been entered. Exiting.");
+    ERR("The fourth input, (to print or not), has not been entered. Exiting.");
     exit(1);
   }
 
+
+  // Int to pass in parameter
+  int testInput = atoi(argv[1]);
+  // String to detail the type of test
+  string testType(argv[2]);
+
+  // Bool to denote the first iteration or not
   int tmp = atoi(argv[3]);
   assert(tmp==1|| tmp==0);
   bool firstGo =(bool)tmp;
 
-  string testType(argv[2]);
-  int testInput = atoi(argv[1]);
-
   // // ATTEMPTS VARIABLES
   // vector<string> folderName = {"5", "10", "15", "20", "25", "30","35", "40", "45", "50"};
   // vector<int> attemptVec = {5,10,15,20,25,30,35,40,45,50};
-  // vector<int> scaleVec = {9};
-  // vector<int> cropsizeVec = {70};
-  // vector<int> dictClustersVec = {30};
 
   // // TEXTDICT VARIABLES
   // vector<string> folderName = {"3","5","8","10","12","15","20","25","30","40","50"};
   // vector<int> dictClustersVec = {3,5,8,10,12,15,20,25,30,40,50};
-  // vector<int> attemptVec = {35};
-  // vector<int> scaleVec = {9};
-  // vector<int> cropsizeVec = {210};
 
-  // // SCALE VARIABLES
-  // vector<string> folderName = {"_9", "_8", "_7", "_6", "_5", "_4","_3", "_2", "_1", "_0"};
-  // vector<int> dictClustersVec = {10};
-  //  vector<int> scaleVec = {9,8,7,6,5,4,3,2,1,0};
-  //  vector<int> attemptVec = {35};
-
-  // // CROPPING SIZE 9
-    // vector<string> folderName = {"5","10","20","30","40","50","60","70"};
-    // vector<int> dictClustersVec = {10};
-    // vector<int> scaleVec = {9};
-    // vector<int> attemptVec = {35};
-    // vector<int> cropsizeVec = {5,10,20,30,40,50,60,70};
-
-  // // CROPPING SIZE 8
-    // vector<string> folderName = {"10","20","40","60","80","100","120","140"};
-    // vector<int> dictClustersVec = {10};
-    // vector<int> scaleVec = {8};
-    // vector<int> attemptVec = {35};
-    // vector<int> cropsizeVec = {10,20,40,60,80,100,120,140};
-
- // CROPPING SIZE 7
-  //   vector<string> folderName = {"25","50","80","100","125","150","175", "200"};
-  //   vector<int> dictClustersVec = {5};
-  //   vector<int> scaleVec = {7};
-  //   vector<int> attemptVec = {35};
-  //   vector<int> cropsizeVec = {25,50,80,100,125,150,175, 200};
-
-   // // // CROPPING SIZE 6
-    //   vector<string> folderName = {"40","80","120","140","160","180","200","240","280"};
-    //   vector<int> dictClustersVec = {10};
-    //   vector<int> scaleVec = {6};
-    //   vector<int> attemptVec = {35};
-    //   vector<int> cropsizeVec = {40,80,120,140,160,180,200,240,280};
-
-    // // INDIVIDUAL VARIABLES
-    vector<string> folderName = {"TEST"};
-    vector<int> cropsizeVec = {70};
-    vector<int> dictClustersVec = {10};
-    vector<int> scaleVec = {8};
-    vector<int> attemptVec = {35};
+  // ---- INITIAL VARIABLES ------ //
+  vector<string> folderName = {"TEST"}; // Where to save prediction Visualisations
+  vector<int> dictClustersVec = {10};
+  vector<int> scaleVec = {8};
+  vector<int> attemptVec = {35};
 
     int programLoop = 1; // Number of time the whole program will repeat
     int testLoop = 1; // Number of results sets which will be gathered
@@ -142,7 +120,8 @@ int main( int argc, char** argv ){
       scale = scaleVec[xx];
     }
 
-// ATTEMPTS
+// ATTEMPTS //
+    // if multiple vals in 'attemptVec' then run all otherwise check input
     if(attemptVec.size()==1){
       if(testType.compare("attempts")==0){
         attempts = testInput;
@@ -156,15 +135,16 @@ int main( int argc, char** argv ){
       attempts = attemptVec[xx];
     }
 
-    // Adjust the cropSize depending on chosen scale
-    double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
+  // Adjust the cropSize depending on chosen scale
+  double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
+  int cropsize;
 
-    int cropsize;
   if(testType.compare("cropping")==0){
       if(VERBOSE){
         cout << "USING FIXED CROPSIZE\n";
       }
       cropsize = testInput;
+      scale=atoi(argv[4]);
   }else{
     cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
   }
@@ -179,9 +159,6 @@ int main( int argc, char** argv ){
       DictSize = dictClustersVec[xx];
     }
 
-    cout << "This is the cropsize: " << cropsize << endl;
-    // exit(1);
-    cout << "This is the scalesize: " << scale << endl;
     double modOverlap = 0; // Percentage of crop which will overlap horizontally
     double modelOverlapDb = (modOverlap/100)*cropsize; // Calculate percentage of cropsize
     int modelOverlap = modelOverlapDb; // To convert to int for transfer to function
@@ -192,12 +169,14 @@ int main( int argc, char** argv ){
     int testimgOverlap =modelOverlap; // Have the same test and model overlap
 
     int dictDur, modDur, novDur;
-    int numClusters = 10;
+    int numClusters = 10; // For model and test images
     int flags = KMEANS_PP_CENTERS;
     int kmeansIteration = 100000;
     double kmeansEpsilon = 0.000001;
     cout << "\nDictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
     << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
+    cout << "This is the cropsize: " << cropsize << "\n";
+    cout << "This is the scalesize: " << scale << endl;
 
     path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
     path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
@@ -266,64 +245,6 @@ int main( int argc, char** argv ){
         novDur = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
       }
     #endif
-
-
-  // /////////////////////////////////// TEST ////////////////////////////////////////////////////////
-  //
-  //       vector<vector<Mat> > filterbank;
-  //       int n_sigmas, n_orientations;
-  //       createFilterbank(filterbank, n_sigmas, n_orientations);
-  //
-  //       Mat imgIn, imgOut;
-  //       int Flags = KMEANS_PP_CENTERS;
-  //       TermCriteria Tc(TermCriteria::MAX_ITER + TermCriteria::EPS, 1000, 0.0001);
-  //       BOWKMeansTrainer tstTrain(30, Tc, 5, Flags);
-  //
-  //
-  //       float blah[] = {0,255};
-  //       const float* histblah= {blah};
-  //       int histSize[] = {10};
-  //       int channels[] = {0};
-  //       Mat ou1;
-  //       namedWindow("testWin", CV_WINDOW_AUTOSIZE);
-  //
-  //       vector<Mat> compareMe;
-  //       for(int j=0;j<1;j++){
-  //         for(int i=0;i<2;i++){
-  //           // if(i==0){
-  //           //   img1 = imread("../../bread.png", CV_LOAD_IMAGE_GRAYSCALE);
-  //           // }else{
-  //           Mat img1 = imread("../../wool.png", CV_LOAD_IMAGE_GRAYSCALE);
-  //           imshow("testWin", img1);
-  //           // waitKey(1000);
-  //           // }
-  //
-  // //         filterHandle(img1, imgOut, filterbank, n_sigmas, n_orientations);
-  //           cout << "This is the size.." << img1.rows << " cols: " << img1.cols << endl;
-  //           Mat imgFlat = reshapeCol(img1);
-  //           cout << "This is the size.." << imgFlat.rows << " cols: " << imgFlat.cols << endl;
-  //
-  //           tstTrain.add(imgFlat);
-  //           Mat clusters = Mat::zeros(10,1, CV_32FC1);
-  //           clusters = tstTrain.cluster();
-  //
-  //          calcHist(&clusters, 1, channels, Mat(), ou1, 1, histSize, &histblah, true, false);
-  //          cout << "after the calc hist" << endl;
-  //           compareMe.push_back(ou1);
-  //          tstTrain.clear();
-  //         //   cout << "done one loop.. this is the size: " << compareMe.size() << endl;
-  //         // cout << "This is the cluster1 : " << compareMe[i] << endl;
-  //         //  cout << "This is the tstTrain.size(): " << tstTrain.descripotorsCount() << endl;
-  //         }
-  //
-  //         double value =  compareHist(compareMe[0], compareMe[1], CV_COMP_CHISQR);
-  //         cout << "This is the Chisqr comparison.." << value << endl;
-  //         compareMe.clear();
-  //       }
-
-  /////////////////////////////////// TEST ////////////////////////////////////////////////////////
-
-
 
     int totalTime =0;
     cout << "\n";

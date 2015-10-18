@@ -48,6 +48,7 @@ Mat reshapeCol(Mat in){
   return points;
 }
 
+// Segment input image and return in vector
 void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
 //  int colstart =0, rowstart=0;
 

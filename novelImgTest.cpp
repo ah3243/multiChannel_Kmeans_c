@@ -29,7 +29,7 @@ using namespace cv;
 using namespace std;
 
 #define CHISQU_MAX_threshold 6
-#define CHISQU_DIS_threshold 1
+#define CHISQU_DIS_threshold 0
 
 // For offsetting segment, MUST === IMGFUNCTION VALUES!!
 #define COLSTART 0
@@ -45,7 +45,7 @@ using namespace std;
 #define PRINT_CONFUSIONMATRIX 0
 #define PRINT_CONFMATAVG 0
 #define PRINT_TPRPPV 0
-#define PRINT_AVG 1
+#define PRINT_AVG 0
 #define PRINT_COLOR 0
 
 #define a1 map<string, int>
@@ -364,11 +364,11 @@ void calcNearestClasses(map<string, vector<map<string, vector<double> > > > resu
     }
   }
 
-//  cout << "0 :";
+  //  cout << "0 :";
   for(auto const ad:avgs){
     cout << ad.first << ":";
   }
-//  cout << "\n";
+  //  cout << "\n";
 
   // Print out each classes average against given class
   for(auto const ae:avgs){
@@ -380,7 +380,7 @@ void calcNearestClasses(map<string, vector<map<string, vector<double> > > > resu
       for(int i=0;i<vecsize;i++){
         q+= b1.second[i];
       }
- //     b1.second.clear();
+      //     b1.second.clear();
       // Print out the mean of all responses for class
       cout << q/vecsize << ": ";
     }
@@ -413,7 +413,6 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   vector<double> grass;
   double acc;// Accuracy
   map<string, vector<double> > avgResults;// Used to collate histogram distance results for easy printing/exporting
-
 
   // Extract and store saved color data from model.xml
   map<string, vector<double> > saveColors;
@@ -530,7 +529,8 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           a2 tmpVals; // For holding all the results from each class for a single segment
           map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
           // Re cluster image segment this number of times averaging the best results
-          for(int tstAVG=0;tstAVG<10;tstAVG++){
+          int numTstRepeats =10;
+          for(int tstAVG=0;tstAVG<numTstRepeats;tstAVG++){
             assert(test.size() == colorTest.size());
 
             // handle segment prediction printing
@@ -581,11 +581,11 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
           // The depth of averaging for values
           ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-          double avgDepth =1;
+          double avgDepth =numTstRepeats;
 
           vector<pair<string, double>> avg;
           // Get the average of the top n values for each class store in sorted vector
-          for(auto const ent9:tmpVals){
+          for(auto const ent9:testAvgs){
             double avgTot=0.0;
             for(int w=0;w<avgDepth;w++){
               avgTot += ent9.second[w];
@@ -790,7 +790,7 @@ void loadVideo(string p, map<string, vector<Mat> > &testImages, int scale){
   }
   cout << "Video Loaded, this is the frame count: " << stream.get(CV_CAP_PROP_FRAME_COUNT) << endl;
   cout << "This is the width of each frame: " << stream.get(CV_CAP_PROP_FRAME_WIDTH) << " and height: " << stream.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
-};
+}
 
 void printFiles(map<string, vector<string> > s, vector<string> &fileNmes, path p){
   cout << "These are the current video files in the directory.\n";
@@ -855,11 +855,9 @@ void printVector(vector<double> hh, bool flag){
   }
 }
 void printPPVTPR(string filler, vector<double> TP, vector<double> H, bool flag){
-  if(flag){
-    cout << ":" << filler;
-  }
   for(int jq=0;jq<H.size();jq++){
-    if(flag){
+    // Add seperating ':' if not first value
+    if(jq!=0){
         cout << ":";
     }
     cout << (TP[jq]/(TP[jq]+H[jq]));
@@ -989,7 +987,7 @@ void printResByClss(map<string, vector<vector<double> > > in, bool firstGo){
         vector<double> TP(iter.second[0]);
         vector<double> FP(iter.second[1]);
         if(firstGo){
-          cout << iter.first;
+          cout << iter.first << ":";
         }
         printPPVTPR("PPV",TP, FP, firstGo);
         cout << "\n";
@@ -1001,7 +999,7 @@ void printResByClss(map<string, vector<vector<double> > > in, bool firstGo){
         vector<double> TP(iter.second[0]);
         vector<double> FN(iter.second[3]);
         if(firstGo){
-          cout << iter.first;
+          cout << iter.first << ":";
         }
         printPPVTPR("TPR",TP, FN, firstGo);
         cout << "\n";
@@ -1032,6 +1030,8 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     // cin >> s;
     // boost::algorithm::to_lower(s);
     // if(s.compare("y")==0){
+
+    // Imports and processes test video if used
     if(false){
       map<string, vector<string> > s1;
       vector<string> fileNmes;
@@ -1145,5 +1145,4 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   int novelHandleTime=0;
   auto novelHandleEnd = std::chrono::high_resolution_clock::now();
   novelHandleTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelHandleEnd - novelHandleStart).count();
-  cout << "\nnovelHandleTime: " << novelHandleTime << endl;
 }
