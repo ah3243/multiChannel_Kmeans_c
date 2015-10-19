@@ -186,7 +186,7 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
 
       classSave[ent1.first].push_back(clus);
       // Replace Cluster Centers with the closest matching texton
-      distances.push_back(textonFind(clus, dictionary, distances)); // substitue textons for cluster centres, store agg distance
+      textonFind(clus, dictionary, distances); // substitue textons for cluster centres, store agg distance
 
       Mat out;
       if(MdlDEBUG){

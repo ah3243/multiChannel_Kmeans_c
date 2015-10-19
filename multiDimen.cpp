@@ -27,6 +27,11 @@
 #define MODEL_BUILD 1
 #define NOVELIMG_TEST 1
 
+#define kmeansIteration 100000
+#define kmeansEpsilon 0.000001
+#define numClusters 10 // For model and test images
+#define flags KMEANS_PP_CENTERS
+
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
 using namespace boost::filesystem;
@@ -34,20 +39,23 @@ using namespace cv;
 using namespace std;
 
 int main( int argc, char** argv ){
-  cout << "number of inputs: " << argc << " 0: " << argv[0] << " 1: " << argv[1] << endl;
-  if(argc==3){
-    string testingFlag = argv[1];
-    if(testingFlag.compare("testing")==0){
-      Mat inImage = imread(argv[2],1);
-      int navOut = directionHandle(inImage);
+  cout << "number of inputs: " << argc << " 0: " << argv[0] << " 1: " << argv[1] << " 2: " << argv[2] << endl;
+  string testingFlag = argv[1];
+  if(testingFlag.compare("testing")==0){
+    map<string, int> testParams;
+    map<string, double> testParamsDB;
+      testParams["scale"] = atoi(argv[3]);
+      testParams["cropSize"] = atoi(argv[4]);
+      testParams["numClusters"] = numClusters;
+      testParamsDB["kmeansIteration"] = kmeansIteration;
+      testParamsDB["kmeansEpsilon"] = kmeansEpsilon;
+      testParams["kmeansAttempts"] = 35;
+      testParams["flags"] = flags;
+      testParams["testRepeats"] = 10;
+
+      int navOut = directionHandle(argv[2], testParams, testParamsDB);
       cout << "\n\nTesting.." << navOut << endl;
       exit(1);
-    }else{
-      ERR("Incorrect number of inputs detected. Exiting.");
-      exit(1);
-    }
-    cout << "not passing ..\n\n";
-    exit(1);
   }else if(argc<3){
     ERR("Incorrect number of inputs detected. Exiting.");
     exit(1);
@@ -169,10 +177,7 @@ int main( int argc, char** argv ){
     int testimgOverlap =modelOverlap; // Have the same test and model overlap
 
     int dictDur, modDur, novDur;
-    int numClusters = 10; // For model and test images
-    int flags = KMEANS_PP_CENTERS;
-    int kmeansIteration = 100000;
-    double kmeansEpsilon = 0.000001;
+
     cout << "\nDictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
     << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
     cout << "This is the cropsize: " << cropsize << "\n";

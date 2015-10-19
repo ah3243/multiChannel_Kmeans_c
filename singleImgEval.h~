@@ -1,0 +1,8 @@
+// Single Image Evaluation Module
+
+#ifndef singleImgEval
+#define singleImgEval
+
+  int directionHandle(std::string inImg, std::map<std::string, int> params, std::map<string, double> paramsDB);
+
+#endif

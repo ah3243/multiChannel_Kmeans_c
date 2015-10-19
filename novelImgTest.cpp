@@ -245,37 +245,6 @@ void saveTestData(vector<map<string, vector<double> > > r, int serial){
   }
 }
 
-int getClassHist(map<string, vector<Mat> >& savedClassHist){
-  int serial;
-  // Load in Class Histograms(Models)
-  FileStorage fs3("models.xml", FileStorage::READ);
-  fs3["Serial"] >> serial;
-  FileNode fn = fs3["classes"];
-  if(fn.type() == FileNode::MAP){
-
-    // Create iterator to go through all the classes
-    for(FileNodeIterator it = fn.begin();it != fn.end();it++){
-      string clsNme = (string)(*it)["Name"];
-      savedClassHist[clsNme];
-
-      // Create node of current Class
-      FileNode clss = (*it)["Models"];
-      // Iterate through each model inside class, saving to map
-      for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
-        FileNode k = *it1;
-        Mat tmp;
-        k >> tmp;
-        savedClassHist[clsNme].push_back(tmp);
-      }
-    }
-    fs3.release();
-  }else{
-    ERR("Class file was not map.");
-    exit(-1);
-  }
-  return serial;
-}
-
 void getColorData(map<string, vector<double> >&saveColors){
   // Load in Class Histograms(Models)
   FileStorage fs3("models.xml", FileStorage::READ);
@@ -297,19 +266,6 @@ void getColorData(map<string, vector<double> >&saveColors){
     ERR("Class file was not map.");
     exit(-1);
   }
-}
-
-void getDictionary(Mat &dictionary, vector<float> &m){
-  // Load TextonDictionary
-  FileStorage fs("dictionary.xml",FileStorage::READ);
-  if(!fs.isOpened()){
-    ERR("Unable to open Texton Dictionary.");
-    exit(-1);
-  }
-
-  fs["vocabulary"] >> dictionary;
-  fs["bins"] >> m;
-  fs.release();
 }
 
 void printConfMat(std::map<std::string, std::map<std::string, int> > in){
@@ -350,7 +306,6 @@ void calcNearestClasses(map<string, vector<map<string, vector<double> > > > resu
   for(int i=0;i<clsnames.size();i++){
     cout << clsnames[i] << endl;
   }
-
 
   // Go through each classes segments
   for(auto const a:results){
@@ -394,9 +349,12 @@ bool pairCompare(const pair<string, double>& firstElem, const pair<string, doubl
 }
 
 void qSegment(Mat in, vector<Mat> &out, int cropsize){
-  // int colstart =20, rowstart=20;
-  for(int i=COLSTART;i<(in.cols-cropsize);i+=cropsize){
-    for(int j=ROWSTART;j<(in.rows-cropsize);j+=cropsize){
+  // find the number of possible segments, then calculate gap around these
+  int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
+  int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
+
+  for(int i=colspace;i<(in.cols-cropsize);i+=cropsize){
+    for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
       tmp = in(Rect(i, j, cropsize, cropsize));
       out.push_back(tmp);
@@ -549,14 +507,14 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
              clus = novelTrainer.cluster();
 
              // Replace Cluster Centers with the closest matching texton
-             textonDistance.push_back(textonFind(clus, dictionary, texDistance));
+             textonFind(clus, dictionary, textonDistance);
 
             // Calculate the histogram
-             Mat out1, out2, lone, lone2;
-             lone = clus.clone();
+             Mat out1;
              int histSize = m.size()-1;
              const float* histRange = {bins};
-             calcHist(&lone, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
+             calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
+
              novelTrainer.clear();
              double high = DBL_MAX, secHigh = DBL_MAX, clsHigh = DBL_MAX;
              string match, secMatch;

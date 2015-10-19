@@ -17,10 +17,6 @@
 using namespace std;
 using namespace cv;
 
-// For offsetting segment, MUST === IMGFUNCTION VALUES!!
-#define COLSTART 0
-#define ROWSTART 0
-
 #define imgFuncDEBUG 0
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
@@ -48,6 +44,49 @@ Mat reshapeCol(Mat in){
   return points;
 }
 
+void getDictionary(Mat &dictionary, vector<float> &m){
+  // Load TextonDictionary
+  FileStorage fs("dictionary.xml",FileStorage::READ);
+  if(!fs.isOpened()){
+    ERR("Unable to open Texton Dictionary.");
+    exit(-1);
+  }
+  fs["vocabulary"] >> dictionary;
+  fs["bins"] >> m;
+  fs.release();
+}
+
+int getClassHist(map<string, vector<Mat> >& savedClassHist){
+  int serial;
+  // Load in Class Histograms(Models)
+  FileStorage fs3("models.xml", FileStorage::READ);
+  fs3["Serial"] >> serial;
+  FileNode fn = fs3["classes"];
+  if(fn.type() == FileNode::MAP){
+
+    // Create iterator to go through all the classes
+    for(FileNodeIterator it = fn.begin();it != fn.end();it++){
+      string clsNme = (string)(*it)["Name"];
+      savedClassHist[clsNme];
+
+      // Create node of current Class
+      FileNode clss = (*it)["Models"];
+      // Iterate through each model inside class, saving to map
+      for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
+        FileNode k = *it1;
+        Mat tmp;
+        k >> tmp;
+        savedClassHist[clsNme].push_back(tmp);
+      }
+    }
+    fs3.release();
+  }else{
+    ERR("Class file was not map.");
+    exit(-1);
+  }
+  return serial;
+}
+
 // Segment input image and return in vector
 void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
 //  int colstart =0, rowstart=0;
@@ -56,7 +95,11 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
   int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
   int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
 
-  if((cropsize+ROWSTART)>in.rows || (cropsize+COLSTART)>in.cols){
+  // int colspace =0; // For ease of testing
+  // int rowspace =0; // For ease of testing
+
+  // Make sure manual offset and cropsize are compatible with imagesize
+  if((cropsize+rowspace)>in.rows || (cropsize+colspace)>in.cols){
     ERR("cropsize larger than input image. Exiting");
     exit(1);
   }
@@ -74,22 +117,23 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
   //   rowstart= rowspace;
   // }
 
-  for(int i=COLSTART;i<(in.cols-cropsize);i+=(cropsize-overlap)){
-    for(int j=ROWSTART;j<(in.rows-cropsize);j+=cropsize){
+  // Extract the maximum Number of full Segments from the image
+  for(int i=colspace;i<(in.cols-cropsize);i+=(cropsize-overlap)){
+    for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
-      tmp = reshapeCol(in(Rect(i, j, cropsize, cropsize)));
+      Mat normImg = in(Rect(i, j, cropsize, cropsize));
+      imshow("SegImg", normImg);
+      tmp = reshapeCol(normImg);
       out.push_back(tmp);
+      waitKey(0);
     }
   }
-  // Mat out1 = Mat::zeros(in.cols, in.rows, CV_32FC1);
-  // out1 = reshapeCol(in);
-  // out.push_back(out1);
   ss.str("");
   ss << "This is the number of segments: " << out.size() << " and the average cols: " << out[0].cols;
   imgFDEBUG(ss.str(), 0);
 }
 
-double textonFind(Mat& clus, Mat dictionary, vector<double>& disVec){
+void textonFind(Mat& clus, Mat dictionary, vector<double>& disVec){
   if(clus.empty() || dictionary.empty()){
     ERR("Texton Find inputs were empty.");
     exit(-1);

@@ -3,6 +3,6 @@
 #ifndef singleImgEval
 #define singleImgEval
 
-  int directionHandle(cv::Mat inImg);
+  int directionHandle(std::string inImg, std::map<std::string, int> params, std::map<std::string, double> paramsDB);
 
 #endif

@@ -50,7 +50,7 @@ do
 	## VARIABLE TYPES
 	inputType="cropping"
 	## SCALE VALUES
-	Scale=9
+	Scale=7
 
 	firstGo=1
 	counter=0

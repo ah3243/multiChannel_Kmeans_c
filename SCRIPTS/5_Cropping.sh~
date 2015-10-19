@@ -50,7 +50,7 @@ do
 	## VARIABLE TYPES
 	inputType="cropping"
 	## SCALE VALUES
-	Scale=9
+	Scale=8
 
 	firstGo=1
 	counter=0
@@ -59,8 +59,8 @@ do
     if [ $Scale -eq 9 ]
     then    
         echo "Scale == 9"
-        Cropping=(5 10 20 30 35 40 50 60 70)
-#       Cropping=(35)  # missing half of height value          
+#        Cropping=(5 10 20 30 35 40 50 60 70)
+       Cropping=(35)  # missing half of height value          
     elif [ $Scale -eq 8 ]
     then
         echo "Scale == 8"
