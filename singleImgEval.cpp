@@ -43,6 +43,9 @@ using namespace std;
 
 #define showImgs 1
 
+// DEBUG FLAGS
+#define DEBUG_SCALE 0
+
 
 // Structure to hold Image segment predictions
 struct segStruct{
@@ -57,7 +60,7 @@ struct segStruct{
 
 // Get Distortion Coefficients and Camera Matrix from file
 void getCalVals(Mat &cameraMatrix, Mat &distCoeffs, double &image_Width, double &image_Height){
-  FileStorage fs("../../../imageRemapping/calFile.xml", FileStorage::READ); // Get config Data from other dir
+  FileStorage fs("/home/james-tt/Desktop/MyFilterbankCode/imageRemapping/calFile.xml", FileStorage::READ); // Get config Data from other dir
   fs["Camera_Matrix"] >> cameraMatrix;
   fs["Distortion_Coefficients"] >> distCoeffs;
   // fs["image_Width"] >> image_Width;
@@ -113,6 +116,9 @@ void scaleTstImg(Mat in, Mat &out, int scale){
     exit(-1);
   }
   resize(in, out, out.size(), effScale, effScale, INTER_AREA);
+  if(DEBUG_SCALE){
+    cerr << "SCALE_DEBUG:- effScale: " << effScale << " outSize: " << out.size() << endl;
+  }
 }
 
 // Cluster the segments filter response
@@ -153,6 +159,47 @@ string avgIterResults(map<string, vector<double> > results){
   }
   fprintf(stderr,"This was the best match: %s distance: %f\n",match.c_str(), bestMatch);
   return match;
+}
+
+// Import TextonDictionary
+void importTexDict(Mat &dictionary, vector<float> &m){
+  // Load TextonDictionary
+  FileStorage fs("/home/james-tt/Desktop/MyFilterbankCode/multiDimen/TESTINGCMAKE/build/dictionary.xml",FileStorage::READ);
+  if(!fs.isOpened()){
+    ERR("Unable to open Texton Dictionary.");
+    exit(-1);
+  }
+  fs["vocabulary"] >> dictionary;
+  fs["bins"] >> m;
+  fs.release();
+}
+// Get Class Models
+void getClassModels(map<string, vector<Mat> >& savedClassHist){
+  // Load in Class Histograms(Models)
+  FileStorage fs3("/home/james-tt/Desktop/MyFilterbankCode/multiDimen/TESTINGCMAKE/build/models.xml", FileStorage::READ);
+  FileNode fn = fs3["classes"];
+  if(fn.type() == FileNode::MAP){
+
+    // Create iterator to go through all the classes
+    for(FileNodeIterator it = fn.begin();it != fn.end();it++){
+      string clsNme = (string)(*it)["Name"];
+      savedClassHist[clsNme];
+
+      // Create node of current Class
+      FileNode clss = (*it)["Models"];
+      // Iterate through each model inside class, saving to map
+      for(FileNodeIterator it1  = clss.begin();it1 != clss.end();it1++){
+        FileNode k = *it1;
+        Mat tmp;
+        k >> tmp;
+        savedClassHist[clsNme].push_back(tmp);
+      }
+    }
+    fs3.release();
+  }else{
+    ERR("Class file was not map.");
+    exit(-1);
+  }
 }
 
 // Store the best match for each segment in SegResults structure
@@ -225,6 +272,7 @@ int navOutput(int scale, string goal){
   }
 }
 
+
 int directionHandle(string imgPath, map<string, int> params, map<string, double> paramsDB, string goal){
   int scale = params["scale"];
   int cropSize = params["cropSize"];
@@ -259,14 +307,14 @@ int directionHandle(string imgPath, map<string, int> params, map<string, double>
   // Import Saved Texton Dictionary
   Mat texDict;
   vector<float> texDictbins;
-  getDictionary(texDict, texDictbins);
+  importTexDict(texDict, texDictbins);
   // Prepare Bins for histogram
   float bins[texDictbins.size()];
   vecToArr(texDictbins, bins);
 
   // Import Models
   map<string, vector<Mat> > savedClassModels;
-  int serial = getClassHist(savedClassModels);
+  getClassModels(savedClassModels);
 
   // Iterate through each segment
   for(int i=0;i<segments.size();i++){
@@ -331,11 +379,12 @@ int main(int argc, char** argv){
   fprintf(stderr,"These are the inputs: \n");
 
   for(int a =0;a<argc;a++){
-    cerr << a << ": " << argv[a];
+    cerr << ", " << a << ": " << argv[a];
   }fprintf(stderr,"\n");
 
   string imgPath = argv[1];
   string goal = argv[4];
+
 
   map<string, int> testParams;
   map<string, double> testParamsDB;
