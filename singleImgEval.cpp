@@ -60,8 +60,10 @@ void getCalVals(Mat &cameraMatrix, Mat &distCoeffs, double &image_Width, double 
   FileStorage fs("../../../imageRemapping/calFile.xml", FileStorage::READ); // Get config Data from other dir
   fs["Camera_Matrix"] >> cameraMatrix;
   fs["Distortion_Coefficients"] >> distCoeffs;
-  fs["image_Width"] >> image_Width;
-  fs["image_Height"] >> image_Height;
+  // fs["image_Width"] >> image_Width;
+  // fs["image_Height"] >> image_Height;
+  image_Width=640;
+  image_Height=360;
   fs.release();
 }
 
@@ -97,6 +99,22 @@ Mat remapImg(Mat input){
   }
   return rview;
 }
+
+// Scale input image depending on input scale
+void scaleTstImg(Mat in, Mat &out, int scale){
+  double endW[] = {1280, 1152, 1024, 896, 768, 640, 512, 384, 256, 128};
+  double endH[] = {720, 648, 576, 504, 432, 360, 288, 216, 144, 72};
+  double effScale;
+
+  effScale = (endW[scale]/in.cols);
+  // Validate height and width match allowed pairs
+  if((endH[scale]/in.rows)!= effScale){
+    ERR("The scaling variables did not match.");
+    exit(-1);
+  }
+  resize(in, out, out.size(), effScale, effScale, INTER_AREA);
+}
+
 // Cluster the segments filter response
 Mat clusterImg(Mat in, map<string, int> params, map<string, double> paramsDB){
   // Extract Parameters
@@ -222,7 +240,7 @@ int directionHandle(string imgPath, map<string, int> params, map<string, double>
 
   // Scale image
   Mat scaledImg;
-  scaleImg(rectImg, scaledImg, scale);
+  scaleTstImg(rectImg, scaledImg, scale);
 
   // Generate and Store Filterbank
   vector<vector<Mat> > filterbank;
@@ -297,7 +315,6 @@ int directionHandle(string imgPath, map<string, int> params, map<string, double>
 
 
 int main(int argc, char** argv){
-
   // Validate the number of inputs is correct
   if(argc<3){
     ERR("Incorrect number of inputs detected. Exiting.");
@@ -316,6 +333,7 @@ int main(int argc, char** argv){
   for(int a =0;a<argc;a++){
     cerr << a << ": " << argv[a];
   }fprintf(stderr,"\n");
+
   string imgPath = argv[1];
   string goal = argv[4];
 
@@ -329,7 +347,6 @@ int main(int argc, char** argv){
     testParams["kmeansAttempts"] = 35;
     testParams["flags"] = flags;
     testParams["testRepeats"] = 10;
-
     int navOut = directionHandle(imgPath, testParams, testParamsDB, goal);
     fprintf(stderr,"\n\nOutput Value..%d\n", navOut);
 

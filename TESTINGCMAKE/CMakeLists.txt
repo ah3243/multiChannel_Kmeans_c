@@ -14,7 +14,7 @@ endif()
 if(Boost_FOUND)
   INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
-  ADD_EXECUTABLE(${PROJECT_NAME} ../singleImgEval.cpp ../filterbank.h ../filterbank.cpp
+  ADD_EXECUTABLE(${PROJECT_NAME} ../singleImgEval.cpp ../singleImgEval.h ../filterbank.h ../filterbank.cpp
   ../imgCollection.cpp ../imgCollection.h ../modelBuild.cpp ../modelBuild.h
 ../imgFunctions.cpp ../imgFunctions.h ../dictCreation.cpp ../dictCreation.h)
 
