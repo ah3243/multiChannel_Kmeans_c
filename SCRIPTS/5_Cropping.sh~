@@ -52,7 +52,7 @@ do
 	## SCALE VALUES
 	Scale=8
 
-	firstGo=1
+	firstGo=1 # Prevents results labels being printed after the first iteration
 	counter=0
     
     ## Assign correct cropping sizes for current scale

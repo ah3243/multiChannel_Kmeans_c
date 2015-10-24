@@ -36,14 +36,28 @@
 using namespace cv;
 using namespace std;
 
+#define ERR(msg) fprintf(stderr,"\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
+
 #define CHISQU_MAX_threshold 6
 #define CHISQU_DIS_threshold 0
 
 #define showImgs 1
 
+
+// Structure to hold Image segment predictions
+struct segStruct{
+  // Top match for each segment position
+  string TopLeft;
+  string TopMiddle;
+  string TopRight;
+  string BottomLeft;
+  string BottomMiddle;
+  string BottomRight;
+} segResStruct;
+
 // Get Distortion Coefficients and Camera Matrix from file
 void getCalVals(Mat &cameraMatrix, Mat &distCoeffs, double &image_Width, double &image_Height){
-  FileStorage fs("../../imageRemapping/calFile.xml", FileStorage::READ); // Get config Data from other dir
+  FileStorage fs("../../../imageRemapping/calFile.xml", FileStorage::READ); // Get config Data from other dir
   fs["Camera_Matrix"] >> cameraMatrix;
   fs["Distortion_Coefficients"] >> distCoeffs;
   fs["image_Width"] >> image_Width;
@@ -57,7 +71,6 @@ Mat remapImg(Mat input){
   Mat map1, map2;
   Mat cameraMatrix, distCoeffs;
   double image_Width, image_Height;
-
   getCalVals(cameraMatrix, distCoeffs, image_Width, image_Height);
   // Set size
   Size imageSize(image_Width, image_Height);
@@ -80,10 +93,11 @@ Mat remapImg(Mat input){
   if(showImgs){
    imshow("before", view);
    imshow("after", rview);
+   waitKey(500); // Wait for 500ms
   }
   return rview;
 }
-
+// Cluster the segments filter response
 Mat clusterImg(Mat in, map<string, int> params, map<string, double> paramsDB){
   // Extract Parameters
   double kmeansEpsilon = paramsDB["kmeansEpsilon"];
@@ -100,25 +114,108 @@ Mat clusterImg(Mat in, map<string, int> params, map<string, double> paramsDB){
   return novelTrainer.cluster();
 }
 
-void avgIterResults(map<string, vector<double> > results){
+// Take the average of each classes iterations and return the best match
+string avgIterResults(map<string, vector<double> > results){
+  // Store best Match distance and class name
+  double bestMatch = DBL_MAX;
+  string match = "noMatch";
+
   // Loop through each class
   for(auto const itrRes:results){
-    double tmp;
-    // Add all results and divide by number of results to get the mean
-    for(int v=0;v<itrRes.second.size(); v++){
-      tmp+=itrRes.second[v];
+    // Calculate the mean of iteration results for each class
+    double sum = accumulate(itrRes.second.begin(), itrRes.second.end(), 0.0);
+    double mean = sum/itrRes.second.size();
+    fprintf(stderr,"%s : %f\n",itrRes.first.c_str(), mean);
+
+    // Store the best Match
+    if(mean<bestMatch){
+      bestMatch=mean;
+      match = itrRes.first;
     }
-    double avgResult = tmp/itrRes.second.size();
-    cout << itrRes.first << " : " << avgResult << endl;
+  }
+  fprintf(stderr,"This was the best match: %s distance: %f\n",match.c_str(), bestMatch);
+  return match;
+}
+
+// Store the best match for each segment in SegResults structure
+void segResults(string match, int iteration){
+  switch (iteration){
+  case 0:
+  // Top Left segment
+  segResStruct.TopLeft = match;
+  break;
+  case 1:
+  // Top Middle segment
+  segResStruct.TopMiddle = match;
+  break;
+  case 2:
+  // Top Right segment
+  segResStruct.TopRight = match;
+  break;
+  case 3:
+  // Bottom Left segment
+  segResStruct.BottomLeft = match;
+  break;
+  case 4:
+  // Bottom Middle segment
+  segResStruct.BottomMiddle = match;
+  break;
+  case 5:
+  // Bottom Right segment
+  segResStruct.BottomRight = match;
+  break;
+  default:
+  ERR("'segResStruct' unknown iteration entered. Exiting.");
+  exit(1);
   }
 }
 
-int directionHandle(string imgPath, map<string, int> params, map<string, double> paramsDB){
+///////////////////////////////////////////////
+//            NAV OUTPUT KEY                 //
+//                                           //
+//  0: GOAL. Validated Positive Result       //
+//  1: Stop and Validated. Positive Results  //
+//     Must be Validated                     //
+//  2: Move Forward. No positive results     //
+//     or positive result in front.          //
+//  3: Turn Left. Positive results to left.  //
+//  4: Turn Right. Positive results to right.//
+//                                           //
+///////////////////////////////////////////////
+
+// Interpret Results to output navigation decision
+int navOutput(int scale, string goal){
+  fprintf(stderr,"This is the goal: %s\n", goal.c_str());
+  // If higher resolution currently used to validate goal and goal found
+  if(scale==7 && segResStruct.BottomMiddle.compare(goal)==0){
+    fprintf(stderr,"\n\nGOAL CLASS FOUND\n\n");
+    return 0; // Exit with successful Class find
+  }
+  // If not currently on validation run but goal found
+  else if(segResStruct.BottomMiddle.compare(goal)==0){
+    fprintf(stderr,"\nValidate Positive Result \n");
+    return 1; // Stop and Validate result with higher resolution
+  }else if(segResStruct.BottomLeft.compare(goal)==0){
+    fprintf(stderr,"\nTurn Left\n");
+    return 3; // Turn Left
+  }else if(segResStruct.BottomMiddle.compare(goal)==0){
+    fprintf(stderr,"\nTurn Right\n");
+    return 4; // Turn Right
+  }else{
+    fprintf(stderr, "\nMove Forward\n");
+    return 2; // Return default move forward
+  }
+}
+
+int directionHandle(string imgPath, map<string, int> params, map<string, double> paramsDB, string goal){
   int scale = params["scale"];
   int cropSize = params["cropSize"];
-
   // Read in image
   Mat inImg = imread(imgPath,1);
+  if(inImg.empty()){
+    ERR("Imported image is empty. Exiting");
+    exit(1);
+  }
 
   // Remap input to remove distortion
   Mat rectImg = remapImg(inImg);
@@ -192,8 +289,50 @@ int directionHandle(string imgPath, map<string, int> params, map<string, double>
       }
     }
     // Average results and return first and return first and second
-    avgIterResults(tmpVals);
+    string bestMatch = avgIterResults(tmpVals);
+    segResults(bestMatch, i);
+  }
+  return navOutput(scale, goal);
+}
+
+
+int main(int argc, char** argv){
+
+  // Validate the number of inputs is correct
+  if(argc<3){
+    ERR("Incorrect number of inputs detected. Exiting.");
+    exit(1);
   }
 
-  return 0;
+  int kmeansIteration = 100000;
+  int kmeansEpsilon = 0.000001;
+  int numClusters = 10; // For model and test images
+  int flags = KMEANS_PP_CENTERS;
+
+  // Print out input parameters
+  fprintf(stderr,"argc: %d\n", argc);
+  fprintf(stderr,"These are the inputs: \n");
+
+  for(int a =0;a<argc;a++){
+    cerr << a << ": " << argv[a];
+  }fprintf(stderr,"\n");
+  string imgPath = argv[1];
+  string goal = argv[4];
+
+  map<string, int> testParams;
+  map<string, double> testParamsDB;
+    testParams["scale"] = atoi(argv[2]);
+    testParams["cropSize"] = atoi(argv[3]);
+    testParams["numClusters"] = numClusters;
+    testParamsDB["kmeansIteration"] = kmeansIteration;
+    testParamsDB["kmeansEpsilon"] = kmeansEpsilon;
+    testParams["kmeansAttempts"] = 35;
+    testParams["flags"] = flags;
+    testParams["testRepeats"] = 10;
+
+    int navOut = directionHandle(imgPath, testParams, testParamsDB, goal);
+    fprintf(stderr,"\n\nOutput Value..%d\n", navOut);
+
+    fprintf(stdout, "%d",navOut); // Output return value to stdout
+    return 0;
 }

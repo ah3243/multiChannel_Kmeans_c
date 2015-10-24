@@ -18,6 +18,7 @@ using namespace std;
 using namespace cv;
 
 #define imgFuncDEBUG 0
+#define showSegments 0
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
 void imgFDEBUG(string msg, double in){
@@ -122,10 +123,13 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
     for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
       Mat normImg = in(Rect(i, j, cropsize, cropsize));
-      imshow("SegImg", normImg);
+      if(showSegments){
+       imshow("SegImg", normImg);
+       cout << "Press any key to change segment." << endl;
+       waitKey(0);
+      }
       tmp = reshapeCol(normImg);
       out.push_back(tmp);
-      waitKey(0);
     }
   }
   ss.str("");

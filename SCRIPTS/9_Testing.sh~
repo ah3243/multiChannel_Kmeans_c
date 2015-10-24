@@ -10,9 +10,11 @@ make
 
 echo finished building
 echo
-        #Program and Parameters
+    #---------Program and Parameters----------#
+    #GOAL CLASS#
+    goal="grass"
     #Image Scale
-    scale=7
+    scale=8
     #Corresponding Segment Size to maintain 6 segments
     if [ $scale -eq 9 ] 
     then
@@ -30,10 +32,10 @@ echo
     echo The scale is $scale and the Cropping Size is $cropSize
     echo
 
-    imgLocation=../testImage.jpg
+    imgLocation=../TESTIMAGES/grass.jpg
 
-    # 1:"flag" 2:"image type" 3:"scale" 4:"cropSize"
-    ./multiDimen "testing" $imgLocation $scale $cropSize
+    # 1:"flag" 2:"image type" 3:"scale" 4:"cropSize" 5:"goal"
+    ./multiDimen "testing" $imgLocation $scale $cropSize $goal
 
 echo
 echo Finished

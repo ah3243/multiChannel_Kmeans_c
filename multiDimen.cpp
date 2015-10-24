@@ -40,29 +40,6 @@ using namespace std;
 
 int main( int argc, char** argv ){
   cout << "number of inputs: " << argc << " 0: " << argv[0] << " 1: " << argv[1] << " 2: " << argv[2] << endl;
-  string testingFlag = argv[1];
-  if(testingFlag.compare("testing")==0){
-    map<string, int> testParams;
-    map<string, double> testParamsDB;
-      testParams["scale"] = atoi(argv[3]);
-      testParams["cropSize"] = atoi(argv[4]);
-      testParams["numClusters"] = numClusters;
-      testParamsDB["kmeansIteration"] = kmeansIteration;
-      testParamsDB["kmeansEpsilon"] = kmeansEpsilon;
-      testParams["kmeansAttempts"] = 35;
-      testParams["flags"] = flags;
-      testParams["testRepeats"] = 10;
-
-      int navOut = directionHandle(argv[2], testParams, testParamsDB);
-      cout << "\n\nTesting.." << navOut << endl;
-      exit(1);
-  }else if(argc<3){
-    ERR("Incorrect number of inputs detected. Exiting.");
-    exit(1);
-  }else if(argc<4){
-    ERR("The fourth input, (to print or not), has not been entered. Exiting.");
-    exit(1);
-  }
 
 
   // Int to pass in parameter
@@ -289,6 +266,5 @@ int main( int argc, char** argv ){
   imshow("finished", finished);
 
   cout << "..........ENDING PROGRAM.............\n";
-//  waitKey(0);
   return 0;
 }
