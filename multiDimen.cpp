@@ -13,7 +13,6 @@
 #include <chrono>  // time measurement
 #include <thread>  // time measurement
 
-#include "singleImgEval.h"
 #include "imgFunctions.h"
 #include "filterbank.h"
 #include "dictCreation.h" // Generate and store Texton Dictionary
@@ -39,8 +38,10 @@ using namespace cv;
 using namespace std;
 
 int main( int argc, char** argv ){
-  cout << "number of inputs: " << argc << " 0: " << argv[0] << " 1: " << argv[1] << " 2: " << argv[2] << endl;
-
+  cout << "number of inputs: " << argc << endl;
+  for(int i=0;i<argc;i++){
+    cout << i << ": " << argv[i] << endl;
+  }
 
   // Int to pass in parameter
   int testInput = atoi(argv[1]);
@@ -52,25 +53,18 @@ int main( int argc, char** argv ){
   assert(tmp==1|| tmp==0);
   bool firstGo =(bool)tmp;
 
-  // // ATTEMPTS VARIABLES
-  // vector<string> folderName = {"5", "10", "15", "20", "25", "30","35", "40", "45", "50"};
-  // vector<int> attemptVec = {5,10,15,20,25,30,35,40,45,50};
-
-  // // TEXTDICT VARIABLES
-  // vector<string> folderName = {"3","5","8","10","12","15","20","25","30","40","50"};
-  // vector<int> dictClustersVec = {3,5,8,10,12,15,20,25,30,40,50};
-
   // ---- INITIAL VARIABLES ------ //
   vector<string> folderName = {"TEST"}; // Where to save prediction Visualisations
   vector<int> dictClustersVec = {10};
   vector<int> scaleVec = {8};
-  vector<int> attemptVec = {35};
+  int defaultattempts = 35;
 
-    int programLoop = 1; // Number of time the whole program will repeat
-    int testLoop = 1; // Number of results sets which will be gathered
+  int programLoop = 1; // Number of time the whole program will repeat
+  int testLoop = 1; // Number of results sets which will be gathered
   for(int xx=0;xx<programLoop;xx++){
     cout << "\n.......Starting Program...... \n" ;
     cout << "This is iteration " << xx << endl;
+
    // Available Scales
     ////////////////////////////////////////
     // These are the possible resolutions //
@@ -88,7 +82,10 @@ int main( int argc, char** argv ){
     // 8   256 x 144                      //
     // 9   128 x 72                       //
     ////////////////////////////////////////
-    int scale, attempts;
+    int scale, attempts, testRepeats = 0, modelRepeats = 1;
+    // Adjust the cropSize depending on chosen scale
+    double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
+    int cropsize;
 
 // SCALE
     if(scaleVec.size()==1){
@@ -107,31 +104,44 @@ int main( int argc, char** argv ){
 
 // ATTEMPTS //
     // if multiple vals in 'attemptVec' then run all otherwise check input
-    if(attemptVec.size()==1){
-      if(testType.compare("attempts")==0){
+    if(testType.compare("attempts")==0){
+      cout << "This is the number of inputs: " << argc << endl;
         attempts = testInput;
-      }else{
-        attempts = attemptVec[0];
-      }
+        scale = atoi(argv[4]);
+        cropsize = atoi(argv[5]);
       if(VERBOSE){
         cout << "USING FIXED ATTEMPTS\n";
       }
     }else{
-      attempts = attemptVec[xx];
+      attempts = defaultattempts;
     }
 
-  // Adjust the cropSize depending on chosen scale
-  double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
-  int cropsize;
-
+  // CROPPING //
   if(testType.compare("cropping")==0){
       if(VERBOSE){
         cout << "USING FIXED CROPSIZE\n";
       }
       cropsize = testInput;
       scale=atoi(argv[4]);
-  }else{
-    cropsize = (700*cropScale[scale]); // Cropsize is 140Pixels at 256 x 144
+  }
+
+  // TEST_REPEATS
+  if(testType.compare("testRepeats")==0){
+      if(VERBOSE){
+        cout << "USING FIXED CROPSIZE\n";
+      }
+      testRepeats = testInput;
+      scale=atoi(argv[4]);
+      cropsize=atoi(argv[5]);
+  }
+  // MODEL_REPEATS
+  if(testType.compare("modelRepeats")==0){
+      if(VERBOSE){
+        cout << "USING FIXED CROPSIZE\n";
+      }
+      modelRepeats = testInput;
+      scale=atoi(argv[4]);
+      cropsize=atoi(argv[5]);
   }
 
     int DictSize;
@@ -201,7 +211,7 @@ int main( int argc, char** argv ){
       // Measure start time
       auto t3 = std::chrono::high_resolution_clock::now();
 
-      modelBuildHandle(cropsize, scale, numClusters, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap);
+      modelBuildHandle(cropsize, scale, numClusters, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap, modelRepeats);
 
       // Measure time efficiency
       auto t4 = std::chrono::high_resolution_clock::now();
@@ -220,7 +230,7 @@ int main( int argc, char** argv ){
         auto t5 = std::chrono::high_resolution_clock::now();
 
         novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags,
-          attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName[xx], firstGo);
+          attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName[xx], firstGo, testRepeats);
 
         // Measure time efficiency
         auto t6 = std::chrono::high_resolution_clock::now();

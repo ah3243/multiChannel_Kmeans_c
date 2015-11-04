@@ -17,7 +17,7 @@ if(Boost_FOUND)
   ADD_EXECUTABLE(${PROJECT_NAME} multiDimen.cpp ./filterbank.h ./filterbank.cpp
   ./imgCollection.cpp ./imgCollection.h ./modelBuild.cpp ./modelBuild.h
 ./imgFunctions.cpp ./imgFunctions.h ./dictCreation.cpp ./dictCreation.h
-./novelImgTest.cpp ./novelImgTest.h ./singleImgEval.cpp)
+./novelImgTest.cpp ./novelImgTest.h)
 
   TARGET_LINK_LIBRARIES(${PROJECT_NAME}
     ${OpenCV_LIBS}

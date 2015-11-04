@@ -35,6 +35,9 @@ using namespace std;
 #define COLSTART 0
 #define ROWSTART 0
 
+// Dictates the number of times to take repeat test readings for averaging
+#define TEST_REPEATS 10
+
 // Results Display Flags
 #define VERBOSE 0
 #define SAVEIMGS 0
@@ -364,7 +367,8 @@ void qSegment(Mat in, vector<Mat> &out, int cropsize){
 
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
                   map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string,
-                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName){
+                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap,
+                  string folderName, int testRepeats){
 
   auto novelStart = std::chrono::high_resolution_clock::now();
   double fpsTotal = 0, frameCount = 0, fpsAvg=0;
@@ -375,7 +379,6 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
   // Extract and store saved color data from model.xml
   map<string, vector<double> > saveColors;
   getColorData(saveColors);
-
   vector<string> Clsnmes;
   for(auto const la : savedClassHist){
     Clsnmes.push_back(la.first);
@@ -487,7 +490,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           a2 tmpVals; // For holding all the results from each class for a single segment
           map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
           // Re cluster image segment this number of times averaging the best results
-          int numTstRepeats =10;
+          int numTstRepeats =testRepeats;
           for(int tstAVG=0;tstAVG<numTstRepeats;tstAVG++){
             assert(test.size() == colorTest.size());
 
@@ -976,18 +979,23 @@ void printResByClss(map<string, vector<vector<double> > > in, bool firstGo){
   }
 }
 void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int numClusters,
-  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName, bool firstGo){
+  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, string folderName, bool firstGo, int testRepeats){
     auto novelHandleStart = std::chrono::high_resolution_clock::now();
     // Load Images to be tested
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
     map<string, vector<Mat> > testImages;
     map<string, vector<map<string, vector<double> > > > fullSegResults;
-
     // string s;
     // cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
     // cin >> s;
     // boost::algorithm::to_lower(s);
     // if(s.compare("y")==0){
+
+    // If no testRepeats assigned set to 1
+    if(testRepeats==0){
+      testRepeats=1;
+    }
+    cout << "\nNumber of TEST Repeats\n";
 
     // Imports and processes test video if used
     if(false){
@@ -1077,7 +1085,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     initROCcnt(results, clsNames); // Initilse map
     cout << "number of test images.." << testImages.size() << endl;
     acc.push_back(testNovelImg(attempts, numClusters, results[kk], testImages, savedClassHist, Colors, cropsize,
-      fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap, folderName));
+      fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap, folderName, testRepeats));
 
    }
 

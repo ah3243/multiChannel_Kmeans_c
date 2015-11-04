@@ -83,35 +83,46 @@ vector<float> createBins(Mat texDic, int numClusters){
   return v;
 }
 
+void filterImgs(map<string, vector<Mat> > imgs, map<string, vector<Mat> > &filteredImgs){
+  // Create Filterbank
+  int n_sigmas, n_orientations;
+  vector<vector<Mat> > filterbank;
+  createFilterbank(filterbank, n_sigmas, n_orientations);
+
+  // Cycle through images and Apply Filterbank saving responses to output
+  for(auto const imgs1 : imgs){
+    for(int curImg=0;curImg<imgs1.second.size();curImg++){
+      Mat in, out;
+      in = imgs1.second[curImg];
+      filterHandle(in, out, filterbank, n_sigmas, n_orientations);
+      filteredImgs[imgs1.first].push_back(out);
+    }
+  }
+}
+
 void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap){
   // TermCriteria tc(TermCriteria::MAX_ITER + TermCriteria::EPS, kmeansIteration, kmeansEpsilon);
   TermCriteria tc(TermCriteria::MAX_ITER, kmeansIteration, kmeansEpsilon);
   BOWKMeansTrainer bowTrainer(numClusters, tc, attempts, flags);
 
-  map<string, vector<Mat> > textonImgs;
+  map<string, vector<Mat> > textonImgs, filteredImgs;
   path p = "../../../TEST_IMAGES/CapturedImgs/classes";
   loadClassImgs(p, textonImgs, scale);
 
-  vector<vector<Mat> > filterbank;
-  int n_sigmas, n_orientations;
-  createFilterbank(filterbank, n_sigmas, n_orientations);
+  filterImgs(textonImgs, filteredImgs);
 
   Mat dictionary;
   // Cycle through Classes
-  for(auto const ent1 : textonImgs){
+  for(auto const ent1 : filteredImgs){
     // Cycle through all images in Class
     for(int j=0;j<ent1.second.size();j++){
-      Mat in = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32F);
-      Mat hold = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32FC1);
+      Mat curImg = Mat::zeros(ent1.second[j].cols, ent1.second[j].rows,CV_32F);
       // Send img to be filtered, and responses aggregated with addWeighted
-      in = ent1.second[j];
-      dicDEBUG("before of filterbank handle texton dict..\n", 0);
-      if(!in.empty())
-        filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
+      curImg = ent1.second[j];
       dicDEBUG("outside of filterbank handle texton dict..\n", 0);
       // Segment the 200x200pixel image
       vector<Mat> test;
-      segmentImg(test, hold, cropsize, overlap);
+      segmentImg(test, curImg, cropsize, overlap);
       dicDEBUG("after segmenation: ", test.size());
       // Push each saved Mat to bowTrainer
       for(int k = 0; k < test.size(); k++){

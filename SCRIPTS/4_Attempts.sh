@@ -15,7 +15,7 @@ if [ $1 == "1" ]
 then
   echo "Generating new images."
   useImgs="Y"
-else 
+else
   useImgs="N"
 fi
 
@@ -28,6 +28,8 @@ echo made and built
 ## Set number of repeats (potentially with new images)
 Repeats=2
 imgCounter=0
+scale=8
+cropsize=105
 
 # Only run tests once if static images used
 if [ "$useImgs" == "N" ]
@@ -46,7 +48,7 @@ do
 	~/Desktop/TEST_IMAGES/CapturedImgs/./ranImgs.sh
 	echo images randomised and allocated
   fi
-		
+
 	## VARIABLE TYPES
 	inputType="attempts"
 	## SCALE VALUES
@@ -54,7 +56,7 @@ do
 
 	firstGo=1
 	counter=0
-    
+
 	for i in ${Attempts[@]}; do
 		# If not first iteration then set flag as 0
 		if [ $counter -gt 0 ]
@@ -64,9 +66,9 @@ do
 		fi
 
 		echo starting program
-	
-		#Note 1.inputValue  2.Input Type 3.firstLineFlag
-		./multiDimen ${i} $inputType $firstGo
+
+		#Note 1.inputValue  2.Input Type 3.firstLineFlag 4.Scale 5.Cropsize
+		./multiDimen ${i} $inputType $firstGo $scale $cropsize
 		echo Test Type is: $inputType
 		echo iteration $counter
 		echo

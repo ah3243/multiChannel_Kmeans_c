@@ -93,16 +93,18 @@ void quickSegment(Mat in, vector<Mat> &out, int cropsize){
   }
 }
 
-void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap){
+void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int attempts, int kmeansIteration,
+  double kmeansEpsilon, int overlap, int modelRepeats){
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;
-    int dictClusters;
-    FileStorage fs("dictionary.xml",FileStorage::READ);
-    fs["vocabulary"] >> dictionary;
-    fs["bins"] >> m;
-    fs["clustersPerClass"] >> dictClusters;
-    cout << "\nThis is the number of dictionary clusters.." << dictClusters << endl;
+
+  int dictClusters;
+  FileStorage fs("dictionary.xml",FileStorage::READ);
+  fs["vocabulary"] >> dictionary;
+  fs["bins"] >> m;
+  fs["clustersPerClass"] >> dictClusters;
+  cout << "\nThis is the number of dictionary clusters.." << dictClusters << endl;
 
     if(!fs.isOpened()){
       ERR("Unable to open Texton Dictionary.");
@@ -130,10 +132,9 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
     bool accumulate = false;
 
     TermCriteria clsTc(TermCriteria::MAX_ITER, kmeansIteration, kmeansEpsilon);
-    BOWKMeansTrainer classTrainer(numClusters, clsTc, attempts, flags);
 
     cout << "\n\n.......Generating Models...... \n" ;
-
+    cout << "\nNumber of Model Repeats: " << modelRepeats << endl;
     map<string, vector<Mat> > classHist;
     map<string, double> avgDistance; // Store the aggregated distance to class textons
     map<string, vector<Mat> > classSave;
@@ -150,50 +151,65 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
     classColor.push_back(a);
     classColor.push_back(a);
 
-    // Cycle through each classes images
     if(MdlDEBUG){
-      cout << "\nClass: " << ent1.first << endl;}
+      cout << "\nClass: " << ent1.first << endl;
+    }
+
+    // Cycle through each classes images
     for(int j=0;j < ent1.second.size();j++){
       Mat in, hold;
       if(MdlDEBUG){
-        cout << "Cycle ent1.second.size(): " << ent1.second[j].size() << " J: " << j << endl;}
+        cout << "Cycle ent1.second.size(): " << ent1.second[j].size() << " J: " << j << endl;
+      }
 
       // Send img to be filtered, and responses aggregated with addWeighted
       in = ent1.second[j];
 
+      // -- Handle Color Sampling of image -- //
       Mat colorSeg;
       in.copyTo(colorSeg);
-      vector<Mat> CSegs;
-      quickSegment(colorSeg, CSegs, cropsize);
-      getMeanColor(CSegs, classColor);
 
-       if(!in.empty())
+      vector<Mat> CSegs;
+      quickSegment(colorSeg, CSegs, cropsize); // Segment image and store to Mat vector
+      getMeanColor(CSegs, classColor); // Get the mean color of all segments
+      // -- END Color sampling -- //
+
+      // If image is not empty filter
+      if(!in.empty()){
           filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
+      }
 
       // Segment and flatten the image then push each single column Mat onto a vector
       vector<Mat> test;
       segmentImg(test, hold, cropsize, overlap);
 
-      // Push each saved Mat to classTrainer
-      for(int k = 0; k < test.size(); k++){
-        if(!test[k].empty()){
-          classTrainer.add(test[k]);
-        }
-      }
-      // Generate the given number of clusters per Image and store in Mat
-      Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
-      clus = classTrainer.cluster();
+      // Object to store segments from single iteration in for clustering
+      BOWKMeansTrainer classTrainer(numClusters, clsTc, attempts, flags);
+      // Object to store results from clustering of all run results
+      BOWKMeansTrainer modelAverages(numClusters, clsTc, attempts, flags);
 
+      // Take multiple clusterings averaging results
+      for(int mReps=0;mReps<modelRepeats;mReps++){
+        // Push each saved Mat to classTrainer
+        for(int k = 0; k < test.size(); k++){
+          if(!test[k].empty()){
+            classTrainer.add(test[k]);
+          }
+        }
+        // Generate the given number of clusters per Image and prepare for clustering
+        modelAverages.add(classTrainer.cluster());
+      }
+      // Create Mat to hold final Values
+      Mat clus(numClusters,1, CV_32FC1, Scalar(0,0,0)); // Hold final Values
+      clus = modelAverages.cluster();
+
+      // Save result from image to map for storage
       classSave[ent1.first].push_back(clus);
       // Replace Cluster Centers with the closest matching texton
       textonFind(clus, dictionary, distances); // substitue textons for cluster centres, store agg distance
 
-      Mat out;
-      if(MdlDEBUG){
-        cout << "\n\nhistRange before : " << histRange << endl;}
+      Mat out; // Mat to store histogram
       calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-      if(MdlDEBUG){
-        cout << "histRange after  : " << histRange << endl;}
       classHist[ent1.first].push_back(out);
       classTrainer.clear();
     }

@@ -19,10 +19,20 @@
   /* __INTEL_COMPILER = VRP */
 # define COMPILER_VERSION_MAJOR DEC(__INTEL_COMPILER/100)
 # define COMPILER_VERSION_MINOR DEC(__INTEL_COMPILER/10 % 10)
-# define COMPILER_VERSION_PATCH DEC(__INTEL_COMPILER    % 10)
+# if defined(__INTEL_COMPILER_UPDATE)
+#  define COMPILER_VERSION_PATCH DEC(__INTEL_COMPILER_UPDATE)
+# else
+#  define COMPILER_VERSION_PATCH DEC(__INTEL_COMPILER   % 10)
+# endif
 # if defined(__INTEL_COMPILER_BUILD_DATE)
   /* __INTEL_COMPILER_BUILD_DATE = YYYYMMDD */
 #  define COMPILER_VERSION_TWEAK DEC(__INTEL_COMPILER_BUILD_DATE)
+# endif
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
 # endif
 
 #elif defined(__PATHCC__)
@@ -34,10 +44,21 @@
 # endif
 
 #elif defined(__clang__)
-# define COMPILER_ID "Clang"
+# if defined(__apple_build_version__)
+#  define COMPILER_ID "AppleClang"
+#  define COMPILER_VERSION_TWEAK DEC(__apple_build_version__)
+# else
+#  define COMPILER_ID "Clang"
+# endif
 # define COMPILER_VERSION_MAJOR DEC(__clang_major__)
 # define COMPILER_VERSION_MINOR DEC(__clang_minor__)
 # define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+# endif
 
 #elif defined(__BORLANDC__) && defined(__CODEGEARC_VERSION__)
 # define COMPILER_ID "Embarcadero"
@@ -199,6 +220,13 @@
    because some compilers will just produce instructions to fill the
    array rather than assigning a pointer to a static array.  */
 char const* info_compiler = "INFO" ":" "compiler[" COMPILER_ID "]";
+#ifdef SIMULATE_ID
+char const* info_simulate = "INFO" ":" "simulate[" SIMULATE_ID "]";
+#endif
+
+#ifdef __QNXNTO__
+char const* qnxnto = "INFO" ":" "qnxnto";
+#endif
 
 /* Identify known platforms by name.  */
 #if defined(__linux) || defined(__linux__) || defined(linux)
@@ -353,12 +381,31 @@ char const info_version[] = {
   ']','\0'};
 #endif
 
+/* Construct a string literal encoding the version number components. */
+#ifdef SIMULATE_VERSION_MAJOR
+char const info_simulate_version[] = {
+  'I', 'N', 'F', 'O', ':',
+  's','i','m','u','l','a','t','e','_','v','e','r','s','i','o','n','[',
+  SIMULATE_VERSION_MAJOR,
+# ifdef SIMULATE_VERSION_MINOR
+  '.', SIMULATE_VERSION_MINOR,
+#  ifdef SIMULATE_VERSION_PATCH
+   '.', SIMULATE_VERSION_PATCH,
+#   ifdef SIMULATE_VERSION_TWEAK
+    '.', SIMULATE_VERSION_TWEAK,
+#   endif
+#  endif
+# endif
+  ']','\0'};
+#endif
+
 /* Construct the string literal in pieces to prevent the source from
    getting matched.  Store it in a pointer rather than an array
    because some compilers will just produce instructions to fill the
    array rather than assigning a pointer to a static array.  */
 char const* info_platform = "INFO" ":" "platform[" PLATFORM_ID "]";
 char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";
+
 
 
 
@@ -371,6 +418,12 @@ int main(int argc, char* argv[])
   require += info_platform[argc];
 #ifdef COMPILER_VERSION_MAJOR
   require += info_version[argc];
+#endif
+#ifdef SIMULATE_ID
+  require += info_simulate[argc];
+#endif
+#ifdef SIMULATE_VERSION_MAJOR
+  require += info_simulate_version[argc];
 #endif
   (void)argv;
   return require;
