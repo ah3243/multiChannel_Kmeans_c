@@ -104,9 +104,14 @@ int getClassHist(map<string, vector<Mat> >& savedClassHist){
 // Segment input image and return in vector
 void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap, int MISSTOPLEFT_RIGHT){
 
-  // find the number of possible segments, then calculate gap around these
-  int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
-  int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
+  // Calculate the maximum number of segments for the given img+cropsize
+  int NumColSegments = (in.cols/cropsize);
+  int NumRowSegments = (in.rows/cropsize);
+  int NumSegmentsTotal = (NumColSegments*NumRowSegments);
+
+  // Calculate gap around the combined segments
+  int colspace = (in.cols -(NumColSegments*cropsize))/2;
+  int rowspace = (in.rows -(NumRowSegments*cropsize))/2;
 
   // Make sure manual offset and cropsize are compatible with imagesize
   if((cropsize+rowspace)>in.rows || (cropsize+colspace)>in.cols){
@@ -126,11 +131,11 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap, int MISSTOP
   int segmentCounter = 0; // Track current segment number(position)
 
   // Extract the maximum Number of full Segments from the image
-  for(int i=colspace;i<(in.cols-cropsize);i+=(cropsize-overlap)){
+  for(int i=0;i<(in.cols-cropsize);i+=(cropsize-overlap)){
     for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
 
       // If MISSTOPLEFT_RIGHT flag == true and segment is top left or top right continue
-      if(MISSTOPLEFT_RIGHT && (segmentCounter==0 || segmentCounter==4)){
+      if(MISSTOPLEFT_RIGHT && (segmentCounter==0 || segmentCounter==4) && NumSegmentsTotal==6){
         segmentCounter++; // Iterate segment counter
         continue;
       }
@@ -144,9 +149,9 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap, int MISSTOP
       }
       tmp = reshapeCol(normImg);
       out.push_back(tmp);
-
       segmentCounter++; // Iterate segment counter
     }
+
   }
   ss.str("");
   ss << "This is the number of segments: " << out.size() << " and the average cols: " << out[0].cols;

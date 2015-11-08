@@ -6,39 +6,12 @@ set -e
 ############################################################
 
 
-#USEAGE INSTRUCTIONS:
-# PARAMETER 1
-#  1= GENERATE NEW RANDOMISED TRAINING AND TEST IMAGES
-
-## if a flag is added(1) then generate new set of random images
-if [ $1 == "1" ]
-then
-  echo "Generating new images."
-  useImgs="Y"
-else
-  useImgs="N"
-fi
-
 ## cd to build dir and make
 cd ../build/
 cmake ..
 make
 echo made and built
 
-## Set number of repeats (potentially with new images)
-Repeats=2
-imgCounter=0
-
-# Only run tests once if static images used
-if [ "$useImgs" == "N" ]
-	then
-	Repeats=1
-fi
-
-echo this is the number of repeats $Repeats
-
-while [ $imgCounter -lt $Repeats ]
-do
 
   # Generate new images if flag input
   if [ "$useImgs" == "Y" ]
@@ -50,8 +23,8 @@ do
 	## VARIABLE TYPES
 	inputType="cropping"
 	## SCALE VALUES
-	Scale=9
-#  Repeats=10
+	Scale=8
+  testRepeats=10
 
 	firstGo=1 # Prevents results labels being printed after the first iteration
 	counter=0
@@ -65,8 +38,8 @@ do
     elif [ $Scale -eq 8 ]
     then
         echo "Scale == 8"
-      #  Cropping=(10 20 40 60 70 80 100 120 140)
-       Cropping=(70)  # missing half of height value
+       Cropping=(10 20 40 60 70 80 100 120 140)
+      #  Cropping=(70)  # missing half of height value
         # Cropping=(61 62 63 64 65 66 67 68 69 70 71 72) # Additional Values around target croppping size
     elif [ $Scale -eq 7 ]
     then
@@ -92,13 +65,11 @@ do
 		echo starting program
 
 		#Note 1.inputValue  2.Input Type 3.firstLineFlag
-		echo Test Type is: $inputType InputParam: ${i} First go?: $firstGo Scale: $Scale
+		echo Test Type is: $inputType InputParam: ${i} First go?: $firstGo Scale: $Scale testRepeats: $testRepeats
 		echo iteration $counter
 		echo
-		./multiDimen ${i} $inputType $firstGo $Scale
+		./multiDimen ${i} $inputType $firstGo $Scale $testRepeats
 		let counter=counter+1
 	done
-	let imgCounter=imgCounter+1
 
-done
 echo Done

@@ -56,217 +56,217 @@ int main( int argc, char** argv ){
   // ---- INITIAL VARIABLES ------ //
   vector<string> folderName = {"TEST"}; // Where to save prediction Visualisations
   vector<int> dictClustersVec = {10};
-  vector<int> scaleVec = {8};
-  int defaultattempts = 35;
-
-  int programLoop = 1; // Number of time the whole program will repeat
+  vector<int> scaleVec = {0};
+  int defaultattempts = 35; // kmeans Attempts
   int testLoop = 1; // Number of results sets which will be gathered
-  for(int xx=0;xx<programLoop;xx++){
-    cout << "\n.......Starting Program...... \n" ;
-    cout << "This is iteration " << xx << endl;
 
-   // Available Scales
-    ////////////////////////////////////////
-    // These are the possible resolutions //
-    // assign scale to the corresponding  //
-    // number                             //
-    //                                    //
-    // 0   1280 x 720                     //
-    // 1   1152 x 648                     //
-    // 2   1024 x 576                     //
-    // 3   896 x 504                      //
-    // 4   768 x 432                      //
-    // 5   640 x 360                      //
-    // 6   512 x 288                      //
-    // 7   384 x 216                      //
-    // 8   256 x 144                      //
-    // 9   128 x 72                       //
-    ////////////////////////////////////////
-    int scale, attempts, testRepeats = 0, modelRepeats = 1;
-    // Adjust the cropSize depending on chosen scale
-    double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
-    int cropsize;
+  cout << "\n.......Starting Program...... \n" ;
+  cout << "This is iteration " << xx << endl;
+
+ // Available Scales
+  ////////////////////////////////////////
+  // These are the possible resolutions //
+  // assign scale to the corresponding  //
+  // number                             //
+  //                                    //
+  // 0   1280 x 720                     //
+  // 1   1152 x 648                     //
+  // 2   1024 x 576                     //
+  // 3   896 x 504                      //
+  // 4   768 x 432                      //
+  // 5   640 x 360                      //
+  // 6   512 x 288                      //
+  // 7   384 x 216                      //
+  // 8   256 x 144                      //
+  // 9   128 x 72                       //
+  ////////////////////////////////////////
+  int scale, attempts, testRepeats = 0, modelRepeats = 1;
+  // Adjust the cropSize depending on chosen scale
+  double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
+  int cropsize;
 
 // SCALE
-    if(scaleVec.size()==1){
-      if(testType.compare("scale")==0){
-        scale = testInput;
-        cout << "Testing Scale: " << scale << endl;
-      }else{
-        scale = scaleVec[0];
-      }
-      if(VERBOSE){
-        cout << "USING FIXED SCALE..\n";
-      }
+  if(scaleVec.size()==1){
+    if(testType.compare("scale")==0){
+      scale = testInput;
+      cout << "Testing Scale: " << scale << endl;
     }else{
-      scale = scaleVec[xx];
+      scale = scaleVec[0];
     }
+    if(VERBOSE){
+      cout << "USING FIXED SCALE..\n";
+    }
+  }else{
+    scale = scaleVec[xx];
+  }
 
 // ATTEMPTS //
-    // if multiple vals in 'attemptVec' then run all otherwise check input
-    if(testType.compare("attempts")==0){
-      cout << "This is the number of inputs: " << argc << endl;
-        attempts = testInput;
-        scale = atoi(argv[4]);
-        cropsize = atoi(argv[5]);
-      if(VERBOSE){
-        cout << "USING FIXED ATTEMPTS\n";
-      }
-    }else{
-      attempts = defaultattempts;
+  // if multiple vals in 'attemptVec' then run all otherwise check input
+  if(testType.compare("attempts")==0){
+    cout << "This is the number of inputs: " << argc << endl;
+      attempts = testInput;
+      scale = atoi(argv[4]);
+      cropsize = atoi(argv[5]);
+    if(VERBOSE){
+      cout << "USING FIXED ATTEMPTS\n";
     }
-
-  // CROPPING //
-  if(testType.compare("cropping")==0){
-      if(VERBOSE){
-        cout << "USING FIXED CROPSIZE\n";
-      }
-//      testRepeats = 10;
-      cropsize = testInput;
-      scale=atoi(argv[4]);
+  }else{
+    attempts = defaultattempts;
   }
 
-  // TEST_REPEATS
-  if(testType.compare("testRepeats")==0){
-      if(VERBOSE){
-        cout << "USING FIXED CROPSIZE\n";
-      }
-      testRepeats = testInput;
-      scale=atoi(argv[4]);
-      cropsize=atoi(argv[5]);
-  }
-  // MODEL_REPEATS
-  if(testType.compare("modelRepeats")==0){
-      if(VERBOSE){
-        cout << "USING FIXED CROPSIZE\n";
-      }
-      modelRepeats = testInput;
-      scale=atoi(argv[4]);
-      cropsize=atoi(argv[5]);
-  }
-
-    int DictSize;
-    if(dictClustersVec.size()==1){
-      if(VERBOSE){
-        cout << "USING FIXED TEXTON CLUSTER NUMBER\n";
-      }
-      DictSize = dictClustersVec[0];
-    }else{
-      DictSize = dictClustersVec[xx];
+// CROPPING //
+if(testType.compare("cropping")==0){
+    if(VERBOSE){
+      cout << "USING FIXED CROPSIZE\n";
     }
+    // Set variables
+    cropsize = testInput;
+    scale=atoi(argv[4]);
+    testRepeats=atoi(argv[5]);
+}
 
-    double modOverlap = 0; // Percentage of crop which will overlap horizontally
-    double modelOverlapDb = (modOverlap/100)*cropsize; // Calculate percentage of cropsize
-    int modelOverlap = modelOverlapDb; // To convert to int for transfer to function
-    // cout << "This is the modelOverlap: " << modelOverlap << " and modelOverlapDb: " << modelOverlapDb << endl;
-    // exit(1);
+// TEST_REPEATS
+if(testType.compare("testRepeats")==0){
+    if(VERBOSE){
+      cout << "USING FIXED CROPSIZE\n";
+    }
+    testRepeats = testInput;
+    scale=atoi(argv[4]);
+    cropsize=atoi(argv[5]);
+}
+// MODEL_REPEATS
+if(testType.compare("modelRepeats")==0){
+    if(VERBOSE){
+      cout << "USING FIXED CROPSIZE\n";
+    }
+    modelRepeats = testInput;
+    scale=atoi(argv[4]);
+    cropsize=atoi(argv[5]);
+}
+
+  int DictSize;
+  if(dictClustersVec.size()==1){
+    if(VERBOSE){
+      cout << "USING FIXED TEXTON CLUSTER NUMBER\n";
+    }
+    DictSize = dictClustersVec[0];
+  }else{
+    DictSize = dictClustersVec[xx];
+  }
+
+  double modOverlap = 0; // Percentage of crop which will overlap horizontally
+  double modelOverlapDb = (modOverlap/100)*cropsize; // Calculate percentage of cropsize
+  int modelOverlap = modelOverlapDb; // To convert to int for transfer to function
+  // cout << "This is the modelOverlap: " << modelOverlap << " and modelOverlapDb: " << modelOverlapDb << endl;
+  // exit(1);
 
 
-    int testimgOverlap =modelOverlap; // Have the same test and model overlap
+  int testimgOverlap =modelOverlap; // Have the same test and model overlap
 
-    int dictDur, modDur, novDur;
+  int dictDur, modDur, novDur;
 
-    cout << "\nDictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
-    << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
-    cout << "This is the cropsize: " << cropsize << "\n";
-    cout << "This is the scalesize: " << scale << endl;
+  cout << "\nDictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
+  << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
+  cout << "This is the cropsize: " << cropsize << "\n";
+  cout << "This is the scalesize: " << scale << endl;
 
-    path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
-    path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
-    path testPath = "../../../TEST_IMAGES/CapturedImgs/novelImgs";
+  path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
+  path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
+  path testPath = "../../../TEST_IMAGES/CapturedImgs/novelImgs";
 
-    #if INTERFACE == 1
-      ///////////////////////
-      // Collecting images //
-      ///////////////////////
+  #if INTERFACE == 1
+    ///////////////////////
+    // Collecting images //
+    ///////////////////////
 
-      cout << "\n............... Passing to Img Collection Module ................\n";
+    cout << "\n............... Passing to Img Collection Module ................\n";
 
-      imgCollectionHandle();
+    imgCollectionHandle();
 
-      cout << "\n............... Returning to main program ..................... \n";
+    cout << "\n............... Returning to main program ..................... \n";
 
-    #endif
-    #if DICTIONARY_BUILD == 1
-      ////////////////////////////////
-      // Creating Texton vocabulary //
-      ////////////////////////////////
+  #endif
+  #if DICTIONARY_BUILD == 1
+    ////////////////////////////////
+    // Creating Texton vocabulary //
+    ////////////////////////////////
 
-      cout << "\n.......Generating Texton Dictionary...... \n" ;
-      // Measure start time
-      auto t1 = std::chrono::high_resolution_clock::now();
+    cout << "\n.......Generating Texton Dictionary...... \n" ;
+    // Measure start time
+    auto t1 = std::chrono::high_resolution_clock::now();
 
-      dictCreateHandler(cropsize, scale, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap);
+    dictCreateHandler(cropsize, scale, DictSize, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap);
+
+    // Measure time efficiency
+    auto t2 = std::chrono::high_resolution_clock::now();
+    dictDur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    waitKey(500); // a a precausion to ensure all processes are finished
+  #endif
+  #if MODEL_BUILD == 1
+    ///////////////////////////////////////////////////////////
+    // Get histogram responses using vocabulary from Classes //
+    ///////////////////////////////////////////////////////////
+
+    cout << "\n........Generating Class Models from Imgs.........\n";
+    // Measure start time
+    auto t3 = std::chrono::high_resolution_clock::now();
+
+    modelBuildHandle(cropsize, scale, numClusters, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap, modelRepeats);
+
+    // Measure time efficiency
+    auto t4 = std::chrono::high_resolution_clock::now();
+    modDur = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
+    waitKey(500); // a a precausion to ensure all processes are finished
+  #endif
+  #if NOVELIMG_TEST == 1
+    //////////////////////////////
+    // Test Against Novel Image //
+    //////////////////////////////
+
+    // Take however many sets of test results
+    for(int r=0;r<testLoop;r++){
+    cout << "\n.......Testing Against Novel Images...... \n" ;
+      // Measure time efficiency
+      auto t5 = std::chrono::high_resolution_clock::now();
+
+      novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags,
+        attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName[xx], firstGo, testRepeats);
 
       // Measure time efficiency
-      auto t2 = std::chrono::high_resolution_clock::now();
-      dictDur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-      waitKey(500); // a a precausion to ensure all processes are finished
-    #endif
-    #if MODEL_BUILD == 1
-      ///////////////////////////////////////////////////////////
-      // Get histogram responses using vocabulary from Classes //
-      ///////////////////////////////////////////////////////////
-
-      cout << "\n........Generating Class Models from Imgs.........\n";
-      // Measure start time
-      auto t3 = std::chrono::high_resolution_clock::now();
-
-      modelBuildHandle(cropsize, scale, numClusters, flags, attempts, kmeansIteration, kmeansEpsilon, modelOverlap, modelRepeats);
-
-      // Measure time efficiency
-      auto t4 = std::chrono::high_resolution_clock::now();
-      modDur = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
-      waitKey(500); // a a precausion to ensure all processes are finished
-    #endif
-    #if NOVELIMG_TEST == 1
-      //////////////////////////////
-      // Test Against Novel Image //
-      //////////////////////////////
-
-      // Take however many sets of test results
-      for(int r=0;r<testLoop;r++){
-      cout << "\n.......Testing Against Novel Images...... \n" ;
-        // Measure time efficiency
-        auto t5 = std::chrono::high_resolution_clock::now();
-
-        novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags,
-          attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName[xx], firstGo, testRepeats);
-
-        // Measure time efficiency
-        auto t6 = std::chrono::high_resolution_clock::now();
-        novDur = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
-      }
-    #endif
-
-    int totalTime =0;
-    cout << "\n";
-    if(DICTIONARY_BUILD == 1){
-  //    cout << "Texton Dictionary Creation took: "
-            cout  << dictDur << "\n";
-  //            << " milliseconds\n";
-              totalTime +=dictDur;
+      auto t6 = std::chrono::high_resolution_clock::now();
+      novDur = std::chrono::duration_cast<std::chrono::milliseconds>(t6 - t5).count();
     }
-    if(MODEL_BUILD == 1){
-  //    cout << "Model Creation took: "
-          cout << modDur << "\n";
-            //  << " milliseconds\n";
-              totalTime+=modDur;
-    }
-    if(NOVELIMG_TEST == 1){
-  //    cout << "Novel Image Testing took: "
-            cout << novDur << "\n";
-    //          << " milliseconds\n";
-              totalTime+=novDur;
-    }
-  //  cout << "The Total Time was: "
-    cout<< totalTime << "\n\n";
-    cout << "This is the cropsize: " << cropsize << endl;
-    cout << "This is the scalesize: " << scale << endl;
-    cout << "Dictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
-    << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
-    cout << "\n\n..........ENDING ITERATION NUMBER " << xx << ".............\n";
+  #endif
+
+  int totalTime =0;
+  cout << "\n";
+  if(DICTIONARY_BUILD == 1){
+//    cout << "Texton Dictionary Creation took: "
+          cout  << dictDur << "\n";
+//            << " milliseconds\n";
+            totalTime +=dictDur;
   }
+  if(MODEL_BUILD == 1){
+//    cout << "Model Creation took: "
+        cout << modDur << "\n";
+          //  << " milliseconds\n";
+            totalTime+=modDur;
+  }
+  if(NOVELIMG_TEST == 1){
+//    cout << "Novel Image Testing took: "
+          cout << novDur << "\n";
+  //          << " milliseconds\n";
+            totalTime+=novDur;
+  }
+
+  cout<< totalTime << "\n\n";
+
+  cout <<"\nENDING RUN\n";
+  cout << "This is the cropsize: " << cropsize << endl;
+  cout << "This is the scalesize: " << scale << endl;
+  cout << "Dictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
+  << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
+
   destroyAllWindows();
   namedWindow("finished", CV_WINDOW_AUTOSIZE);
   moveWindow("finished", 500,200);

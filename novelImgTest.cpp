@@ -349,14 +349,20 @@ bool pairCompare(const pair<string, double>& firstElem, const pair<string, doubl
 }
 
 void qSegment(Mat in, vector<Mat> &out, int cropsize, int MISSTOPLEFT_RIGHT){
-  // find the number of possible segments, then calculate gap around these
-  int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
-  int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
+
+  // Calculate the maximum number of segments for the given img+cropsize
+  int NumColSegments = (in.cols/cropsize);
+  int NumRowSegments = (in.rows/cropsize);
+  int NumSegmentsTotal = (NumColSegments*NumRowSegments);
+
+  // Calculate the gap around the combined segments
+  int colspace = (in.cols -(NumColSegments*cropsize))/2;
+  int rowspace = (in.rows -(NumRowSegments*cropsize))/2;
 
   int segmentCounter=0;
   for(int i=colspace;i<(in.cols-cropsize);i+=cropsize){
     for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
-      if(MISSTOPLEFT_RIGHT&&(segmentCounter==0||segmentCounter==4)){
+      if(MISSTOPLEFT_RIGHT&&(segmentCounter==0||segmentCounter==4)&&NumSegmentsTotal==6){
         segmentCounter++;
         continue;
       }
@@ -456,9 +462,9 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         }
         // segment color image and store in vector
         vector<Mat> colorTest;
-        int MISSTOPLEFT_RIGHT = 1;
-        qSegment(in, colorTest, cropsize, MISSTOPLEFT_RIGHT);
 
+        // Disregard top right and top left segments from a 6 segment crop
+        int MISSTOPLEFT_RIGHT = 1;
 
         vector<vector<Mat> > filterbank;
         int n_sigmas, n_orientations;
@@ -467,6 +473,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         // Send img to be filtered, and responses aggregated with addWeighted
         filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
         // Divide the image into segments specified in 'cropsize' and flatten for clustering
+        qSegment(in, colorTest, cropsize, MISSTOPLEFT_RIGHT);
         vector<Mat> test;
         segmentImg(test, hold, cropsize, overlap, MISSTOPLEFT_RIGHT);
 
@@ -487,7 +494,6 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
           // Re cluster image segment this number of times averaging the best results
           int numTstRepeats =testRepeats;
-          cout << "This is hte number of repeats!!" << numTstRepeats << endl;
           for(int tstAVG=0;tstAVG<numTstRepeats;tstAVG++){
             // verify the same number of color and normal segmented images
             assert(test.size() == colorTest.size());
@@ -647,6 +653,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
              ss  << folderName << "/Predictions/" << entx.first << "_" << frameCount << ".png";
              cout << "Saving: " << ss.str() << endl;
              imwrite(ss.str(),disVals1);
+             ss.str(""); // Clear stringstream
            }
              waitKey(30);
           }
@@ -1099,7 +1106,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   for(int kk=0;kk<numofRuns;kk++){
     cout << "This is iteration: " << kk+1 << " out of: " << numofRuns << endl;
     initROCcnt(results, clsNames); // Initilse map
-    cout << "number of test images.." << testImages.size() << endl;
+    cout << "number of test Classes.." << testImages.size() << endl;
     acc.push_back(testNovelImg(attempts, numClusters, results[kk], testImages, savedClassHist, Colors, cropsize,
       fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap, folderName, testRepeats));
 
