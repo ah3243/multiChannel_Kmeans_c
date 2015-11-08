@@ -122,7 +122,8 @@ void dictCreateHandler(int cropsize, int scale, int numClusters, int flags, int 
       dicDEBUG("outside of filterbank handle texton dict..\n", 0);
       // Segment the 200x200pixel image
       vector<Mat> test;
-      segmentImg(test, curImg, cropsize, overlap);
+      int MISSTOPLEFT_RIGHT=0;
+      segmentImg(test, curImg, cropsize, overlap, MISSTOPLEFT_RIGHT);
       dicDEBUG("after segmenation: ", test.size());
       // Push each saved Mat to bowTrainer
       for(int k = 0; k < test.size(); k++){

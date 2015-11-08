@@ -50,7 +50,8 @@ do
 	## VARIABLE TYPES
 	inputType="cropping"
 	## SCALE VALUES
-	Scale=7
+	Scale=9
+#  Repeats=10
 
 	firstGo=1 # Prevents results labels being printed after the first iteration
 	counter=0
@@ -65,14 +66,14 @@ do
     then
         echo "Scale == 8"
       #  Cropping=(10 20 40 60 70 80 100 120 140)
-      #  Cropping=(70)  # missing half of height value
-        Cropping=(61 62 63 64 65 66 67 68 69 70 71 72) # Additional Values around target croppping size
+       Cropping=(70)  # missing half of height value
+        # Cropping=(61 62 63 64 65 66 67 68 69 70 71 72) # Additional Values around target croppping size
     elif [ $Scale -eq 7 ]
     then
         echo "Scale == 7"
       #  Cropping=(25 50 80 100 105 125 150 175 200)
-      #  Cropping=(105) # missing half of height value
-        Cropping=(100 102 104 106 107 108 109 110 111 112 113) # Additional Values around target croppping size
+       Cropping=(105) # missing half of height value
+        # Cropping=(100 102 104 106 107 108 109 110 111 112 113) # Additional Values around target croppping size
 
     elif [ $Scale -eq 6 ]
     then

@@ -35,9 +35,6 @@ using namespace std;
 #define COLSTART 0
 #define ROWSTART 0
 
-// Dictates the number of times to take repeat test readings for averaging
-#define TEST_REPEATS 10
-
 // Results Display Flags
 #define VERBOSE 0
 #define SAVEIMGS 0
@@ -351,16 +348,22 @@ bool pairCompare(const pair<string, double>& firstElem, const pair<string, doubl
   return firstElem.second < secondElem.second;
 }
 
-void qSegment(Mat in, vector<Mat> &out, int cropsize){
+void qSegment(Mat in, vector<Mat> &out, int cropsize, int MISSTOPLEFT_RIGHT){
   // find the number of possible segments, then calculate gap around these
   int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
   int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
 
+  int segmentCounter=0;
   for(int i=colspace;i<(in.cols-cropsize);i+=cropsize){
     for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
+      if(MISSTOPLEFT_RIGHT&&(segmentCounter==0||segmentCounter==4)){
+        segmentCounter++;
+        continue;
+      }
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
       tmp = in(Rect(i, j, cropsize, cropsize));
       out.push_back(tmp);
+      segmentCounter++;
     }
   }
 }
@@ -453,7 +456,8 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         }
         // segment color image and store in vector
         vector<Mat> colorTest;
-        qSegment(in, colorTest, cropsize);
+        int MISSTOPLEFT_RIGHT = 1;
+        qSegment(in, colorTest, cropsize, MISSTOPLEFT_RIGHT);
 
 
         vector<vector<Mat> > filterbank;
@@ -464,26 +468,18 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         filterHandle(in, hold, filterbank, n_sigmas, n_orientations);
         // Divide the image into segments specified in 'cropsize' and flatten for clustering
         vector<Mat> test;
+        segmentImg(test, hold, cropsize, overlap, MISSTOPLEFT_RIGHT);
 
-        segmentImg(test, hold, cropsize, overlap);
+        // find the number of possible segments, then calculate gap around these
+        int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
+        int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
 
-        int vCrop, hCrop;
-        vCrop = ((hold.rows/cropsize)*cropsize);
-        hCrop = ((hold.cols/cropsize)*cropsize);
-        // SAVE IMAGES .....
-        if(SAVEIMGS){
-          stringstream ss12;
-          ss12 << folderName << "/Images/" << entx.first << "_" << h << ".png";
-          imwrite(ss12.str(), in(Rect(0,0,hCrop, vCrop)));
-        }
-        // END SAVE IMAGES .....
-
-        int imgSize = hCrop;
-        Mat disVals = Mat(vCrop, hCrop,CV_8UC3, Scalar(255,255,255));
+        // Calculate the space around the cropped segments
+        Mat disVals = Mat(in.size(),CV_8UC3, Scalar(255,255,255));
         Mat matchDisplay = Mat(50,50,CV_8UC3, Scalar(0,0,0));
 
         // Counters for putting 'pixels' on display image
-        int disrows = 0, discols = 0;
+        int disrows = rowspace, discols = colspace;
         // Loop through and classify all image segments
         for(int x=0;x<test.size();x++){
           map<string, double> matchResults;
@@ -491,16 +487,23 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
           // Re cluster image segment this number of times averaging the best results
           int numTstRepeats =testRepeats;
+          cout << "This is hte number of repeats!!" << numTstRepeats << endl;
           for(int tstAVG=0;tstAVG<numTstRepeats;tstAVG++){
+            // verify the same number of color and normal segmented images
             assert(test.size() == colorTest.size());
 
-            // handle segment prediction printing
-            if(discols>imgSize-cropsize){
-              discols=0;
+            int imgSize = in.cols;
+            // If using reduced segments, skip top left and top right
+            if(MISSTOPLEFT_RIGHT && (x==0||x==1)){
+              discols += cropsize;
             }
-            if(discols==0&& x>0){
+            // If discols is larger than the image then move to next row
+            if(discols>imgSize-cropsize){
+              discols=colspace;
               disrows += cropsize;
             }
+
+            // If segment is not empty add to novelimgTrainer
             if(!test[x].empty()){
                novelTrainer.add(test[x]);
             }
@@ -622,16 +625,28 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           cacheTestdata(entx.first, prediction, results);
           discols +=cropsize;
         }
+        // Blend predictions with origianl image
+        Mat disVals1;
+        addWeighted(in, 0.7, disVals, 0.3, 0.0, disVals1, -1);
          if(SHOW_PREDICTIONS){
            rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
            imshow("correct", matchDisplay);
            imshow("novelImg", entx.second[h]);
-           imshow("segmentPredictions", disVals);
+           imshow("segmentPredictions", disVals1);
 
            if(SAVEPREDICTIONS){
              stringstream ss;
+
+             // Ensure correct Dirs Exist
+             ss << folderName << "/Predictions/";
+             assert(createDir(folderName));
+             assert(createDir(ss.str()));
+
+             ss.str(""); // Clear stringstream
+             // Save prediction images
              ss  << folderName << "/Predictions/" << entx.first << "_" << frameCount << ".png";
-             imwrite(ss.str(),disVals);
+             cout << "Saving: " << ss.str() << endl;
+             imwrite(ss.str(),disVals1);
            }
              waitKey(30);
           }
@@ -1066,6 +1081,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
       // Window for Legend display
       namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
       imshow("legendWin", Key);
+      imwrite("./TEST/Predictions/Key.png", Key);
     }
   // Holds Class names, each holding a count for TP, FP, FN, FP Values
   vector<map<string, vector<double> > > results;

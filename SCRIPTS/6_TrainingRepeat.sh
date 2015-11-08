@@ -15,17 +15,17 @@ echo made and built
 inputType="testRepeats"
 
 ## SCALE DEPENDANT VALS
-	# Scale=7
-  # CropSize=113
+	Scale=7
+  CropSize=113
 
-  Scale=8
-  CropSize=71
+  # Scale=8
+  # CropSize=71
 
 firstGo=1 # Prevents results labels being printed after the first iteration
 counter=0
 
 # Training=(1 2 4 6 8 10) # Number of Training Test Repeats
-Training=(3 5 7 9) # Number of Training Test Repeats
+Training=(1 2 3 4 5 6 7 8 9 10) # Number of Training Test Repeats
 
 for i in ${Training[@]}; do
 	# If not first iteration then set flag as 0

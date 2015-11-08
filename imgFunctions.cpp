@@ -18,7 +18,8 @@ using namespace std;
 using namespace cv;
 
 #define imgFuncDEBUG 0
-#define showSegments 0
+#define SHOWSEGMENTS 0 // Display source image and cropped segments
+
 #define ERR(msg) printf("\n\nERROR!: %s Line %d\nExiting.\n\n", msg, __LINE__);
 
 void imgFDEBUG(string msg, double in){
@@ -29,6 +30,18 @@ void imgFDEBUG(string msg, double in){
   }
   cout << "\n";
   }
+}
+
+int createDir(string pathNme){
+  const char* path = pathNme.c_str();
+  boost::filesystem::path dir(path);
+  if(boost::filesystem::create_directory(dir)){
+    cerr << "Directory Created: " << pathNme << endl;
+    return 1;
+  }else{
+    return 1;
+  }
+  return 0;
 }
 
 Mat reshapeCol(Mat in){
@@ -89,15 +102,11 @@ int getClassHist(map<string, vector<Mat> >& savedClassHist){
 }
 
 // Segment input image and return in vector
-void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
-//  int colstart =0, rowstart=0;
+void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap, int MISSTOPLEFT_RIGHT){
 
   // find the number of possible segments, then calculate gap around these
   int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
   int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
-
-  // int colspace =0; // For ease of testing
-  // int rowspace =0; // For ease of testing
 
   // Make sure manual offset and cropsize are compatible with imagesize
   if((cropsize+rowspace)>in.rows || (cropsize+colspace)>in.cols){
@@ -110,26 +119,33 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap){
   ss << in.rows << " cols: " << in.cols;
   imgFDEBUG(ss.str(), 0);
 
-  // // if no overlap and unable to make >1 segment, place segment in center of screen
-  // if(overlap==0&&colspace>0){
-  //   colstart= colspace;
-  // }
-  // if(overlap==0&&rowspace>0){
-  //   rowstart= rowspace;
-  // }
+  if(SHOWSEGMENTS){
+    imshow("Whole Image", in);
+  }
+
+  int segmentCounter = 0; // Track current segment number(position)
 
   // Extract the maximum Number of full Segments from the image
   for(int i=colspace;i<(in.cols-cropsize);i+=(cropsize-overlap)){
     for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
+
+      // If MISSTOPLEFT_RIGHT flag == true and segment is top left or top right continue
+      if(MISSTOPLEFT_RIGHT && (segmentCounter==0 || segmentCounter==4)){
+        segmentCounter++; // Iterate segment counter
+        continue;
+      }
+
       Mat tmp = Mat::zeros(cropsize,cropsize,CV_32FC1);
       Mat normImg = in(Rect(i, j, cropsize, cropsize));
-      if(showSegments){
+      if(SHOWSEGMENTS){
        imshow("SegImg", normImg);
        cout << "Press any key to change segment." << endl;
        waitKey(0);
       }
       tmp = reshapeCol(normImg);
       out.push_back(tmp);
+
+      segmentCounter++; // Iterate segment counter
     }
   }
   ss.str("");

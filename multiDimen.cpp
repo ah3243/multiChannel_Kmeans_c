@@ -121,6 +121,7 @@ int main( int argc, char** argv ){
       if(VERBOSE){
         cout << "USING FIXED CROPSIZE\n";
       }
+//      testRepeats = 10;
       cropsize = testInput;
       scale=atoi(argv[4]);
   }
