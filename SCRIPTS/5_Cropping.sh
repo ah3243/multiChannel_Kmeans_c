@@ -23,7 +23,7 @@ echo made and built
 	## VARIABLE TYPES
 	inputType="cropping"
 	## SCALE VALUES
-	Scale=8
+	Scale=7
   testRepeats=10
 
 	firstGo=1 # Prevents results labels being printed after the first iteration
@@ -44,8 +44,8 @@ echo made and built
     elif [ $Scale -eq 7 ]
     then
         echo "Scale == 7"
-      #  Cropping=(25 50 80 100 105 125 150 175 200)
-       Cropping=(105) # missing half of height value
+       Cropping=(25 50 80 100 105 125 150 175 200)
+      #  Cropping=(105) # missing half of height value
         # Cropping=(100 102 104 106 107 108 109 110 111 112 113) # Additional Values around target croppping size
 
     elif [ $Scale -eq 6 ]

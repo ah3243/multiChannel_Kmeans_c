@@ -54,14 +54,10 @@ int main( int argc, char** argv ){
   bool firstGo =(bool)tmp;
 
   // ---- INITIAL VARIABLES ------ //
-  vector<string> folderName = {"TEST"}; // Where to save prediction Visualisations
-  vector<int> dictClustersVec = {10};
-  vector<int> scaleVec = {0};
-  int defaultattempts = 35; // kmeans Attempts
+  string folderName = "TEST"; // Where to save prediction Visualisations
   int testLoop = 1; // Number of results sets which will be gathered
 
   cout << "\n.......Starting Program...... \n" ;
-  cout << "This is iteration " << xx << endl;
 
  // Available Scales
   ////////////////////////////////////////
@@ -80,24 +76,17 @@ int main( int argc, char** argv ){
   // 8   256 x 144                      //
   // 9   128 x 72                       //
   ////////////////////////////////////////
-  int scale, attempts, testRepeats = 0, modelRepeats = 1;
+  int scale, attempts=35, testRepeats = 0, modelRepeats = 1;
+
   // Adjust the cropSize depending on chosen scale
   double cropScale[]={1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1};
-  int cropsize;
+  int DictSize = 10;
+  int cropsize = 0;
 
 // SCALE
-  if(scaleVec.size()==1){
-    if(testType.compare("scale")==0){
-      scale = testInput;
-      cout << "Testing Scale: " << scale << endl;
-    }else{
-      scale = scaleVec[0];
-    }
-    if(VERBOSE){
-      cout << "USING FIXED SCALE..\n";
-    }
-  }else{
-    scale = scaleVec[xx];
+  if(testType.compare("scale")==0){
+    scale = testInput;
+    cout << "Testing Scale: " << scale << endl;
   }
 
 // ATTEMPTS //
@@ -110,8 +99,6 @@ int main( int argc, char** argv ){
     if(VERBOSE){
       cout << "USING FIXED ATTEMPTS\n";
     }
-  }else{
-    attempts = defaultattempts;
   }
 
 // CROPPING //
@@ -144,31 +131,23 @@ if(testType.compare("modelRepeats")==0){
     cropsize=atoi(argv[5]);
 }
 
-  int DictSize;
-  if(dictClustersVec.size()==1){
-    if(VERBOSE){
-      cout << "USING FIXED TEXTON CLUSTER NUMBER\n";
-    }
-    DictSize = dictClustersVec[0];
-  }else{
-    DictSize = dictClustersVec[xx];
-  }
-
   double modOverlap = 0; // Percentage of crop which will overlap horizontally
   double modelOverlapDb = (modOverlap/100)*cropsize; // Calculate percentage of cropsize
   int modelOverlap = modelOverlapDb; // To convert to int for transfer to function
-  // cout << "This is the modelOverlap: " << modelOverlap << " and modelOverlapDb: " << modelOverlapDb << endl;
-  // exit(1);
-
 
   int testimgOverlap =modelOverlap; // Have the same test and model overlap
 
   int dictDur, modDur, novDur;
-
+  if(scale==0){
+    ERR("Scale no set. Exiting.");
+    exit(1);
+  }
   cout << "\nDictionary Size: " << DictSize << "\nNumber of Clusters: " << numClusters << "\nAttempts: " << attempts << "\nIterations: "
   << kmeansIteration << "\nKmeans Epsilon: " << kmeansEpsilon << endl;
   cout << "This is the cropsize: " << cropsize << "\n";
   cout << "This is the scalesize: " << scale << endl;
+  cout << "This is the number of testRepeats: " << testRepeats << endl;
+  cout << "This is the number of modelRepeats: " << modelRepeats << endl;
 
   path textonPath = "../../../TEST_IMAGES/CapturedImgs/textons";
   path clsPath = "../../../TEST_IMAGES/CapturedImgs/classes/";
@@ -230,7 +209,7 @@ if(testType.compare("modelRepeats")==0){
       auto t5 = std::chrono::high_resolution_clock::now();
 
       novelImgHandle(testPath, clsPath, scale, cropsize, numClusters, DictSize, flags,
-        attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName[xx], firstGo, testRepeats);
+        attempts, kmeansIteration, kmeansEpsilon, testimgOverlap, folderName, firstGo, testRepeats);
 
       // Measure time efficiency
       auto t6 = std::chrono::high_resolution_clock::now();

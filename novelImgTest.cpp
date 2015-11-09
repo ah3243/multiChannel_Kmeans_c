@@ -48,6 +48,9 @@ using namespace std;
 #define PRINT_AVG 0
 #define PRINT_COLOR 0
 
+#define MULTITHREAD 0
+
+
 #define a1 map<string, int>
 #define a2 map<string, vector<double> >
 
@@ -440,7 +443,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
 
       for(int h=0;h < entx.second.size();h++){
         vector<double> texDistance;
-        BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, flags);
+
       // Display current Frame/Image Count
         stringstream ss;
         ss << "Frame: " << h;
@@ -492,6 +495,8 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           map<string, double> matchResults;
           a2 tmpVals; // For holding all the results from each class for a single segment
           map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
+
+
           // Re cluster image segment this number of times averaging the best results
           int numTstRepeats =testRepeats;
           for(int tstAVG=0;tstAVG<numTstRepeats;tstAVG++){
@@ -509,6 +514,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
               disrows += cropsize;
             }
 
+            BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, flags);
             // If segment is not empty add to novelimgTrainer
             if(!test[x].empty()){
                novelTrainer.add(test[x]);
