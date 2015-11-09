@@ -23,8 +23,8 @@ echo made and built
 	## VARIABLE TYPES
 	inputType="cropping"
 	## SCALE VALUES
-	Scale=7
-  testRepeats=10
+	Scale=9
+  testRepeats=5
 
 	firstGo=1 # Prevents results labels being printed after the first iteration
 	counter=0

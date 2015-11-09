@@ -43,13 +43,12 @@ using namespace std;
 #define SHOW_PREDICTIONS 0
 #define PRINT_RAWRESULTS 0
 #define PRINT_CONFUSIONMATRIX 0
-#define PRINT_CONFMATAVG 0
+#define PRINT_CONFMATAVG 1
 #define PRINT_TPRPPV 0
 #define PRINT_AVG 0
 #define PRINT_COLOR 0
 
 #define MULTITHREAD 0
-
 
 #define a1 map<string, int>
 #define a2 map<string, vector<double> >
@@ -294,59 +293,6 @@ void printConfMat(std::map<std::string, std::map<std::string, int> > in){
   cout << "\n";
 }
 
-void calcNearestClasses(map<string, vector<map<string, vector<double> > > > results){
-  cout << "This is the results size: " << results.size() << endl;
-  cout << "these are the average scores for all classes across all segments:\n";
-
-  map<string, map<string, vector<double> > >  avgs;
-
-  vector<string> clsnames;
-
-  for(auto const nmes : results){
-    clsnames.push_back(nmes.first);
-  }
-  cout << "These are the names: " << endl;
-  for(int i=0;i<clsnames.size();i++){
-    cout << clsnames[i] << endl;
-  }
-
-  // Go through each classes segments
-  for(auto const a:results){
-    // Go through all segments from that class
-    for(int i=0;i<a.second.size();i++){
-      // Go through all classes which recorded distances from the image
-      for(auto const b : a.second[i]){
-        for(int j=0;j<b.second.size();j++)
-          avgs[a.first][b.first].push_back(b.second[j]);
-      }
-    }
-  }
-
-  //  cout << "0 :";
-  for(auto const ad:avgs){
-    cout << ad.first << ":";
-  }
-  //  cout << "\n";
-
-  // Print out each classes average against given class
-  for(auto const ae:avgs){
-    cout << ae.first << " :";
-    for(auto const b1:ae.second){
-      int vecsize = b1.second.size();
-      double q = 0.0;
-      // Go through and add up all responses
-      for(int i=0;i<vecsize;i++){
-        q+= b1.second[i];
-      }
-      //     b1.second.clear();
-      // Print out the mean of all responses for class
-      cout << q/vecsize << ": ";
-    }
-    cout << "\n";
-  }
-  cout << "\n\nleaving calcNearestClasses" << endl;
-}
-
 bool pairCompare(const pair<string, double>& firstElem, const pair<string, double>& secondElem) {
   return firstElem.second < secondElem.second;
 }
@@ -378,13 +324,12 @@ void qSegment(Mat in, vector<Mat> &out, int cropsize, int MISSTOPLEFT_RIGHT){
 }
 
 double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double> >& results, map<string, vector<Mat> > testImgs,
-                  map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, map<string, vector<map<string,
-                  vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap,
-                  string folderName, int testRepeats){
+                  map<string, vector<Mat> > savedClassHist, map<string, Scalar> Colors, int cropsize, int flags, int kmeansIteration,
+                  double kmeansEpsilon, int overlap, string folderName, int testRepeats){
 
   auto novelStart = std::chrono::high_resolution_clock::now();
   double fpsTotal = 0, frameCount = 0, fpsAvg=0;
-  vector<double> grass;
+
   double acc;// Accuracy
   map<string, vector<double> > avgResults;// Used to collate histogram distance results for easy printing/exporting
 
@@ -490,12 +435,12 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
 
         // Counters for putting 'pixels' on display image
         int disrows = rowspace, discols = colspace;
+
         // Loop through and classify all image segments
         for(int x=0;x<test.size();x++){
-          map<string, double> matchResults;
-          a2 tmpVals; // For holding all the results from each class for a single segment
-          map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
 
+          map<string, double> matchResults;
+          map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
 
           // Re cluster image segment this number of times averaging the best results
           int numTstRepeats =testRepeats;
@@ -503,6 +448,7 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
             // verify the same number of color and normal segmented images
             assert(test.size() == colorTest.size());
 
+            // -- VISULAISATION VARS -- //
             int imgSize = in.cols;
             // If using reduced segments, skip top left and top right
             if(MISSTOPLEFT_RIGHT && (x==0||x==1)){
@@ -514,41 +460,40 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
               disrows += cropsize;
             }
 
+            // -- CLUSTERING/TEXMATCHING -- //
             BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, flags);
             // If segment is not empty add to novelimgTrainer
             if(!test[x].empty()){
                novelTrainer.add(test[x]);
             }
-
              // Generate specified number of clusters per segment and store in Mat
              Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
              clus = novelTrainer.cluster();
 
              // Replace Cluster Centers with the closest matching texton
              textonFind(clus, dictionary, textonDistance);
+             novelTrainer.clear();
 
-            // Calculate the histogram
+             // -- HIST CALC -- //
              Mat out1;
              int histSize = m.size()-1;
              const float* histRange = {bins};
              calcHist(&clus, 1, 0, Mat(), out1, 1, &histSize, &histRange, false, false);
 
-             novelTrainer.clear();
+             // -- HIST MATCH -- //
              double high = DBL_MAX, secHigh = DBL_MAX, clsHigh = DBL_MAX;
              string match, secMatch;
-
-             // Compare all saved histograms against novelimg
+             // Compare against each classes saved Histogram
              for(auto const ent2 : savedClassHist){
                matchResults[ent2.first] = DBL_MAX;
                vector<double> tmpVec;
-               // Compare saved histgrams from each class
+               // Compare against all saved Histograms from a single class
                for(int j=0;j < ent2.second.size();j++){
                  Mat tmpHist = ent2.second[j].clone();
                  double val = compareHist(out1,tmpHist,CV_COMP_CHISQR);
                  tmpVec.push_back(val);
                }
               sort(tmpVec.begin(), tmpVec.end());
-              tmpVals[ent2.first] = tmpVec;
               testAvgs[ent2.first].push_back(tmpVec[0]); // Push back the top match for each class
              }
            } // End of test image reclustering
@@ -579,35 +524,35 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
               cout << avg[z].first << " : " << avg[z].second << endl;
             }
           }
-          fullSegResults[entx.first].push_back(tmpVals);
            string prediction = "";
 
-           // Take the average bgr values for croppsed patch
-           Scalar segColor = mean(colorTest[x]);
-           double tb=0, tg=0, tr=0;
-           tb = segColor[0];
-           tg = segColor[1];
-           tr = segColor[2];
-
-           string colorMatch;
-           double distance = DBL_MAX, Bclear =0, Gclear = 0, Rclear =0;
-           for(auto const amc:saveColors){
-             double tmpBDis =0, tmpGDis=0, tmpRDis=0;
-              tmpBDis =  abs(tb - amc.second[0]); // Blue
-              tmpGDis =  abs(tg - amc.second[1]); // Green
-              tmpRDis =  abs(tr - amc.second[2]); // Red
-              double tmpDis = abs(tmpRDis+tmpGDis+tmpBDis);
-              if(tmpDis<distance){
-                Bclear = abs(distance-tmpBDis);
-                Gclear = abs(distance-tmpGDis);
-                Rclear = abs(distance-tmpRDis);
-                distance=tmpDis;
-                colorMatch = amc.first;
-              }
-           }
-           if(PRINT_COLOR){
-            cout << "This is the distance: " << distance << " and match: " << colorMatch << " with a clearance of Bclear: " << Bclear << " Gclear: " << Gclear << " Rclear: " << Rclear << endl;
-           }
+          //  // -- COLOR -- //
+          //  // Take the average bgr values for croppsed patch
+          //  Scalar segColor = mean(colorTest[x]);
+          //  double tb=0, tg=0, tr=0;
+          //  tb = segColor[0];
+          //  tg = segColor[1];
+          //  tr = segColor[2];
+           //
+          //  string colorMatch;
+          //  double distance = DBL_MAX, Bclear =0, Gclear = 0, Rclear =0;
+          //  for(auto const amc:saveColors){
+          //    double tmpBDis =0, tmpGDis=0, tmpRDis=0;
+          //     tmpBDis =  abs(tb - amc.second[0]); // Blue
+          //     tmpGDis =  abs(tg - amc.second[1]); // Green
+          //     tmpRDis =  abs(tr - amc.second[2]); // Red
+          //     double tmpDis = abs(tmpRDis+tmpGDis+tmpBDis);
+          //     if(tmpDis<distance){
+          //       Bclear = abs(distance-tmpBDis);
+          //       Gclear = abs(distance-tmpGDis);
+          //       Rclear = abs(distance-tmpRDis);
+          //       distance=tmpDis;
+          //       colorMatch = amc.first;
+          //     }
+          //  }
+          //  if(PRINT_COLOR){
+          //   cout << "This is the distance: " << distance << " and match: " << colorMatch << " with a clearance of Bclear: " << Bclear << " Gclear: " << Gclear << " Rclear: " << Rclear << endl;
+          //  }
 
            // If match above threshold or to close to other match or all values are identical Class as 'UnDefined'
            if((avg[0].second>CHISQU_MAX_threshold || (avg[1].second - avg[0].second)<CHISQU_DIS_threshold || avg[1].second==DBL_MAX) && avg[0].second>0){
@@ -619,22 +564,11 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
           confMat[entx.first][prediction]+=1;
 
           rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
-          // Populate Window with predictions
-           if(prediction.compare(entx.first)==0){
-             Correct += 1;
-             trueNegative+=Clsnmes.size()-1;
-            // rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Correct"], -1, 8, 0);
-           }else if(prediction.compare("UnDefined")==0){
-             Unknown +=1;
-            // rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors[prediction], -1, 8, 0);
-           }else{
-             trueNegative+= Clsnmes.size()-2;
-             Incorrect += 1;
-          //  rectangle(disVals, Rect(discols, disrows,cropsize,cropsize), Colors["Incorrect"], -1, 8, 0);
-           }
 
           // Save ROC data to results, clsAttempts starts at 0 so is -1
           cacheTestdata(entx.first, prediction, results);
+
+          // Increment segment for visualusation
           discols +=cropsize;
         }
         // Blend predictions with origianl image
@@ -681,19 +615,20 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
     }
 
 
+    // -- TIME -- //
     int novelTime=0;
     auto novelEnd = std::chrono::high_resolution_clock::now();
     novelTime = std::chrono::duration_cast<std::chrono::milliseconds>(novelEnd - novelStart).count();
     cout << "\nTotal Frames: " << frameCount << " total Time: " << fpsTotal << " Averaged frames per second: " << frameCount/(fpsTotal/1000) << "\n";
     cout << "novelTime: " << novelTime << endl;
+
+
+
     if(PRINT_CONFUSIONMATRIX){
       printConfMat(confMat);
       //acc = ((Correct+trueNegative)/(Correct+trueNegative+Unknown+));
     }
-    cout << "\n";
-    for(int i=0;i<grass.size();i++){
-      cout << grass[i] << ",";
-    }
+
     cout << "\n";
 
     // Print out collated Histogram distances
@@ -1012,7 +947,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     // Load Images to be tested
     path vPath = "../../../TEST_IMAGES/CapturedImgs/novelVideo/";
     map<string, vector<Mat> > testImages;
-    map<string, vector<map<string, vector<double> > > > fullSegResults;
+
     // string s;
     // cout << "Would you like to analyse a video instead or Imgs? (enter Y or N).\n";
     // cin >> s;
@@ -1114,7 +1049,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
     initROCcnt(results, clsNames); // Initilse map
     cout << "number of test Classes.." << testImages.size() << endl;
     acc.push_back(testNovelImg(attempts, numClusters, results[kk], testImages, savedClassHist, Colors, cropsize,
-      fullSegResults, flags, kmeansIteration, kmeansEpsilon, overlap, folderName, testRepeats));
+     flags, kmeansIteration, kmeansEpsilon, overlap, folderName, testRepeats));
 
    }
 
@@ -1128,10 +1063,6 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
   vector<string> clsNmes;
   getClsNames(results[0], clsNmes); // Get class Names
   organiseResultByClass(results, resByCls, clsNmes);
-
-  if(PRINT_CONFMATAVG){
-    calcNearestClasses(fullSegResults);
-  }
 
   // Print out all iterations results by class
   printResByClss(resByCls, firstGo);

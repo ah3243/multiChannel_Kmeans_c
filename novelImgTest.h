@@ -12,16 +12,19 @@ void calcROCVals(std::map<std::string, std::vector<std::vector<double> > > in, s
   std::vector<std::string> clssNmes, std::vector<std::string> testClsNmes);
 void saveTestData(std::vector<std::map<std::string, std::vector<double> > > r, int serial);
 void printConfMat(std::map<std::string, std::map<std::string, int> > in);
-double testNovelImg(int clsAttempts, int numClusters, std::map<std::string, std::vector<double> >& results,
-std::map<std::string, std::vector<cv::Mat> > classImgs, std::map<std::string, std::vector<cv::Mat> > savedClassHist,
-std::map<std::string, cv::Scalar> Colors, int cropsize, std::map<std::string, std::vector<std::map<std::string,
-std::vector<double> > > >& fullSegResults, int flags, int kmeansIteration, double kmeansEpsilon, int overlap, std::string folderName,
-int testRepeats);
+
+double testNovelImg(int clsAttempts, int numClusters, std::map<std::string, std::vector<double> >& results, std::map<std::string,
+  std::vector<cv::Mat> > testImgs, std::map<std::string, std::vector<cv::Mat> > savedClassHist, std::map<std::string, cv::Scalar> Colors,
+  int cropsize, int flags, int kmeansIteration, double kmeansEpsilon, int overlap,
+  std::string folderName, int testRepeats);
+
 void loadVideo(std::string p, std::map<std::string, std::vector<cv::Mat> > &classImages, int scale);
 void printFiles(std::map<std::string, std::vector<std::string> > s, std::vector<std::string> &fileNmes, boost::filesystem::path p);
 std::string getfileNme(std::vector<std::string> s);
+
 void novelImgHandle(boost::filesystem::path testPath,boost::filesystem::path clsPath, int scale, int cropsize, int numClusters,
-  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, std::string folderName, bool firstGo, int testRepeats);
+  int DictSize, int flags, int attempts, int kmeansIteration, double kmeansEpsilon, int overlap, std::string folderName,
+  bool firstGo, int testRepeats);
 
 
 #endif
