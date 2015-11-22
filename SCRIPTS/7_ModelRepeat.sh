@@ -19,12 +19,12 @@ inputType="modelRepeats"
   # CropSize=113
 
   Scale=8
-  CropSize=71
+  CropSize=70
 
 firstGo=1 # Prevents results labels being printed after the first iteration
 counter=0
 
-Training=(1 2 4 6 8 10) # Number of Training Model Repeats
+Training=(5 10 15) # Number of Training Model Repeats
 
 for i in ${Training[@]}; do
 	# If not first iteration then set flag as 0

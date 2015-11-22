@@ -98,7 +98,7 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
   // Load TextonDictionary
   Mat dictionary;
   vector<float> m;
-
+  cout << "\nTHis is the number of Model Repeats\n\n";
   int dictClusters;
   FileStorage fs("dictionary.xml",FileStorage::READ);
   fs["vocabulary"] >> dictionary;
@@ -186,34 +186,34 @@ void modelBuildHandle(int cropsize, int scale, int numClusters, int flags, int a
 
       // Object to store segments from single iteration in for clustering
       BOWKMeansTrainer classTrainer(numClusters, clsTc, attempts, flags);
-      // Object to store results from clustering of all run results
-      BOWKMeansTrainer modelAverages(numClusters, clsTc, attempts, flags);
 
       // Take multiple clusterings averaging results
       for(int mReps=0;mReps<modelRepeats;mReps++){
-        // Push each saved Mat to classTrainer
+
+        // Push all segments to trainer object for clustering
         for(int k = 0; k < test.size(); k++){
           if(!test[k].empty()){
             classTrainer.add(test[k]);
           }
         }
-        // Generate the given number of clusters per Image and prepare for clustering
-        modelAverages.add(classTrainer.cluster());
+
+        // Create Mat to hold final Values
+        Mat clus(numClusters,1, CV_32FC1, Scalar(0,0,0)); // Hold final Values
+        clus = classTrainer.cluster();
+
+        // Save result from image to map for storage
+        classSave[ent1.first].push_back(clus);
+        // Replace Cluster Centers with the closest matching texton
+        textonFind(clus, dictionary, distances); // substitue textons for cluster centres, store agg distance
+
+        Mat out; // Mat to store histogram
+        calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
+        classHist[ent1.first].push_back(out);
+        classTrainer.clear();
+
       }
-      // Create Mat to hold final Values
-      Mat clus(numClusters,1, CV_32FC1, Scalar(0,0,0)); // Hold final Values
-      clus = modelAverages.cluster();
-
-      // Save result from image to map for storage
-      classSave[ent1.first].push_back(clus);
-      // Replace Cluster Centers with the closest matching texton
-      textonFind(clus, dictionary, distances); // substitue textons for cluster centres, store agg distance
-
-      Mat out; // Mat to store histogram
-      calcHist(&clus, 1, 0, Mat(), out, 1, &histSize, &histRange, uniform, accumulate);
-      classHist[ent1.first].push_back(out);
-      classTrainer.clear();
     }
+
     // Calculate and store the average distance from texton dictionary centers to model centers
     double tmpdist;
     for(int mm;mm<distances.size();mm++){

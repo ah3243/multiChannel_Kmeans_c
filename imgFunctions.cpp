@@ -109,6 +109,10 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap, int MISSTOP
   int NumRowSegments = (in.rows/cropsize);
   int NumSegmentsTotal = (NumColSegments*NumRowSegments);
 
+  if(NumSegmentsTotal!=6){
+    MISSTOPLEFT_RIGHT=0;
+  }
+
   // Calculate gap around the combined segments
   int colspace = (in.cols -(NumColSegments*cropsize))/2;
   int rowspace = (in.rows -(NumRowSegments*cropsize))/2;
@@ -135,7 +139,7 @@ void segmentImg(vector<Mat>& out, Mat in, int cropsize, int overlap, int MISSTOP
     for(int j=rowspace;j<(in.rows-cropsize);j+=cropsize){
 
       // If MISSTOPLEFT_RIGHT flag == true and segment is top left or top right continue
-      if(MISSTOPLEFT_RIGHT && (segmentCounter==0 || segmentCounter==4) && NumSegmentsTotal==6){
+      if(MISSTOPLEFT_RIGHT==1 && (segmentCounter==0 || segmentCounter==4) && NumSegmentsTotal==6){
         segmentCounter++; // Iterate segment counter
         continue;
       }

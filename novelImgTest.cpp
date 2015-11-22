@@ -38,12 +38,12 @@ using namespace std;
 // Results Display Flags
 #define VERBOSE 0
 #define SAVEIMGS 0
-#define SAVEPREDICTIONS 0
+#define SAVEPREDICTIONS 1
 #define PRINT_HISTRESULTS 0
-#define SHOW_PREDICTIONS 0
+#define SHOW_PREDICTIONS 1
 #define PRINT_RAWRESULTS 0
 #define PRINT_CONFUSIONMATRIX 0
-#define PRINT_CONFMATAVG 1
+#define PRINT_CONFMATAVG 0
 #define PRINT_TPRPPV 0
 #define PRINT_AVG 0
 #define PRINT_COLOR 0
@@ -425,9 +425,19 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         vector<Mat> test;
         segmentImg(test, hold, cropsize, overlap, MISSTOPLEFT_RIGHT);
 
-        // find the number of possible segments, then calculate gap around these
-        int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
-        int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
+        // Calculate the maximum number of segments for the given img+cropsize
+        int NumColSegments = (in.cols/cropsize);
+        int NumRowSegments = (in.rows/cropsize);
+        int NumSegmentsTotal = (NumColSegments*NumRowSegments);
+
+        // Calculate the gap around the combined segments
+        int colspace = (in.cols -(NumColSegments*cropsize))/2;
+        int rowspace = (in.rows -(NumRowSegments*cropsize))/2;
+        //
+        // // find the number of possible segments, then calculate gap around these
+        // int NumColSegments
+        // int colspace = (in.cols -((in.cols/cropsize)*cropsize))/2;
+        // int rowspace = (in.rows -((in.rows/cropsize)*cropsize))/2;
 
         // Calculate the space around the cropped segments
         Mat disVals = Mat(in.size(),CV_8UC3, Scalar(255,255,255));
@@ -439,26 +449,32 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         // Loop through and classify all image segments
         for(int x=0;x<test.size();x++){
 
+          // -- VISULAISATION VARS -- //
+          int imgSize = in.cols;
+          // If using reduced segments, skip top left and top right
+          if(MISSTOPLEFT_RIGHT && (x==0||x==1)&& NumSegmentsTotal==6){
+            discols += cropsize;
+          }
+          // If discols is larger than the image then move to next row
+          if(discols>imgSize-cropsize){
+            discols=colspace;
+            disrows += cropsize;
+          }
+
+          // ----- TEST REPEATS ----- //
+
           map<string, double> matchResults;
           map<string, vector<double> > testAvgs; // map to hold each classes best matches for single segment over several repeat clusterings
 
           // Re cluster image segment this number of times averaging the best results
           int numTstRepeats =testRepeats;
-          for(int tstAVG=0;tstAVG<numTstRepeats;tstAVG++){
-            // verify the same number of color and normal segmented images
-            assert(test.size() == colorTest.size());
 
-            // -- VISULAISATION VARS -- //
-            int imgSize = in.cols;
-            // If using reduced segments, skip top left and top right
-            if(MISSTOPLEFT_RIGHT && (x==0||x==1)){
-              discols += cropsize;
-            }
-            // If discols is larger than the image then move to next row
-            if(discols>imgSize-cropsize){
-              discols=colspace;
-              disrows += cropsize;
-            }
+          if(MULTITHREAD){
+            // #pragma omp parallel for num_threads(2) shared(testAvgs, matchResults, test, numClusters, clsTc, clsAttempts, flags, numTstRepeats, dictionary, m, bins, savedClassHist)
+          }
+          for(int tstAVG=0;tstAVG<numTstRepeats;tstAVG++){
+            // // verify the same number of color and normal segmented images
+            // assert(test.size() == colorTest.size());
 
             // -- CLUSTERING/TEXMATCHING -- //
             BOWKMeansTrainer novelTrainer(numClusters, clsTc, clsAttempts, flags);
@@ -467,12 +483,13 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
                novelTrainer.add(test[x]);
             }
              // Generate specified number of clusters per segment and store in Mat
-             Mat clus = Mat::zeros(numClusters,1, CV_32FC1);
-             clus = novelTrainer.cluster();
+            Mat tmpClus = Mat::zeros(numClusters,1, CV_32FC1);
+            tmpClus = novelTrainer.cluster();
+            Mat clus = tmpClus.clone();
 
+            vector<double> textonDistances;
              // Replace Cluster Centers with the closest matching texton
-             textonFind(clus, dictionary, textonDistance);
-             novelTrainer.clear();
+             textonFind(clus, dictionary, textonDistances);
 
              // -- HIST CALC -- //
              Mat out1;
@@ -494,16 +511,15 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
                  tmpVec.push_back(val);
                }
               sort(tmpVec.begin(), tmpVec.end());
-              testAvgs[ent2.first].push_back(tmpVec[0]); // Push back the top match for each class
+             testAvgs[ent2.first].push_back(tmpVec[0]); // Push back the top match for each class
              }
            } // End of test image reclustering
-
 
            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
           // The depth of averaging for values
           ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-          double avgDepth =numTstRepeats;
 
+          double avgDepth =numTstRepeats;
           vector<pair<string, double>> avg;
           // Get the average of the top n values for each class store in sorted vector
           for(auto const ent9:testAvgs){
@@ -574,28 +590,28 @@ double testNovelImg(int clsAttempts, int numClusters, map<string, vector<double>
         // Blend predictions with origianl image
         Mat disVals1;
         addWeighted(in, 0.7, disVals, 0.3, 0.0, disVals1, -1);
+        rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
+
+         if(SAVEPREDICTIONS){
+           stringstream ss;
+
+           // Ensure correct Dirs Exist
+           ss << "./Predictions/" << folderName;
+           assert(createDir("Predictions"));
+           assert(createDir(ss.str()));
+
+           ss.str(""); // Clear stringstream
+           // Save prediction images
+           ss  << "./Predictions/" << folderName << "/" << entx.first << "_" << frameCount << ".png";
+           cout << "Saving: " << ss.str() << endl;
+           imwrite(ss.str(),disVals1);
+           ss.str(""); // Clear stringstream
+         }
          if(SHOW_PREDICTIONS){
-           rectangle(matchDisplay, Rect(0, 0,50,50), Colors[entx.first], -1, 8, 0);
            imshow("correct", matchDisplay);
            imshow("novelImg", entx.second[h]);
            imshow("segmentPredictions", disVals1);
-
-           if(SAVEPREDICTIONS){
-             stringstream ss;
-
-             // Ensure correct Dirs Exist
-             ss << folderName << "/Predictions/";
-             assert(createDir(folderName));
-             assert(createDir(ss.str()));
-
-             ss.str(""); // Clear stringstream
-             // Save prediction images
-             ss  << folderName << "/Predictions/" << entx.first << "_" << frameCount << ".png";
-             cout << "Saving: " << ss.str() << endl;
-             imwrite(ss.str(),disVals1);
-             ss.str(""); // Clear stringstream
-           }
-             waitKey(30);
+           waitKey(30);
           }
          auto fpsEnd = std::chrono::high_resolution_clock::now();
          fpsTotal+= std::chrono::duration_cast<std::chrono::milliseconds>(fpsEnd - fpsStart).count();
@@ -985,7 +1001,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
 
     map<string, Scalar> Colors;
     vector<Scalar> clsColor;
-    if(SHOW_PREDICTIONS){
+    if(SHOW_PREDICTIONS||SAVEPREDICTIONS){
       // Stock Scalar Colors
           clsColor.push_back(Scalar(255,0,0)); // Blue
           clsColor.push_back(Scalar(0,128,255)); // Orange
@@ -1029,7 +1045,7 @@ void novelImgHandle(path testPath, path clsPath, int scale, int cropsize, int nu
       // Window for Legend display
       namedWindow("legendWin", CV_WINDOW_AUTOSIZE);
       imshow("legendWin", Key);
-      imwrite("./TEST/Predictions/Key.png", Key);
+      imwrite("./Predictions/Key.png", Key);
     }
   // Holds Class names, each holding a count for TP, FP, FN, FP Values
   vector<map<string, vector<double> > > results;

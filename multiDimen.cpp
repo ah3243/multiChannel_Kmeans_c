@@ -110,8 +110,20 @@ if(testType.compare("cropping")==0){
     cropsize = testInput;
     scale=atoi(argv[4]);
     testRepeats=atoi(argv[5]);
+    modelRepeats=atoi(argv[6]);
+    folderName=argv[1]; // Set subfolder name to number of repeats
 }
-
+// TEXDICT_CLUSTERS //
+if(testType.compare("texDict")==0){
+  cout << "\nTextDict Running\n";
+    // Set variables
+    DictSize = testInput;
+    cropsize = atoi(argv[7]);
+    scale=atoi(argv[4]);
+    testRepeats=atoi(argv[5]);
+    modelRepeats=atoi(argv[6]);
+    folderName=argv[1]; // Set subfolder name to number of repeats
+}
 // TEST_REPEATS
 if(testType.compare("testRepeats")==0){
     if(VERBOSE){
@@ -120,6 +132,7 @@ if(testType.compare("testRepeats")==0){
     testRepeats = testInput;
     scale=atoi(argv[4]);
     cropsize=atoi(argv[5]);
+    folderName=argv[1]; // Set subfolder name to number of repeats
 }
 // MODEL_REPEATS
 if(testType.compare("modelRepeats")==0){
@@ -218,27 +231,35 @@ if(testType.compare("modelRepeats")==0){
   #endif
 
   int totalTime =0;
-  cout << "\n";
   if(DICTIONARY_BUILD == 1){
-//    cout << "Texton Dictionary Creation took: "
-          cout  << dictDur << "\n";
-//            << " milliseconds\n";
-            totalTime +=dictDur;
+    cout << "\n";
+    if(firstGo){
+      cout << "TextonDict: ";
+    }
+    cout  << dictDur;
+    totalTime +=dictDur;
   }
   if(MODEL_BUILD == 1){
-//    cout << "Model Creation took: "
-        cout << modDur << "\n";
-          //  << " milliseconds\n";
-            totalTime+=modDur;
+    cout << "\n";
+    if(firstGo){
+      cout << "Models: ";
+    }
+    cout << modDur;
+    totalTime+=modDur;
   }
   if(NOVELIMG_TEST == 1){
-//    cout << "Novel Image Testing took: "
-          cout << novDur << "\n";
-  //          << " milliseconds\n";
-            totalTime+=novDur;
+    cout << "\n";
+    if(firstGo){
+      cout << "NovelImgs: ";
+    }
+    cout << novDur;
+    totalTime+=novDur;
   }
-
-  cout<< totalTime << "\n\n";
+  cout << "\n";
+  if(firstGo){
+    cout << "TotalTime: ";
+  }
+  cout<< totalTime << "\n";
 
   cout <<"\nENDING RUN\n";
   cout << "This is the cropsize: " << cropsize << endl;

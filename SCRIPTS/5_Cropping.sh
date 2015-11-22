@@ -12,7 +12,6 @@ cmake ..
 make
 echo made and built
 
-
   # Generate new images if flag input
   if [ "$useImgs" == "Y" ]
   then
@@ -24,7 +23,8 @@ echo made and built
 	inputType="cropping"
 	## SCALE VALUES
 	Scale=9
-  testRepeats=5
+  testRepeats=1
+  modelRepeats=1
 
 	firstGo=1 # Prevents results labels being printed after the first iteration
 	counter=0
@@ -38,14 +38,14 @@ echo made and built
     elif [ $Scale -eq 8 ]
     then
         echo "Scale == 8"
-       Cropping=(10 20 40 60 70 80 100 120 140)
-      #  Cropping=(70)  # missing half of height value
+      #  Cropping=(10 20 40 60 70 80 100 120 140)
+       Cropping=(70)  # missing half of height value
         # Cropping=(61 62 63 64 65 66 67 68 69 70 71 72) # Additional Values around target croppping size
     elif [ $Scale -eq 7 ]
     then
         echo "Scale == 7"
-       Cropping=(25 50 80 100 105 125 150 175 200)
-      #  Cropping=(105) # missing half of height value
+      #  Cropping=(25 50 80 100 105 125 150 175 200)
+       Cropping=(100) # missing half of height value
         # Cropping=(100 102 104 106 107 108 109 110 111 112 113) # Additional Values around target croppping size
 
     elif [ $Scale -eq 6 ]
@@ -68,7 +68,7 @@ echo made and built
 		echo Test Type is: $inputType InputParam: ${i} First go?: $firstGo Scale: $Scale testRepeats: $testRepeats
 		echo iteration $counter
 		echo
-		./multiDimen ${i} $inputType $firstGo $Scale $testRepeats
+		./multiDimen ${i} $inputType $firstGo $Scale $testRepeats $modelRepeats
 		let counter=counter+1
 	done
 
